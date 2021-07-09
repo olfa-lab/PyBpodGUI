@@ -1,0 +1,53 @@
+{
+   "Dilutors" : [],
+   "Olfactometers" : [
+      {
+         "Dilutors" : [],
+         "MFCs" : [
+            {
+               "MFC_type" : "analog",
+               "address" : "A",
+               "arduino_port_num" : 1,
+               "capacity" : 1000,
+               "gas" : "Air"
+            },
+            {
+               "MFC_type" : "analog",
+               "address" : "A",
+               "arduino_port_num" : 2,
+               "capacity" : 100,
+               "gas" : "Nitrogen"
+            }
+         ],
+         "Vials" : {
+            "4" : {
+               "conc" : 0,
+               "odor" : "dummy"
+            },
+            "5" : {
+               "conc" : 0.1,
+               "odor" : "pinene0"
+            },
+            "6" : {
+               "conc" : 0.1,
+               "odor" : "pinene1"
+            },
+            "7" : {
+               "conc" : 0.1,
+               "odor" : "pinene2"
+            },
+            "8" : {
+               "conc" : 0.1,
+               "odor" : "pinene3"
+            }
+         },
+         "cassette_1_sn" : 1222,
+         "cassette_2_sn" : 1234,
+         "cleandate" : 20140101,
+         "com_port" : 5,
+         "interface" : "teensy",
+         "master_sn" : 212,
+         "slave_index" : 1
+      }
+   ]
+}
