@@ -125,6 +125,7 @@ class BpodAnalogIn(object):
             self._confirmTransmission('streamPrefix')
         
         self.StreamPrefix = prefix
+
         
     def setNactiveChannels(self, nChannels):
         if self._Initialized:

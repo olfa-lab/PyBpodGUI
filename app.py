@@ -51,6 +51,14 @@ Things to do:
 
     * __X__ close serial devices and threads when application exits
 
+    * __X__ get rid of the samplingThread and let the sessionDataThread do the sampling and saving to .h5 and let it collect 100 or so samples in an array and emit it to the streamingWorker whenever it gets filled instead of one sample at a time.
+
+    * __X__ save sniff signal (voltage over time) for each trial in .h5 file
+
+    * __X__ save timestamps of lick events for each trial in .h5 file
+
+    * __X__ synchronize analog data with state machine timing.
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -77,13 +85,7 @@ Things to do:
 
     * _____ disable buttons that should not be clicked during certain operations
 
-    * _____ save sniff signal (voltage over time) for each trial in .h5 file
-
-    * _____ save timestamps of lick events for each trial in .h5 file
-
     * _____ use pyqtgraph instead of matplotlib for the streaming plot to check if faster sampling/plotting is possible
-
-    * _____ synchronize analog data with state machine timing.
 
     * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
 
@@ -91,8 +93,7 @@ Things to do:
 
     * _____ configure tab order for the LineEdit fields
 
-    * _____ instead of the samplingWorker emitting one sample at a time, let it collect 100 or so samples in an array and emit whenever it gets filled.
-
+    * _____ create a metadata for the .h5 file
     
 
 Questions to research:
@@ -106,6 +107,7 @@ Questions to research:
 
 
 '''
+Example trial info dictionary created by the bpod.
 {
     'Bpod start timestamp': 4.344831,
     'Trial start timestamp': 28.050931,
@@ -141,7 +143,6 @@ Questions to research:
 '''
 
 class SessionData(tables.IsDescription):
-    # mouseNumber = tables.UInt16Col()
     trialNum = tables.UInt16Col(pos=0)
     correctResponse = tables.StringCol(5, pos=1)
     responseResult = tables.StringCol(16, pos=2)
@@ -154,9 +155,10 @@ class SessionData(tables.IsDescription):
     responseWindowEndTime = tables.Float32Col(pos=9)
     responseTimeElapsed = tables.Float32Col(pos=10)
     itiDuration = tables.UInt8Col(pos=11)
-    # leftLickTimes = tables.Float32Col(shape=(5,), dflt=0.0)  # Shape dimensions need to exactly match the dimensions of the array to be written.
-    # rightLickTimes = tables.Float32Col(shape=(5,), dflt=0.0)  # But, if given array of length 1, PyTables will copy that one element 5 times.
-    # voltages = tables.Float32Col(shape=(100000,), dflt=0.0)
+    trialStartTime = tables.Float32Col(pos=12)
+    trialEndTime = tables.Float32Col(pos=13)
+    totalTrialTime = tables.Float32Col(pos=14)
+    bpodStartTime = tables.Float32Col(pos=15)
 
 
 class FinalData(tables.IsDescription):
@@ -172,16 +174,20 @@ class FinalData(tables.IsDescription):
 class VoltageData(tables.IsDescription):
     # stateNum = tables.UInt8Col(pos=0)
     stateNum = tables.StringCol(1, pos=0)
-    voltage = tables.Float32Col(shape=(1, ), pos=1)
+    # computerTime = tables.Float32Col(pos=1)
+    # computerPeriod = tables.Float32Col(pos=2)
+    bpodTime = tables.Float32Col(pos=1)
+    voltage = tables.Float32Col(shape=(1, ), pos=2)
 
 
 class SessionDataWorker(QObject):
-    newDataSignal = pyqtSignal()
+    analogDataSignal = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
-    def __init__(self, mouseNum, rigLetter):
+    def __init__(self, mouseNum, rigLetter, analogInModule):
         super(SessionDataWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
+        self.adc = analogInModule
         dateTimeObj = datetime.now()
         dateObj = dateTimeObj.date()
         timeObj = dateTimeObj.time()
@@ -189,17 +195,31 @@ class SessionDataWorker(QObject):
         if not os.path.isdir('results'):
             os.mkdir('results')
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
-        self.group = self.h5file.create_group(where='/', name='voltages', title='Voltages Per Trial')
+        self.voltsGroup = self.h5file.create_group(where='/', name='voltages', title='Voltages Per Trial')
+        self.licksGroup = self.h5file.create_group(where='/', name='lickTimes', title='Lick Timestamps Per Trial')
         self.table = self.h5file.create_table(where='/', name='trial_data', description=SessionData, title='Trial Data')
         self.trial = self.table.row
+        self.statesTable = None  # Make it None because have to wait for completion of first trial to get names of all the states. Afterwhich, make description dictionary and then table.
+        self.statesTableDescDict = {}  # Description for the states table (using this instead of making a class definition and subclassing tables.IsDescription).
+        self.licksTable = None
+        self.licksTableDescDict = {  # Description for the licks table instead of making a class definition and subclassing tables.IsDescription.
+            'leftLickTimes': tables.Float32Col(dflt=np.nan, pos=0),
+            'rightLickTimes': tables.Float32Col(dflt=np.nan, pos=1)
+        }
         self.keepRunning = True
         self.newData = False
         self.infoDict = {}
         self.finalResultsDict = {}
-        self.analogDataBuffer = collections.deque(maxlen=100)
-        self.analogAvailable = False
+        self.analogDataBufferSize = 10
+        self.analogDataBuffer = np.zeros(shape=self.analogDataBufferSize, dtype='float32')
         self.trialNum = 1
         self.stateNum = 0
+        self.maxVoltage = 5
+        self.counter = 0
+        self.previousTimer = 0
+        self.t_start = 0
+        self.samplingPeriod = 1 / 1000
+        self.bpodTime = 0
 
     def receiveInfoDict(self, infoDict):
         self.newData = True
@@ -209,15 +229,6 @@ class SessionDataWorker(QObject):
     def receiveFinalResultsDict(self, resultsDict):
         logging.info('incoming final results dict')
         self.finalResultsDict = resultsDict
-
-    def receiveAnalogData(self, analogData):
-        self.analogAvailable = True
-        prefix = analogData[0][0]
-        syncByte = analogData[0][1]
-        samples = analogData[1]
-        self.analogDataBuffer.append(samples)
-        if (prefix == 35):  # 35 is the decimal value for the ascii char '#'
-            self.stateNum = chr(syncByte)
 
     def saveFinalResults(self):
         logging.info('attempting to save final results data')
@@ -237,14 +248,44 @@ class SessionDataWorker(QObject):
         self.finalTable.flush()
         logging.info('final results data has been written to disk')
 
+    def saveStatesTimestamps(self):
+        # Define the description for the states table using a dictionary of the states timestamps. Then create the states table (only once).
+        if self.statesTable is None:
+            pos = 0
+            for k, v in self.infoDict['States timestamps'].items():
+                keyString = k + 'Start'
+                self.statesTableDescDict[keyString] = tables.Float32Col(pos=pos)
+                pos += 1
+                keyString = k + 'End'
+                self.statesTableDescDict[keyString] = tables.Float32Col(pos=pos)
+                pos += 1
+            
+            self.statesTable = self.h5file.create_table(where='/', name='statesTimestamps', description=self.statesTableDescDict, title='States Timestamps')
+            self.statesRow = self.statesTable.row
+
+        # Fill in column values for the states timestamps for the current row since statesTable has been created.
+        for k, v in self.infoDict['States timestamps'].items():
+            keyString = k + 'Start'
+            self.statesRow[keyString] = v[0][0]
+            keyString = k + 'End'
+            self.statesRow[keyString] = v[0][1]
+
+        # only one row per end of trial data so append what was written and flush to disk.
+        self.statesRow.append()
+        self.statesTable.flush()
+   
     def run(self):
         self.voltTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum}', description=VoltageData, title=f'Trial {self.trialNum} Voltage Data')
         self.voltsRow = self.voltTable.row
 
+        self.t_start = time.perf_counter()
         while self.keepRunning:
             if self.newData:
                 self.newData = False  # reset
                 logging.info("attempting to save data")
+
+                self.licksTable = self.h5file.create_table(where='/lickTimes', name=f'trial_{self.trialNum}', description=self.licksTableDescDict, title=f'Trial {self.trialNum} Lick Timestamps')
+                self.licksRow = self.licksTable.row
 
                 self.trial['trialNum'] = self.infoDict['currentTrialNum']
                 self.trial['correctResponse'] = self.infoDict['correctResponse']
@@ -252,38 +293,122 @@ class SessionDataWorker(QObject):
                 self.trial['odorName'] = self.infoDict['currentOdorName']
                 self.trial['odorConc'] = self.infoDict['currentOdorConc']
                 self.trial['odorFlow'] = self.infoDict['currentFlow']
-                self.trial['itiDuration'] = self.infoDict['currentITI']
                 self.trial['responseWindowStartTime'] = self.infoDict['States timestamps']['WaitForResponse'][0][0]
                 self.trial['responseWindowEndTime'] = self.infoDict['States timestamps']['WaitForResponse'][0][1]
                 self.trial['responseTimeElapsed'] = self.trial['responseWindowEndTime'] - self.trial['responseWindowStartTime']
+                self.trial['itiDuration'] = self.infoDict['currentITI']
+                self.trial['trialStartTime'] = self.infoDict['Trial start timestamp']
+                self.trial['trialEndTime'] = self.infoDict['Trial end timestamp']
+                self.trial['totalTrialTime'] = self.trial['trialEndTime'] - self.trial['trialStartTime']
+                self.trial['bpodStartTime'] = self.infoDict['Bpod start timestamp']
 
                 if 'Port1In' in self.infoDict['Events timestamps']:
-                    self.trial['leftLicksCount'] = len(self.infoDict['Events timestamps']['Port1In'])
-                    # Need to check that shapes of array match the shape specified in the SessionData class.
-                    # self.trial['leftLickTimes'] = np.array(self.infoDict['Events timestamps']['Port1In'])
-                if 'Port3In' in self.infoDict['Events timestamps']:
-                    self.trial['rightLicksCount'] = len(self.infoDict['Events timestamps']['Port3In'])
-                    # Need to check that shapes of array match the shape specified in the SessionData class.
-                    # self.trial['rightLickTimes'] = np.array(self.infoDict['Events timestamps']['Port3In'])
+                    leftLicksList = self.infoDict['Events timestamps']['Port1In']
+                    leftLicksCount = len(leftLicksList)
+                    self.trial['leftLicksCount'] = leftLicksCount
 
+                    if 'Port3In' in self.infoDict['Events timestamps']:
+                        rightLicksList = self.infoDict['Events timestamps']['Port3In']
+                        rightLicksCount = len(rightLicksList)
+                        self.trial['rightLicksCount'] = rightLicksCount
+
+                        # Save both left and right lick times to each row if both exist, and avoid index out of range errors.
+                        if (rightLicksCount >= leftLicksCount):
+                            for i in range(rightLicksCount):
+                                self.licksRow['rightLickTimes'] = rightLicksList[i]
+                                if (i < leftLicksCount):
+                                    self.licksRow['leftLickTimes'] = leftLicksList[i]
+                                
+                                self.licksRow.append()
+                        else:
+                            for i in range(leftLicksCount):
+                                self.licksRow['leftLickTimes'] = leftLicksList[i]
+                                if (i < rightLicksCount):
+                                    self.licksRow['rightLickTimes'] = rightLicksList[i]
+                                
+                                self.licksRow.append()
+                    else:   
+                        # Only left licks exist. 
+                        self.trial['leftLicksCount'] = len(self.infoDict['Events timestamps']['Port1In'])
+                        for t in self.infoDict['Events timestamps']['Port1In']:
+                            self.licksRow['leftLickTimes'] = t
+                            self.licksRow.append()
+                    self.licksTable.flush()
+
+                # Only right licks exist.
+                elif 'Port3In' in self.infoDict['Events timestamps']:
+                    self.trial['rightLicksCount'] = len(self.infoDict['Events timestamps']['Port3In'])
+                    for t in self.infoDict['Events timestamps']['Port3In']:
+                        self.licksRow['rightLickTimes'] = t
+                        self.licksRow.append()
+                    self.licksTable.flush()
+                
                 self.trial.append()
                 self.table.flush()
 
+                self.saveStatesTimestamps()
+
                 # The trial data above comes at the end of a trial, so write the voltages to the disk, and create a new table for the next trial's voltages
-                self.analogDataBuffer.clear()
                 self.voltTable.flush()
-                self.trialNum += 1  # increment trial number
+                self.trialNum += 1  # increment trial number.
+                self.stateNum = 0  # reset state number back to zero.
+                self.bpodTime = 0  # reset timestamps for samples back to zero.
+                
+                # Re-iterate through the volts table row by row to update the bpodTime so it corresponds to the bpod's trial start time instead of starting it at zero.
+                # self.bpodTime = self.infoDict['Trial start timestamp']
+                # for voltsRow in self.voltTable.iterrows():
+                #     voltsRow['bpodTime'] = self.bpodTime
+                #     self.bpodTime += self.samplingPeriod
+                #     voltsRow.update()
+                # self.voltTable.flush()
+
                 self.voltTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum}', description=VoltageData, title=f'Trial {self.trialNum} Voltage Data')
                 self.voltsRow = self.voltTable.row
-
             
             else:
-                if not (len(self.analogDataBuffer) == 0):
+                analogData = self.adc.getSampleFromUSB()
+
+                # Uses the computer's clock to make the timestamps for the samples and period in between each sample.
+                # currentTimer = time.perf_counter()
+                # period = currentTimer - self.previousTimer
+                # elapsed = currentTimer - self.t_start
+                # self.previousTimer = currentTimer
+
+                prefix = analogData[0][0]
+                syncByte = analogData[0][1]
+                samples = analogData[1]
+                voltages = [0] * len(samples)
+
+                if (prefix == 35):  # 35 is the decimal value for the ascii char '#'
+                    self.stateNum = chr(syncByte)  # update the state number with the syncByte's ascii character.
+
+                # convert decimal bit value to voltage.
+                for i in range(len(samples)):
+                    if samples[i] >= 4096:
+                        samples[i] -= 4096
+                        voltages[i] = (samples[i] * self.maxVoltage) / 4096
+                    elif samples[i] < 4096:
+                        voltages[i] = ((samples[i] * self.maxVoltage) / 4096) - self.maxVoltage
+
+                # Start saving to file when the trial starts, which is indicated when a syncByte is received and 'self.stateNum' is updated with the syncByte's value.
+                if not (self.stateNum == 0):
                     self.voltsRow['stateNum'] = self.stateNum
-                    self.voltsRow['voltage'] = self.analogDataBuffer.popleft()
+                    # self.voltsRow['computerTime'] = elapsed
+                    # self.voltsRow['computerPeriod'] = period
+                    self.voltsRow['bpodTime'] = self.bpodTime
+                    self.bpodTime += self.samplingPeriod
+                    self.voltsRow['voltage'] = voltages
                     self.voltsRow.append()
 
-            QThread.sleep(1)  # Need this, or else GUI will severely lag. It is alternative to 'time.sleep()' but I should figure out how to use interrupts instead of infinite polling.
+                # fill buffer and send it when full using the signal.
+                if self.counter < self.analogDataBufferSize:    
+                    self.analogDataBuffer[self.counter] = voltages[0]  # Need to use element, not list
+                    self.counter += 1
+                else:
+                    self.analogDataSignal.emit(self.analogDataBuffer)
+                    self.counter = 0
+                    self.analogDataBuffer[self.counter] = voltages[0]
+                    self.counter += 1
 
         self.table.flush()
         self.voltTable.flush()
@@ -297,7 +422,6 @@ class SessionDataWorker(QObject):
     def stopRunning(self):
         self.keepRunning = False
         
-
 
 class InputEventWorker(QObject):
     inputEventSignal = pyqtSignal(list)
@@ -318,7 +442,6 @@ class InputEventWorker(QObject):
 
     def run(self):
         logging.info("InputEventThread is running")
-        currentTrialNum = 0
         currentPort1In = 0
         currentPort3In = 0
         while self.keepRunning:
@@ -717,35 +840,6 @@ class ProtocolWorker(QObject):
             logging.info("current trial aborted")
 
 
-class SamplingWorker(QObject):
-    dataReceivedSignal = pyqtSignal(list)
-    finished = pyqtSignal()
-
-    def __init__(self, analogInputObject):
-        super(SamplingWorker, self).__init__()
-        # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
-        self.adc = analogInputObject
-        self.keepRunning = True
-        self.rawData = []
-
-    def run(self):
-        # Strange thing to note is that this infinite while loop does not cause any lagging
-        # or freezing of the GUI or animation DESPITE NOT HAVING a 'time.sleep' or similar
-        # blocking method between loops. This runs in a thread just like the other infinite
-        # loops but its confusing why this works fine, but the other threads with infinite
-        # loops need a 'time.sleep' or 'QThread.sleep' to prevent lagging/freezing.
-        while (self.keepRunning):
-            self.rawData = self.adc.getSampleFromUSB()
-            if self.rawData is not None:
-                self.dataReceivedSignal.emit(self.rawData)
-
-        logging.info("SamplingWorker Finished")
-        self.finished.emit()
-
-    def stopRunning(self):
-        self.keepRunning = False
-
-
 class StreamingWorker(QObject):
     def __init__(self, plotLength=100, numPlots=1):
         super(StreamingWorker, self).__init__()
@@ -778,8 +872,8 @@ class StreamingWorker(QObject):
             pltInterval = 10    # Period at which the plot animation updates [ms]
             xmin = 0
             xmax = self.plotMaxLength
-            ymin = -3.0
-            ymax = 3.0
+            ymin = -5.0
+            ymax = 5.0
             ax = self.dynamic_canvas.figure.add_subplot(111)
             ax.set_xlabel('Time')
             ax.set_ylabel('Voltage')
@@ -801,7 +895,7 @@ class StreamingWorker(QObject):
                     # gets in the way and does not look nice.
                     lineValueText.append(ax.text(0.70, 0.90-i*0.05, '', transform=ax.transAxes))
 
-            # Make sure to use "self.anim" instead of just "anim". Otherwise animation will freeze.
+            # Make sure to use "self.anim" instead of just "anim". Otherwise animation will freeze because the reference will be garbage collected.
             self.anim = animation.FuncAnimation(self.dynamic_canvas.figure, self.parseData, fargs=(lines, lineValueText, lineLabel, timeText), interval=pltInterval)    # fargs has to be a tuple
             logging.info("animation created")
             # Doing it like this causes the animation to freeze halfway into the plot.
@@ -811,7 +905,7 @@ class StreamingWorker(QObject):
             self.isSetup = True
 
     def getData(self, data):
-        self.rawData = data[1]  # first element of data is the array of prefix byte and sync byte, second element is the array of samples.
+        self.rawData = data
         # logging.info(f"rawdata is {data}")
 
     def parseData(self, frame, lines, lineValueText, lineLabel, timeText):
@@ -819,54 +913,35 @@ class StreamingWorker(QObject):
         self.plotTimer = int((currentTimer - self.previousTimer) * 1000)     # the first reading will be erroneous
         self.previousTimer = currentTimer
         timeText.set_text('Plot Interval = ' + str(self.plotTimer) + 'ms')
-        privateData = copy.deepcopy(self.rawData[:])    # so that the 3 values in our plots will be synchronized to the same sample time
+        # privateData = copy.deepcopy(self.rawData[:])    # so that the 3 values in our plots will be synchronized to the same sample time
         
         for i in range(0, self.numPlots):
-            # Data from analog input module.
-            # try:
-            #     value = privateData[i]
-            # except IndexError:
-            #     value = 4096
-            if not (len(privateData) < 1):
-                value = privateData[i]
-            else:
-                value = 4096
-
-            if value >= 4096:
-                value -= 4096
-                voltage = (value * 2.5) / 4096
-            elif value < 4096:
-                voltage = ((value * 2.5) / 4096) - 2.5
-
-            self.data[i].append(round(voltage, 3))    # we get the latest data point and append it to our deque
+            for j in range(len(self.rawData)):
+                self.data[i].append(self.rawData[j])    # we get the latest data point and append it to our deque
+                
             lines[i].set_data(range(self.plotMaxLength), self.data[i])
-            lineValueText[i].set_text('[' + lineLabel[i] + '] = ' + str(round(voltage, 3)))
+            lineValueText[i].set_text('[' + lineLabel[i] + '] = ' + str(round(self.data[i][-1], 3)))  # I use the latest element for the voltage text.
+        
+        self.data[self.numPlots].append(self.lickRightCorrect)  # Right correct lick.
+        self.data[self.numPlots + 1].append(self.lickRightWrong)    # Right incorrect lick.
+        self.data[self.numPlots + 2].append(self.lickLeftCorrect)   # Left correct lick. 
+        self.data[self.numPlots + 3].append(self.lickLeftWrong)  # Left incorrect lick.
 
-        # Right correct lick.
-        value = self.lickRightCorrect
-        self.data[self.numPlots].append(value)    # we get the latest data point and append it to our deque
-        lines[self.numPlots].set_data(range(self.plotMaxLength), self.data[self.numPlots])
-        # lineValueText[self.numPlots].set_text('[' + lineLabel[self.numPlots] + '] = ' + str(value))
+        # Need to append as many elements to the lick lines as were appended to the voltage line so that all lines scroll at same speed.
+        for i in range(self.numPlots, self.numPlots + 4):
+            for j in range(len(self.rawData)):
+                self.data[i].append(np.nan)
 
-        # Right incorrect lick.
-        value = self.lickRightWrong
-        self.data[self.numPlots + 1].append(value)    # we get the latest data point and append it to our deque
-        lines[self.numPlots + 1].set_data(range(self.plotMaxLength), self.data[self.numPlots + 1])
-        # lineValueText[self.numPlots + 1].set_text('[' + lineLabel[self.numPlots + 1] + '] = ' + str(value))
+        lines[self.numPlots].set_data(range(self.plotMaxLength), self.data[self.numPlots])  # Set line for right correct lick.
+        # lineValueText[self.numPlots].set_text('[' + lineLabel[self.numPlots] + '] = ' + str(value))  # Set text for right correct lick.
+        lines[self.numPlots + 1].set_data(range(self.plotMaxLength), self.data[self.numPlots + 1])  # Set line for right incorrect lick.
+        # lineValueText[self.numPlots + 1].set_text('[' + lineLabel[self.numPlots + 1] + '] = ' + str(value))  # Set text for right incorrect lick.
+        lines[self.numPlots + 2].set_data(range(self.plotMaxLength), self.data[self.numPlots + 2])  # Set line for left correct lick.
+        # lineValueText[self.numPlots + 2].set_text('[' + lineLabel[self.numPlots + 2] + '] = ' + str(value))  # Set text for left correct lick.
+        lines[self.numPlots + 3].set_data(range(self.plotMaxLength), self.data[self.numPlots + 3])  # Set line for left incorrect lick.
+        # lineValueText[self.numPlots + 3].set_text('[' + lineLabel[self.numPlots + 3] + '] = ' + str(value))  # Set text for left incorrect lick.
 
-        # Left correct lick.
-        value = self.lickLeftCorrect
-        self.data[self.numPlots + 2].append(value)    # we get the latest data point and append it to our deque
-        lines[self.numPlots + 2].set_data(range(self.plotMaxLength), self.data[self.numPlots + 2])
-        # lineValueText[self.numPlots + 2].set_text('[' + lineLabel[self.numPlots + 2] + '] = ' + str(value))
-
-        # Left incorrect lick.
-        value = self.lickLeftWrong
-        self.data[self.numPlots + 3].append(value)    # we get the latest data point and append it to our deque
-        lines[self.numPlots + 3].set_data(range(self.plotMaxLength), self.data[self.numPlots + 3])
-        # lineValueText[self.numPlots + 3].set_text('[' + lineLabel[self.numPlots + 3] + '] = ' + str(value))
-
-        # Reset values.
+        # Reset lick values.
         self.lickRightCorrect = np.nan
         self.lickRightWrong = np.nan
         self.lickLeftCorrect = np.nan
@@ -997,7 +1072,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.olfaPortLineEdit.setText(self.olfaSerialPort)
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
-        self.streaming = StreamingWorker(plotLength=200)
+        self.streaming = StreamingWorker(plotLength=1000)
         self.streamingGroupBoxVLayout.addWidget(self.streaming.getFigure())
         self.streaming.setupAnimation()
         self.sessionDataWorker = None
@@ -1033,7 +1108,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bpodPortLineEdit.editingFinished.connect(self._recordBpodSerialPort)
         self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
         self.olfaPortLineEdit.editingFinished.connect(self._recordOlfaSerialPort)
-
 
     def _launchOlfaGUI(self):
         if self.olfas is not None:
@@ -1109,7 +1183,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.configureAnalogModule()
         self.startAnalogModule()
         self._runSessionDataThread()
-        self._runSamplingThread()
         self._runInputEventThread()
         self._runProtocolThread()
 
@@ -1132,7 +1205,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self._experimentCompleteDialog()
 
     def _checkIfRunning(self):
-        # When this function is called for the first time upop clicking the stop button
+        # When this function is called for the first time upon clicking the stop button
         # to stop the threads, it works without errors or raising exceptions and will
         # return true for all except 'self.sessionDataThread.isRunning()' which will be
         # false. Not sure why any of the threads would still be running when they should
@@ -1345,28 +1418,15 @@ class Window(QMainWindow, Ui_MainWindow):
         self.inputEventThread.start()
         logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
 
-    def _runSamplingThread(self):
-        self.samplingThread = QThread()
-        self.samplingWorker = SamplingWorker(self.adc)
-        self.samplingWorker.moveToThread(self.samplingThread)
-        self.samplingThread.started.connect(self.samplingWorker.run)
-        self.samplingWorker.finished.connect(self.samplingThread.quit)
-        self.samplingWorker.finished.connect(self.samplingWorker.deleteLater)
-        self.samplingThread.finished.connect(self.samplingThread.deleteLater)
-        self.samplingWorker.dataReceivedSignal.connect(self.streaming.getData)
-        self.samplingWorker.dataReceivedSignal.connect(lambda x: self.sessionDataWorker.receiveAnalogData(x))
-        self.stopRunningSignal.connect(lambda: self.samplingWorker.stopRunning())
-        self.samplingThread.start()
-        logging.info("samplingThread started")
-
     def _runSessionDataThread(self):
         self.sessionDataThread = QThread()
-        self.sessionDataWorker = SessionDataWorker(self.mouseNumber, self.rigLetter)
+        self.sessionDataWorker = SessionDataWorker(self.mouseNumber, self.rigLetter, self.adc)
         self.sessionDataWorker.moveToThread(self.sessionDataThread)
         self.sessionDataThread.started.connect(self.sessionDataWorker.run)
         self.sessionDataWorker.finished.connect(self.sessionDataThread.quit)
         self.sessionDataWorker.finished.connect(self.sessionDataWorker.deleteLater)
         self.sessionDataThread.finished.connect(self.sessionDataThread.deleteLater)
+        self.sessionDataWorker.analogDataSignal.connect(self.streaming.getData)
         self.stopRunningSignal.connect(lambda: self.sessionDataWorker.stopRunning())
         self.sessionDataThread.start()
         logging.info(f"sessionDataThread running? {self.sessionDataThread.isRunning()}")
