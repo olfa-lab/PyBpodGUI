@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>739</width>
+    <height>887</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>840</y>
+     <width>161</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="addNewStateLabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>540</y>
+     <width>181</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add new state to the state machine</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>570</y>
+     <width>701</width>
+     <height>252</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="4" column="3" colspan="2">
+     <widget class="QPushButton" name="addStateChangeConditionButton">
+      <property name="text">
+       <string>Add state change condition</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLabel" name="stateChangeEventLabel">
+      <property name="text">
+       <string>State Change Event</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="6">
+     <widget class="QLabel" name="outputChannelValueLabel">
+      <property name="text">
+       <string>Output Channel Value</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="5" colspan="2">
+     <widget class="QListWidget" name="outputActionsListWidget"/>
+    </item>
+    <item row="3" column="5">
+     <widget class="QComboBox" name="outputChannelNameComboBox"/>
+    </item>
+    <item row="4" column="5" colspan="2">
+     <widget class="QPushButton" name="addOutputActionButton">
+      <property name="text">
+       <string>Add output action</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="stateNameLabel">
+      <property name="text">
+       <string>State Name</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1" alignment="Qt::AlignTop">
+     <widget class="QLineEdit" name="stateTimerLineEdit"/>
+    </item>
+    <item row="3" column="3">
+     <widget class="QComboBox" name="stateChangeEventComboBox"/>
+    </item>
+    <item row="1" column="0" alignment="Qt::AlignTop">
+     <widget class="QLineEdit" name="stateNameLineEdit"/>
+    </item>
+    <item row="0" column="5" colspan="2">
+     <widget class="QLabel" name="outputActionsLabel">
+      <property name="text">
+       <string>Output Actions</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3" colspan="2">
+     <widget class="QLabel" name="stateChangeConditionsLabel">
+      <property name="text">
+       <string>State Change Conditions</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5">
+     <widget class="QLabel" name="outputChannelNameLabel">
+      <property name="text">
+       <string>Output Channel Name</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="3" colspan="2">
+     <widget class="QListWidget" name="stateChangeConditionsListWidget"/>
+    </item>
+    <item row="5" column="3" colspan="2">
+     <widget class="QPushButton" name="clearStateChangeConditionsButton">
+      <property name="text">
+       <string>Clear all entries</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="6">
+     <widget class="QComboBox" name="outputChannelValueComboBox"/>
+    </item>
+    <item row="2" column="4">
+     <widget class="QLabel" name="stateChangeNameLabel">
+      <property name="text">
+       <string>State Change Name</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QLabel" name="stateTimerLabel">
+      <property name="text">
+       <string>State Timer (secs)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="5" colspan="2">
+     <widget class="QPushButton" name="clearOutputActionsButton">
+      <property name="text">
+       <string>Clear all entries</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="4">
+     <widget class="QComboBox" name="stateChangeNameComboBox">
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QPushButton" name="addStateButton">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>520</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add State</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="removeStateButton">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>520</y>
+     <width>81</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Remove State</string>
+   </property>
+  </widget>
+  <widget class="QGraphicsView" name="graphicsView">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>40</y>
+     <width>701</width>
+     <height>471</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="stateFlowchartLabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>State flowchart diagram</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>656</x>
+     <y>850</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

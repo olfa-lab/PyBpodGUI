@@ -24,6 +24,7 @@ from protocolWorker import ProtocolWorker
 from streamingWorker import StreamingWorker
 from resultsPlotWorker import ResultsPlotWorker
 # from calibrateWaterWorker import CalibrateWaterWorker
+from protocolEditorDialog import ProtocolEditorDialog
 
 # from matplotlib.backends.backend_qt5agg import (
 #     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
@@ -166,6 +167,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.clicked.connect(self._calibrateLeftWaterValve)
         self.calibRightWaterButton.clicked.connect(self._calibrateRightWaterValve)
         self.connectDevicesButton.clicked.connect(self._connectDevices)
+        self.actionNew.triggered.connect(self._launchProtocolEditor)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
@@ -179,6 +181,10 @@ class Window(QMainWindow, Ui_MainWindow):
     def _launchOlfaGUI(self):
         if self.olfas is not None:
             self.olfas.show()
+
+    def _launchProtocolEditor(self):
+        self.protocolEditor = ProtocolEditorDialog(parent=self)
+        self.protocolEditor.show()
 
     def configureAnalogModule(self):
         self.adc.setSamplingRate(1000)
@@ -227,7 +233,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         try:
             if self.olfaCheckBox.isChecked():
-                self.olfas = olfactometry.Olfactometers()  # Import to only create object once up here.
+                self.olfas = olfactometry.Olfactometers(parent=self)  # Import to only create object once up here.
         except IOError:
             QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
             return
