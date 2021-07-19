@@ -67,6 +67,8 @@ Things to do:
 
     * __X__ implement progress bar dialog window for calibrating water
 
+    * __X__ fix h5 file naming so that datetime format is YYYY-MM-DD_HHMMSS
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -93,7 +95,7 @@ Things to do:
 
     * _____ configure tab order for the LineEdit fields
 
-    * _____ create a metadata for the .h5 file  
+    * _____ create a metadata for the .h5 file
       
 
 Questions to research:
@@ -188,10 +190,8 @@ class SessionDataWorker(QObject):
         super(SessionDataWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.adc = analogInModule
-        dateTimeObj = datetime.now()
-        dateObj = dateTimeObj.date()
-        timeObj = dateTimeObj.time()
-        fileName = f"results/Mouse_{mouseNum}_Rig_{rigLetter}_{dateObj}_{timeObj.hour}{timeObj.minute}{timeObj.second}.h5"
+        dateTimeString = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        fileName = f"results/Mouse_{mouseNum}_Rig_{rigLetter}_{dateTimeString}.h5"
         if not os.path.isdir('results'):
             os.mkdir('results')
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
