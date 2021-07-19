@@ -9,8 +9,8 @@ import logging
 from datetime import datetime
 
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMainWindow, QMessageBox)
-from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
+    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog)
+from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt
 
 from main_window_ui import Ui_MainWindow
 from pybpodapi.protocol import Bpod, StateMachine
@@ -59,6 +59,14 @@ Things to do:
 
     * __X__ synchronize analog data with state machine timing.
 
+    * __X__ disable buttons that should not be clicked during certain operations
+
+    * __X__ make a separate button to connect to devices first, before starting the experiment.
+
+    * __X__ implement calibrate water valve buttons
+
+    * __X__ implement progress bar dialog window for calibrating water
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -73,28 +81,20 @@ Things to do:
 
     * _____ implement ability to configure analog module
 
-    * _____ implement serial port selection for devices
-
-    * _____ implement calibrate water valve buttons
+    * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
     * _____ implement validators for the line edits to restrict input values
 
     * _____ implement progress bar for state machine during trial run
 
-    * _____ implement progress bar dialog window for calibrating water
-
-    * _____ disable buttons that should not be clicked during certain operations
-
     * _____ use pyqtgraph instead of matplotlib for the streaming plot to check if faster sampling/plotting is possible
 
     * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
 
-    * _____ make a separate button to connect to devices first, before starting the experiment.
-
     * _____ configure tab order for the LineEdit fields
 
-    * _____ create a metadata for the .h5 file
-    
+    * _____ create a metadata for the .h5 file  
+      
 
 Questions to research:
 
@@ -1090,6 +1090,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resultsPlot = ResultsPlotWorker()
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
 
+        self.startButton.setEnabled(False)  # do not enable start button until user connects buttons.
+        self.finalValveButton.setEnabled(False)
+        self.leftWaterValveButton.setEnabled(False)
+        self.rightWaterValveButton.setEnabled(False)
+        self.calibLeftWaterButton.setEnabled(False)
+        self.calibRightWaterButton.setEnabled(False)
+
     def _connectSignalsSlots(self):
         self.olfaButton.clicked.connect(self._launchOlfaGUI)
         self.startButton.clicked.connect(self._runTask)
@@ -1099,6 +1106,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveButton.clicked.connect(self._toggleRightWaterValve)
         self.calibLeftWaterButton.clicked.connect(self._calibrateLeftWaterValve)
         self.calibRightWaterButton.clicked.connect(self._calibrateRightWaterValve)
+        self.connectDevicesButton.clicked.connect(self._connectDevices)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
@@ -1150,6 +1158,36 @@ class Window(QMainWindow, Ui_MainWindow):
     #     logging.info('got analog data. here is what is got:')
     #     logging.info(adcSignal)
     #     self.sessionDataWorker.receiveAnalogData(adcSignal)
+    def _connectDevices(self):
+        try:
+            if self.analogInputModuleCheckBox.isChecked():
+                self.adc = BpodAnalogIn(serial_port=self.adcSerialPort)
+        except BpodErrorException:
+            QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct!")
+            return
+
+        try:
+            if self.olfaCheckBox.isChecked():
+                self.olfas = olfactometry.Olfactometers()  # Import to only create object once up here.
+        except IOError:
+            QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
+            return
+
+        try:
+            self.myBpod = Bpod(serial_port=self.bpodSerialPort)
+        except IOError:
+            QMessageBox.warning(self, "Warning", "Cannot connect to bpod! Check that serial port is correct!")
+            return
+        
+        self.startButton.setEnabled(True)  # This means successful connection attempt for enabled devices.
+        self.connectDevicesButton.setEnabled(False)  # Disable to prevent clicking again.
+        self.connectDevicesButton.setText("Connected")
+
+        self.finalValveButton.setEnabled(True)
+        self.leftWaterValveButton.setEnabled(True)
+        self.rightWaterValveButton.setEnabled(True)
+        self.calibLeftWaterButton.setEnabled(True)
+        self.calibRightWaterButton.setEnabled(True)
 
     def _runTask(self):
         if self.mouseNumber is None:
@@ -1162,24 +1200,6 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", "Please enter number of trials for this experiment!")
             return
 
-        try:
-            self.adc = BpodAnalogIn(serial_port=self.adcSerialPort)
-        except BpodErrorException:
-            QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct!")
-            return
-
-        try:
-            self.olfas = olfactometry.Olfactometers()  # Import to only create object once up here.
-        except IOError:
-            QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
-            return
-
-        try:
-            self.myBpod = Bpod(serial_port=self.bpodSerialPort)
-        except IOError:
-            QMessageBox.warning(self, "Warning", "Cannot connect to bpod! Check that serial port is correct!")
-            return
-
         self.configureAnalogModule()
         self.startAnalogModule()
         self._runSessionDataThread()
@@ -1190,6 +1210,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.streaming.resumeAnimation()
 
         self.startButton.setEnabled(False)
+        self.calibLeftWaterButton.setEnabled(False)
+        self.calibRightWaterButton.setEnabled(False)
         self.stopButton.setEnabled(True)
 
     def _endTask(self):
@@ -1287,14 +1309,35 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _calibrateLeftWaterValve(self):
         if self.myBpod is not None:
+            self.leftWaterValveButton.setEnabled(False)
+            self.rightWaterValveButton.setEnabled(False)
+            self.calibLeftWaterButton.setEnabled(False)
+            self.calibRightWaterButton.setEnabled(False)
+            self.startButton.setEnabled(False)
+
             self.timerCounter = 0
             self.isOpen = False
             self.timer = QTimer(self)
             self.timer.timeout.connect(self._calibrateLeftWaterValveToggler)
+
+            self.progress = QProgressDialog("Calibrating left water valve...", "Cancel", 0, 100, self)
+            self.progress.setWindowModality(Qt.WindowModal)
+
             self.timer.start(self.leftWaterValveDuration)
 
     def _calibrateLeftWaterValveToggler(self):
-        if (self.timerCounter < 100):
+        if self.progress.wasCanceled():  # first check if user cancelled.
+            self._closeValve(self.leftWaterValve)
+            self.timer.stop()
+
+            self.leftWaterValveButton.setEnabled(True)
+            self.rightWaterValveButton.setEnabled(True)
+            self.calibLeftWaterButton.setEnabled(True)
+            self.calibRightWaterButton.setEnabled(True)
+            self.startButton.setEnabled(True)
+
+        elif (self.timerCounter < 100):
+            self.progress.setValue(self.timerCounter)  # update the progress bar.
             if self.isOpen:
                 self._closeValve(self.leftWaterValve)
                 self.isOpen = False
@@ -1303,11 +1346,66 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.isOpen = True
                 self.timerCounter += 1  # increment inside if-else statement so that the valve opens 100 times.
         else:
+            self.progress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
             self._closeValve(self.leftWaterValve)
             self.timer.stop()
 
+            self.leftWaterValveButton.setEnabled(True)
+            self.rightWaterValveButton.setEnabled(True)
+            self.calibLeftWaterButton.setEnabled(True)
+            self.calibRightWaterButton.setEnabled(True)
+            self.startButton.setEnabled(True)
+
     def _calibrateRightWaterValve(self):
-        self._runCalibrateWaterThread(self.rightWaterValve, self.rightWaterValveDuration)
+        # self._runCalibrateWaterThread(self.rightWaterValve, self.rightWaterValveDuration)
+
+        if self.myBpod is not None:
+            self.leftWaterValveButton.setEnabled(False)
+            self.rightWaterValveButton.setEnabled(False)
+            self.calibLeftWaterButton.setEnabled(False)
+            self.calibRightWaterButton.setEnabled(False)
+            self.startButton.setEnabled(False)
+
+            self.timerCounter = 0
+            self.isOpen = False
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self._calibrateRightWaterValveToggler)
+
+            self.progress = QProgressDialog("Calibrating right water valve...", "Cancel", 0, 100, self)
+            self.progress.setWindowModality(Qt.WindowModal)
+
+            self.timer.start(self.rightWaterValveDuration)
+
+    def _calibrateRightWaterValveToggler(self):
+        if self.progress.wasCanceled():  # first check if user cancelled.
+            self._closeValve(self.rightWaterValve)
+            self.timer.stop()
+
+            self.leftWaterValveButton.setEnabled(True)
+            self.rightWaterValveButton.setEnabled(True)
+            self.calibLeftWaterButton.setEnabled(True)
+            self.calibRightWaterButton.setEnabled(True)
+            self.startButton.setEnabled(True)
+
+        elif (self.timerCounter < 100):
+            self.progress.setValue(self.timerCounter)  # update the progress bar.
+            if self.isOpen:
+                self._closeValve(self.rightWaterValve)
+                self.isOpen = False
+            else:
+                self._openValve(self.rightWaterValve)
+                self.isOpen = True
+                self.timerCounter += 1  # increment inside if-else statement so that the valve opens 100 times.
+        else:
+            self.progress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
+            self._closeValve(self.rightWaterValve)
+            self.timer.stop()
+
+            self.leftWaterValveButton.setEnabled(True)
+            self.rightWaterValveButton.setEnabled(True)
+            self.calibLeftWaterButton.setEnabled(True)
+            self.calibRightWaterButton.setEnabled(True)
+            self.startButton.setEnabled(True)
 
     def _recordMouseNumber(self):
         self.mouseNumber = self.mouseNumberLineEdit.text()
@@ -1455,18 +1553,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolThread.start()
         logging.info("protocolThread started")
 
-    def _runCalibrateWaterThread(self, valveNum, duration):
-        self.calibrateWaterThread = QThread()
-        self.calibrateWaterWorker = CalibrateWaterWorker(valveNum=valveNum, duration=duration)
-        self.calibrateWaterWorker.moveToThread(self.calibrateWaterThread)
-        self.calibrateWaterThread.started.connect(self.calibrateWaterWorker.run)
-        self.calibrateWaterWorker.finished.connect(self.calibrateWaterThread.quit)
-        self.calibrateWaterWorker.finished.connect(self.calibrateWaterWorker.deleteLater)
-        self.calibrateWaterThread.finished.connect(self.calibrateWaterThread.deleteLater)
-        self.calibrateWaterWorker.openValveSignal.connect(lambda: self._openValve(valveNum))
-        self.calibrateWaterWorker.closeValveSignal.connect(lambda: self._closeValve(valveNum))
-        self.calibrateWaterThread.start()
-        logging.info("calibrateWaterThread start")
+    # def _runCalibrateWaterThread(self, valveNum, duration):
+    #     self.calibrateWaterThread = QThread()
+    #     self.calibrateWaterWorker = CalibrateWaterWorker(valveNum=valveNum, duration=duration)
+    #     self.calibrateWaterWorker.moveToThread(self.calibrateWaterThread)
+    #     self.calibrateWaterThread.started.connect(self.calibrateWaterWorker.run)
+    #     self.calibrateWaterWorker.finished.connect(self.calibrateWaterThread.quit)
+    #     self.calibrateWaterWorker.finished.connect(self.calibrateWaterWorker.deleteLater)
+    #     self.calibrateWaterThread.finished.connect(self.calibrateWaterThread.deleteLater)
+    #     self.calibrateWaterWorker.openValveSignal.connect(lambda: self._openValve(valveNum))
+    #     self.calibrateWaterWorker.closeValveSignal.connect(lambda: self._closeValve(valveNum))
+    #     self.calibrateWaterThread.start()
+    #     logging.info("calibrateWaterThread start")
 
 
 if __name__ == "__main__":

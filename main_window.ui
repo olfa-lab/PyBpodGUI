@@ -299,6 +299,16 @@
       <item row="0" column="1">
        <widget class="QLineEdit" name="olfaPortLineEdit"/>
       </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="olfaCheckBox">
+        <property name="text">
+         <string>Enable</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </widget>
@@ -542,6 +552,13 @@
      </property>
      <layout class="QVBoxLayout" name="sessionButtonsVLayout">
       <item>
+       <widget class="QPushButton" name="connectDevicesButton">
+        <property name="text">
+         <string>Connect Devices</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="startButton">
         <property name="text">
          <string>Start</string>
@@ -571,13 +588,6 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="saveAsButton">
-        <property name="text">
-         <string>Save As</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
     <widget class="QWidget" name="verticalLayoutWidget_5">
@@ -590,19 +600,6 @@
       </rect>
      </property>
      <layout class="QVBoxLayout" name="resultsPlotVLayout"/>
-    </widget>
-    <widget class="QProgressBar" name="progressBar">
-     <property name="geometry">
-      <rect>
-       <x>430</x>
-       <y>190</y>
-       <width>181</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="value">
-      <number>24</number>
-     </property>
     </widget>
    </widget>
    <widget class="QGroupBox" name="analogInputModuleGroupBox">
@@ -636,6 +633,16 @@
       </item>
       <item row="0" column="1">
        <widget class="QLineEdit" name="analogInputModulePortLineEdit"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="analogInputModuleCheckBox">
+        <property name="text">
+         <string>Enable</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -674,7 +681,7 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="action_New"/>
+    <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionExit"/>
@@ -682,7 +689,7 @@
    </widget>
    <addaction name="menuFile"/>
   </widget>
-  <action name="action_New">
+  <action name="actionNew">
    <property name="text">
     <string>&amp;New</string>
    </property>
@@ -703,6 +710,43 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>bpodPortLineEdit</tabstop>
+  <tabstop>finalValveButton</tabstop>
+  <tabstop>leftWaterValveButton</tabstop>
+  <tabstop>rightWaterValveButton</tabstop>
+  <tabstop>leftWaterValveDurationLineEdit</tabstop>
+  <tabstop>rightWaterValveDurationLineEdit</tabstop>
+  <tabstop>calibLeftWaterButton</tabstop>
+  <tabstop>calibRightWaterButton</tabstop>
+  <tabstop>olfaPortLineEdit</tabstop>
+  <tabstop>olfaCheckBox</tabstop>
+  <tabstop>olfaButton</tabstop>
+  <tabstop>olfaConfigButton</tabstop>
+  <tabstop>analogInputModulePortLineEdit</tabstop>
+  <tabstop>analogInputModuleCheckBox</tabstop>
+  <tabstop>configAnalogInputModuleButton</tabstop>
+  <tabstop>mouseNumberLineEdit</tabstop>
+  <tabstop>rigLetterLineEdit</tabstop>
+  <tabstop>nTrialsLineEdit</tabstop>
+  <tabstop>experimentNameLineEdit</tabstop>
+  <tabstop>connectDevicesButton</tabstop>
+  <tabstop>startButton</tabstop>
+  <tabstop>stopButton</tabstop>
+  <tabstop>pauseButton</tabstop>
+  <tabstop>trialLineEdit</tabstop>
+  <tabstop>correctResponseLineEdit</tabstop>
+  <tabstop>itiLineEdit</tabstop>
+  <tabstop>currentStateLineEdit</tabstop>
+  <tabstop>odorNameLineEdit</tabstop>
+  <tabstop>odorConcentrationLineEdit</tabstop>
+  <tabstop>currentFlowLineEdit</tabstop>
+  <tabstop>responseResultLineEdit</tabstop>
+  <tabstop>totalRewardsLineEdit</tabstop>
+  <tabstop>totalWrongLicksLineEdit</tabstop>
+  <tabstop>totalNoResponsesLineEdit</tabstop>
+  <tabstop>totalPercentCorrectLineEdit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
  <slots>
