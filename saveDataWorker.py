@@ -76,8 +76,8 @@ class FinalData(tables.IsDescription):
 
 
 class VoltageData(tables.IsDescription):
-    # stateNum = tables.UInt8Col(pos=0)
-    stateNum = tables.StringCol(1, pos=0)
+    stateNum = tables.UInt8Col(pos=0)
+    # stateNum = tables.StringCol(1, pos=0)
     # computerTime = tables.Float32Col(pos=1)
     # computerPeriod = tables.Float32Col(pos=2)
     bpodTime = tables.Float32Col(pos=1)
@@ -282,7 +282,7 @@ class SaveDataWorker(QObject):
                 voltages = [0] * len(samples)
 
                 if (prefix == 35):  # 35 is the decimal value for the ascii char '#'
-                    self.stateNum = chr(syncByte)  # update the state number with the syncByte's ascii character.
+                    self.stateNum = syncByte  # update the state number with the syncByte as a uint8.
 
                 # convert decimal bit value to voltage.
                 for i in range(len(samples)):

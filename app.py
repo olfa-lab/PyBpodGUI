@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog)
+    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog)
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt
 
 from main_window_ui import Ui_MainWindow
@@ -77,6 +77,10 @@ Things to do:
 
     * __X__ fix h5 file naming so that datetime format is YYYY-MM-DD_HHMMSS
 
+    * __X__ configure tab order for the LineEdit fields
+
+    * __X__ implement ability to configure protocol
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -86,8 +90,6 @@ Things to do:
     * _____ implement ability to configure flow rates
 
     * _____ implement ability to configure odors and/or olfa json file
-
-    * _____ implement ability to configure protocol
 
     * _____ implement ability to configure analog module
 
@@ -100,8 +102,6 @@ Things to do:
     * _____ use pyqtgraph instead of matplotlib for the streaming plot to check if faster sampling/plotting is possible
 
     * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
-
-    * _____ configure tab order for the LineEdit fields
 
     * _____ create a metadata for the .h5 file
       
@@ -149,6 +149,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveDurationLineEdit.setText(str(self.rightWaterValveDuration))
         self.resultsPlot = ResultsPlotWorker()
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
+        self.protocolFileName = ''
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects buttons.
         self.finalValveButton.setEnabled(False)
@@ -168,6 +169,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibRightWaterButton.clicked.connect(self._calibrateRightWaterValve)
         self.connectDevicesButton.clicked.connect(self._connectDevices)
         self.actionNew.triggered.connect(self._launchProtocolEditor)
+        self.actionOpen.triggered.connect(self.openFileNameDialog)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
@@ -183,8 +185,21 @@ class Window(QMainWindow, Ui_MainWindow):
             self.olfas.show()
 
     def _launchProtocolEditor(self):
-        self.protocolEditor = ProtocolEditorDialog(parent=self)
-        self.protocolEditor.show()
+        if self.myBpod is not None:
+            sma = StateMachine(self.myBpod)
+            events = sma.hardware.channels.event_names
+            outputs = sma.hardware.channels.output_channel_names
+            self.protocolEditor = ProtocolEditorDialog(events, outputs)
+            self.protocolEditor.show()
+
+    def openFileNameDialog(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","JSON Files (*.json)", options=options)
+        if fileName:
+            self.protocolFileName = fileName
+            self.experimentNameLineEdit.setText(fileName)
+            logging.info(f"The file {fileName} has been loaded.")
 
     def configureAnalogModule(self):
         self.adc.setSamplingRate(1000)
@@ -263,6 +278,9 @@ class Window(QMainWindow, Ui_MainWindow):
             return
         elif self.numTrials is None:
             QMessageBox.warning(self, "Warning", "Please enter number of trials for this experiment!")
+            return
+        elif self.protocolFileName is '':
+            QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
 
         self.configureAnalogModule()
@@ -596,7 +614,7 @@ class Window(QMainWindow, Ui_MainWindow):
   
     def _runProtocolThread(self):
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.olfas, self.numTrials)
+        self.protocolWorker = ProtocolWorker(self.myBpod, self.olfas, self.protocolFileName, self.numTrials)
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)

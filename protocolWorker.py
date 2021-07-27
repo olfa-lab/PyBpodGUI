@@ -1,4 +1,5 @@
 import logging
+import json
 import numpy as np
 import time
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
@@ -22,11 +23,13 @@ class ProtocolWorker(QObject):
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, olfaObject, numTrials=1):
+    def __init__(self, bpodObject, olfaObject, protocolFileName, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
+        self.analogIn = bpodObject.find_module_by_name('AnalogIn1')  # Check if analog input module is connected. This is of type <class 'pybpodapi.bpod_modules.bpod_module.BpodModule'>, not BpodAnalogIn class.
         self.olfas = olfaObject
+        self.protocolFileName = protocolFileName
         self.correctResponse = None
         self.currentOdorName = None
         self.currentOdorConc = None
@@ -39,10 +42,12 @@ class ProtocolWorker(QObject):
         self.noResponseCutOff = 10
         self.currentITI = None
         self.nTrials = numTrials
+        self.leftPort = 1
+        self.rightPort = 3
         self.leftWaterDuration = 0.1  # seconds
         self.rightWaterDuration = 0.1  # seconds
         self.keepRunning = True
-        self.currentState = ''
+        self.currentStateName = ''
         self.currentResponseResult = ''
         self.previousResponseResult = ''
         self.vials = ["pinene0", "pinene1", "pinene2", "pinene3"]
@@ -58,6 +63,7 @@ class ProtocolWorker(QObject):
                 'NoResponse': 0,
                 'Total': 0
             }
+
     # @pyqtSlot()  # Even with this decorator, I still need to use lambda when connecting a signal to this function.
     def setLeftWaterDuration(self, duration):
         self.leftWaterDuration = duration / 1000  # Convert to seconds.
@@ -86,7 +92,7 @@ class ProtocolWorker(QObject):
         return {}
 
     def getEndOfTrialInfoDict(self):
-        if self.currentState == 'exit':
+        if self.currentStateName == 'exit':
             dict1 = self.getCurrentTrialInfoDict()
             dict2 = self.myBpod.session.current_trial.export()
             dict3 = {**dict1, **dict2}  # Merge both dictionaries
@@ -111,33 +117,17 @@ class ProtocolWorker(QObject):
         return totals
 
     def my_softcode_handler(self, softcode):
-        '''
-        mybpod.session.current_trial will contain timestamps of the states,
-        but only upon completion of the trial. So this work around gives
-        me the current state while the trial is running.
-        '''
+        # I will reserve softcode 1 to be an automatic output from every state so that the my_softcode_handler function gets called at every
+        # state to update the GUI info and emit the necessary signals. If user selects a different softcode other than 1, the instructions
+        # below will still be executed. However, I'm still not sure how to implement a way to allow a user to configure softcode actions.
         if softcode == 1:
-            self.currentState = 'WaitForOdor'
-            self.trialStartSignal.emit(self.correctResponse)
-            self.newStateSignal.emit(self.currentState)
-            self.currentResponseResult = '--'  # reset until bpod gets response result.
-            self.responseResultSignal.emit(self.currentResponseResult)
-            currentTrialInfo = self.getCurrentTrialInfoDict()
-            self.newTrialInfoSignal.emit(currentTrialInfo)
-            logging.info(f'starting trial {self.currentTrialNum}')
+            pass
 
-        elif softcode == 2:
-            self.currentState = 'WaitForSniff'
-            self.newStateSignal.emit(self.currentState)
-            # self.startSDCardLoggingSignal.emit()
-
-        elif softcode == 3:
-            self.currentState = 'WaitForResponse'
-            self.newStateSignal.emit(self.currentState)
-
-        elif softcode == 4:
-            self.currentState = 'Reward'
-            self.newStateSignal.emit(self.currentState)
+        # Update trial info for GUI
+        self.currentStateName = self.sma.state_names[self.sma.current_state]
+        self.newStateSignal.emit(self.currentStateName)
+        
+        if self.currentStateName == 'Correct':
             self.currentResponseResult = 'Correct'
             self.responseResultSignal.emit(self.currentResponseResult)
 
@@ -149,12 +139,8 @@ class ProtocolWorker(QObject):
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             self.totalRewards += 1
-            sessionTotals = self.getTotalsDict()
-            self.totalsDictSignal.emit(sessionTotals)
 
-        elif softcode == 5:
-            self.currentState = 'Punish'
-            self.newStateSignal.emit(self.currentState)
+        elif self.currentStateName == 'Wrong':
             self.currentResponseResult = 'Wrong'
             self.responseResultSignal.emit(self.currentResponseResult)
 
@@ -167,14 +153,9 @@ class ProtocolWorker(QObject):
                 self.flowResultsCounterDict[str(self.currentFlow)]['left'] += 1  # increment the opposite direction because the response was wrong.
             self.flowResultsCounterDict[str(self.currentFlow)]['Wrong'] += 1
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
-            self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             self.totalPunishes += 1
-            sessionTotals = self.getTotalsDict()
-            self.totalsDictSignal.emit(sessionTotals)
 
-        elif softcode == 6:
-            self.currentState = 'NoLick'
-            self.newStateSignal.emit(self.currentState)
+        elif self.currentStateName == 'NoResponse':
             self.currentResponseResult = 'No Response'
             self.responseResultSignal.emit(self.currentResponseResult)
 
@@ -186,14 +167,16 @@ class ProtocolWorker(QObject):
 
             self.flowResultsCounterDict[str(self.currentFlow)]['NoResponse'] += 1
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
-            self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             self.totalNoResponses += 1
-            sessionTotals = self.getTotalsDict()
-            self.totalsDictSignal.emit(sessionTotals)
+        
+        elif self.currentStateName == 'NoSniff':
+            self.currentResponseResult = 'No Sniff'
+            self.responseResultSignal.emit(self.currentResponseResult)
 
-        elif softcode == 7:
-            self.currentState = 'ITIdelay'
-            self.newStateSignal.emit(self.currentState)
+        sessionTotals = self.getTotalsDict()
+        self.totalsDictSignal.emit(sessionTotals)
+        self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
+
 
     def stimulusRandomizer(self):
         flow_threshold = np.sqrt(self.flows[0] * self.flows[-1])
@@ -234,104 +217,107 @@ class ProtocolWorker(QObject):
             self.currentTrialNum += 1
 
             if self.correctResponse == 'left':
-                leftAction = 'Reward'
-                rightAction = 'Punish'
+                leftAction = 'Correct'
+                rightAction = 'Wrong'
                 rewardValve = 1  # Left reward valve connected to bpod behavior port 1.
                 rewardDuration = self.leftWaterDuration
             elif self.correctResponse == 'right':
-                leftAction = 'Punish'
-                rightAction = 'Reward'
+                leftAction = 'Wrong'
+                rightAction = 'Correct'
                 rewardValve = 3  # Right reward valve connected to bpod behavior port 3.
                 rewardDuration = self.rightWaterDuration
 
-            sma = StateMachine(self.myBpod)
+            # load protocol from json file. I do this every trial because I need to reset some values back to their original as read
+            # from the file, so instead of looping through the self.stateMachine dictionary a second time just to reset the values
+            # after parsing it and adding the state to the state machine, I'll just re-read the file and all value will go back to
+            # original. I need the values to go back to their original because the way I check for variables like "leftAction" and 
+            # "rightAction" results in them only being modified the first trial. These variables change every trial according to 
+            # self.correctResponse, so I need to update what gets added to the state machine every trial. Otherwise, the state change
+            # condition for 'Port1In' will always stay the same instead of changing depending on self.correctResponse.
+            with open(self.protocolFileName, 'r') as protocolFile:
+                self.stateMachine = json.load(protocolFile)
+            
+            self.sma = StateMachine(self.myBpod)
+            stateNum = 1
+            listOfTuples = []
 
-            sma.add_state(
-                state_name='WaitForOdor',
-                state_timer=1,
-                state_change_conditions={'Tup': 'WaitForSniff'},
-                output_actions=[
-                    ('SoftCode', 1),
-                    ('Serial1', ord('1'))  # Sync data to connect the analog signal to this state.
-                ]
-            )
-            sma.add_state(
-                state_name='WaitForSniff',
-                state_timer=0,
-                # Change state when 0x01 is received from the analog input module connected to the bpod's module port 1.
-                # This is a trigger indicating the voltage threshold was crossed on channel 1 of the analog input module,
-                # meaning a sniff was detected.
-                state_change_conditions={'AnalogIn1_1': 'WaitForResponse'},
-                output_actions=[
-                    ('SoftCode', 2),
-                    ('Serial1', ord('2'))  # Sync data to show start of sniff detection state in analog input stream.
-                ]  #(Bpod.OutputChannels.Valve, rewardValve)]  # ShapingReward
-            )
-            sma.add_state(
-                state_name='WaitForResponse',
-                state_timer=10,
-                state_change_conditions={
-                    'Port1In': leftAction,
-                    'Port3In': rightAction,
-                    'Tup': 'NoLick'
-                },
-                output_actions=[
-                    ('Valve', finalValve),
-                    ('SoftCode', 3),
-                    ('Serial1', ord('3'))  # Sync data to show start of response window in analog input stream.
-                ]                             
-            )
-            sma.add_state(
-                state_name='Reward',
-                state_timer=rewardDuration,
-                state_change_conditions={'Tup': 'ITIdelay'},
-                output_actions=[
-                    ('Valve', rewardValve),  # Reward correct choice.
-                    ('SoftCode', 4),
-                    ('Serial1', ord('4'))  # Sync data to show point of response in analog input stream.
-                ] 
-            )
-            sma.add_state(
-                state_name='Punish',  # No reward.
-                state_timer=0,
-                state_change_conditions={'Tup': 'ITIdelay'},
-                output_actions=[
-                    ('SoftCode', 5),
-                    ('Serial1', ord('5'))  # Sync data to show point of response in analog input stream.
-                ]
-            )
-            sma.add_state(
-                state_name='NoLick',
-                state_timer=0,
-                state_change_conditions={'Tup': 'ITIdelay'},
-                output_actions=[
-                    ('SoftCode', 6),
-                    ('Serial1', ord('6'))  # Sync data to show point of response in analog input stream.
-                ]
-            )
-            sma.add_state(
-                state_name='ITIdelay',
-                state_timer=self.currentITI,
-                state_change_conditions={'Tup': 'exit'},
-                output_actions=[
-                    ('SoftCode', 7),
-                    ('Serial1', ord('7'))  # Sync data to connect the analog signal to this state.
-                ]
-            )
+            for state in self.stateMachine['states']:
+                # Automatically add a softcode in every state to call my_softcode_handler function so that GUI gets updated and signals get emitted.
+                if 'SoftCode' not in state['outputActions']:
+                    state['outputActions']['SoftCode'] = 1  # SoftCode 1 is reserved for this purpose.
 
-            # Load serial messages for the sync data to the analog module.
-            self.myBpod.load_serial_message(serial_channel=1, message_ID=ord('1'), serial_message=[ord('#'), ord('1')])
-            self.myBpod.load_serial_message(serial_channel=1, message_ID=ord('2'), serial_message=[ord('#'), ord('2')])
-            self.myBpod.load_serial_message(serial_channel=1, message_ID=ord('3'), serial_message=[ord('#'), ord('3')])
-            self.myBpod.load_serial_message(serial_channel=1, message_ID=ord('4'), serial_message=[ord('#'), ord('4')])
-            self.myBpod.load_serial_message(serial_channel=1, message_ID=ord('5'), serial_message=[ord('#'), ord('5')])
-            self.myBpod.load_serial_message(serial_channel=1, message_ID=ord('6'), serial_message=[ord('#'), ord('6')])
-            self.myBpod.load_serial_message(serial_channel=1, message_ID=ord('7'), serial_message=[ord('#'), ord('7')])
+                # Replace change state names with respective variable that changes every trial based on self.correctResponse.
+                if 'Port1In' in state['stateChangeConditions']:
+                    if (state['stateChangeConditions']['Port1In'] == 'leftAction'):
+                        state['stateChangeConditions']['Port1In'] = leftAction
+                    elif (state['stateChangeConditions']['Port1In'] == 'rightAction'):
+                        state['stateChangeConditions']['Port1In'] = rightAction
 
-            self.myBpod.send_state_machine(sma)  # Send state machine description to Bpod device
-            self.myBpod.run_state_machine(sma)  # Run state machine
+                if 'Port3In' in state['stateChangeConditions']:
+                    if (state['stateChangeConditions']['Port3In'] == 'leftAction'):
+                        state['stateChangeConditions']['Port3In'] = leftAction
+                    elif (state['stateChangeConditions']['Port3In'] == 'rightAction'):
+                        state['stateChangeConditions']['Port3In'] = rightAction
 
-            self.currentState = 'exit'
+                # Replace output action values with respective variable.
+                if 'Valve' in state['outputActions']:
+                    for i in range(len(state['outputActions']['Valve'])):
+                        if (state['outputActions']['Valve'][i] == 'finalValve'):
+                            state['outputActions']['Valve'][i] = finalValve
+                        elif (state['outputActions']['Valve'][i] == 'rewardValve'):
+                            state['outputActions']['Valve'][i] = rewardValve
+
+                if (state['stateTimer'] == 'rewardDuration'):
+                    state['stateTimer'] = rewardDuration                    
+
+                if state['stateName'] == 'itiDelay':
+                    state['stateTimer'] = self.currentITI 
+
+                for channelName, channelValue in state['outputActions'].items():
+                    # Automatically add the sync byte transmission to the analog module for every state.
+                    if channelName.startswith('Serial') and (channelValue == 'SyncByte'):
+                        # reassign channelValue from 'SyncByte' to stateNum so that when appending it to the listOfTuples, the byte value
+                        # go into the tuple instead of 'SyncByte'. This way the state machine can replace the byte value with the loaded
+                        # serial message. 
+                        channelValue = stateNum
+                        # I also update the state['outputActions'] dictionary with stateNum as the value instead of 'SyncByte'
+                        # for consistency, which also causes this if statement to be enter only once at the beginning of the experiment instead
+                        # of before the start of every trial. But either way it should not make any difference...
+                        state['outputActions'][channelName] = stateNum
+                        self.myBpod.load_serial_message(
+                            serial_channel=int(channelName[-1]),
+                            message_ID=stateNum,
+                            serial_message=[ord('#'), stateNum]
+                        )
+                    # Convert output actions from dictionary to list of two-tuples.
+                    if isinstance(channelValue, list):
+                        for i in channelValue:
+                            listOfTuples.append((channelName, i))
+                    else:
+                        listOfTuples.append((channelName, channelValue))                       
+
+                logging.info(listOfTuples)
+                # Now add the updated state to the state machine.
+                self.sma.add_state(
+                    state_name=state['stateName'],
+                    state_timer=state['stateTimer'],
+                    state_change_conditions=state['stateChangeConditions'],
+                    output_actions=listOfTuples
+                )
+
+                stateNum += 1  # increment state number for record keeping.
+                listOfTuples = []  # reset to empty list.
+
+            self.trialStartSignal.emit(self.correctResponse)
+            self.currentResponseResult = '--'  # reset until bpod gets response result.
+            self.responseResultSignal.emit(self.currentResponseResult)
+            currentTrialInfo = self.getCurrentTrialInfoDict()
+            self.newTrialInfoSignal.emit(currentTrialInfo)
+
+            self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
+            self.myBpod.run_state_machine(self.sma)  # Run state machine
+
+            self.currentStateName = 'exit'
             endOfTrialDict = self.getEndOfTrialInfoDict()
             self.saveTrialDataDictSignal.emit(endOfTrialDict)
             logging.info("saveTrialDataDictSignal emitted")
@@ -362,8 +348,8 @@ class ProtocolWorker(QObject):
         
     def stopRunning(self):
         self.keepRunning = False
-        # I should probably also check for edge case when (self.currentState == '') upon init of the ProtocolWorker class.
-        if not (self.currentState == 'exit'):
+        # I should probably also check for edge case when (self.currentStateName == '') upon init of the ProtocolWorker class.
+        if not (self.currentStateName == 'exit'):
             logging.info("attempting to abort current trial")
             self.myBpod.stop_trial()
             logging.info("current trial aborted")

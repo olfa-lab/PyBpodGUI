@@ -1,0 +1,93 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForOdor",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Tup": "WaitForSniff"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForSniff",
+            "stateTimer": 10,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "WaitForResponse",
+                "Tup": "NoSniff"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 10,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "itiDelay"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "itiDelay"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "itiDelay"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoSniff",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "itiDelay"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "itiDelay",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        }
+    ]
+}

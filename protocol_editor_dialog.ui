@@ -52,67 +52,10 @@
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="4" column="3" colspan="2">
-     <widget class="QPushButton" name="addStateChangeConditionButton">
+    <item row="2" column="4">
+     <widget class="QLabel" name="stateChangeNameLabel">
       <property name="text">
-       <string>Add state change condition</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="3">
-     <widget class="QLabel" name="stateChangeEventLabel">
-      <property name="text">
-       <string>State Change Event</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="6">
-     <widget class="QLabel" name="outputChannelValueLabel">
-      <property name="text">
-       <string>Output Channel Value</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="5" colspan="2">
-     <widget class="QListWidget" name="outputActionsListWidget"/>
-    </item>
-    <item row="3" column="5">
-     <widget class="QComboBox" name="outputChannelNameComboBox"/>
-    </item>
-    <item row="4" column="5" colspan="2">
-     <widget class="QPushButton" name="addOutputActionButton">
-      <property name="text">
-       <string>Add output action</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="stateNameLabel">
-      <property name="text">
-       <string>State Name</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1" alignment="Qt::AlignTop">
-     <widget class="QLineEdit" name="stateTimerLineEdit"/>
-    </item>
-    <item row="3" column="3">
-     <widget class="QComboBox" name="stateChangeEventComboBox"/>
-    </item>
-    <item row="1" column="0" alignment="Qt::AlignTop">
-     <widget class="QLineEdit" name="stateNameLineEdit"/>
-    </item>
-    <item row="0" column="5" colspan="2">
-     <widget class="QLabel" name="outputActionsLabel">
-      <property name="text">
-       <string>Output Actions</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3" colspan="2">
-     <widget class="QLabel" name="stateChangeConditionsLabel">
-      <property name="text">
-       <string>State Change Conditions</string>
+       <string>State Change Name</string>
       </property>
      </widget>
     </item>
@@ -123,8 +66,33 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="3" colspan="2">
-     <widget class="QListWidget" name="stateChangeConditionsListWidget"/>
+    <item row="0" column="1">
+     <widget class="QLabel" name="stateTimerLabel">
+      <property name="text">
+       <string>State Timer (secs)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLabel" name="stateChangeEventLabel">
+      <property name="text">
+       <string>State Change Event</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="3" colspan="2">
+     <widget class="QPushButton" name="addStateChangeConditionButton">
+      <property name="text">
+       <string>Add state change condition</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="5" colspan="2">
+     <widget class="QPushButton" name="addOutputActionButton">
+      <property name="text">
+       <string>Add output action</string>
+      </property>
+     </widget>
     </item>
     <item row="5" column="3" colspan="2">
      <widget class="QPushButton" name="clearStateChangeConditionsButton">
@@ -133,22 +101,45 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="6">
-     <widget class="QComboBox" name="outputChannelValueComboBox"/>
+    <item row="1" column="0" alignment="Qt::AlignTop">
+     <widget class="QLineEdit" name="stateNameLineEdit"/>
     </item>
-    <item row="2" column="4">
-     <widget class="QLabel" name="stateChangeNameLabel">
+    <item row="1" column="5" colspan="2">
+     <widget class="QListWidget" name="outputActionsListWidget"/>
+    </item>
+    <item row="2" column="6">
+     <widget class="QLabel" name="outputChannelValueLabel">
       <property name="text">
-       <string>State Change Name</string>
+       <string>Output Channel Value</string>
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QLabel" name="stateTimerLabel">
+    <item row="0" column="5" colspan="2">
+     <widget class="QLabel" name="outputActionsLabel">
       <property name="text">
-       <string>State Timer (secs)</string>
+       <string>Output Actions</string>
       </property>
      </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="stateNameLabel">
+      <property name="text">
+       <string>State Name</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="4">
+     <widget class="QComboBox" name="stateChangeNameComboBox">
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="5">
+     <widget class="QComboBox" name="outputChannelNameComboBox"/>
+    </item>
+    <item row="3" column="3">
+     <widget class="QComboBox" name="stateChangeEventComboBox"/>
     </item>
     <item row="5" column="5" colspan="2">
      <widget class="QPushButton" name="clearOutputActionsButton">
@@ -157,8 +148,21 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="4">
-     <widget class="QComboBox" name="stateChangeNameComboBox">
+    <item row="0" column="3" colspan="2">
+     <widget class="QLabel" name="stateChangeConditionsLabel">
+      <property name="text">
+       <string>State Change Conditions</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="6">
+     <widget class="QComboBox" name="outputChannelValueComboBox"/>
+    </item>
+    <item row="1" column="3" colspan="2">
+     <widget class="QListWidget" name="stateChangeConditionsListWidget"/>
+    </item>
+    <item row="1" column="1" alignment="Qt::AlignTop">
+     <widget class="QComboBox" name="stateTimerComboBox">
       <property name="editable">
        <bool>true</bool>
       </property>
@@ -195,9 +199,9 @@
   <widget class="QGraphicsView" name="graphicsView">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>220</x>
      <y>40</y>
-     <width>701</width>
+     <width>501</width>
      <height>471</height>
     </rect>
    </property>
@@ -205,7 +209,7 @@
   <widget class="QLabel" name="stateFlowchartLabel">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>220</x>
      <y>20</y>
      <width>141</width>
      <height>16</height>
@@ -215,7 +219,85 @@
     <string>State flowchart diagram</string>
    </property>
   </widget>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>181</width>
+     <height>341</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="variablesLabel">
+      <property name="text">
+       <string>Variables that change every trial:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QListWidget" name="variablesListWidget"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="variableNameLabel">
+      <property name="text">
+       <string>Variable name</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="variableNameLineEdit"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="variableAffectsLabel">
+      <property name="text">
+       <string>What this variable affects:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="variableAffectsComboBox"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="addVariableButton">
+      <property name="text">
+       <string>Add Variable</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="removeVariableButton">
+      <property name="text">
+       <string>Remove Variable</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
+ <tabstops>
+  <tabstop>stateNameLineEdit</tabstop>
+  <tabstop>stateTimerComboBox</tabstop>
+  <tabstop>stateChangeEventComboBox</tabstop>
+  <tabstop>stateChangeNameComboBox</tabstop>
+  <tabstop>addStateChangeConditionButton</tabstop>
+  <tabstop>clearStateChangeConditionsButton</tabstop>
+  <tabstop>outputChannelNameComboBox</tabstop>
+  <tabstop>outputChannelValueComboBox</tabstop>
+  <tabstop>addOutputActionButton</tabstop>
+  <tabstop>clearOutputActionsButton</tabstop>
+  <tabstop>addStateButton</tabstop>
+  <tabstop>removeStateButton</tabstop>
+  <tabstop>variableNameLineEdit</tabstop>
+  <tabstop>variableAffectsComboBox</tabstop>
+  <tabstop>addVariableButton</tabstop>
+  <tabstop>removeVariableButton</tabstop>
+  <tabstop>variablesListWidget</tabstop>
+  <tabstop>graphicsView</tabstop>
+  <tabstop>stateChangeConditionsListWidget</tabstop>
+  <tabstop>outputActionsListWidget</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
