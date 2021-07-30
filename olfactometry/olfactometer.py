@@ -629,7 +629,7 @@ def main():
 
 if __name__ == "__main__":
     import sys
-    from utils import get_olfa_config
+    from .utils import get_olfa_config
     LOGGING_LEVEL = logging.DEBUG
     logger = logging.getLogger()
     handler = logging.StreamHandler()

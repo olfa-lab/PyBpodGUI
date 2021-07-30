@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .utils import get_olfa_config, OlfaException, flatten_dictionary
 from .olfactometer import TeensyOlfa, Olfactometer
-from .dilutor import DILUTORS
+from .dilutor import DILUTORS, Dilutor
 from pprint import pformat
 import logging
 import os
@@ -362,8 +362,8 @@ class Olfactometers(QtWidgets.QMainWindow):
         return
 
     def _start_calibration(self):
-        import calibration  # only import if required, because we have some other imports that will waste memory.
-        self.cal_view = calibration.CalibrationViewer()
+        from .calibration import CalibrationViewer  # only import if required, because we have some other imports that will waste memory.
+        self.cal_view = CalibrationViewer()
         self.cal_view.show()
 
     def __getitem__(self, olfa_idx):

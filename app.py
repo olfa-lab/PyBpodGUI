@@ -10,13 +10,14 @@ from datetime import datetime
 
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog)
-from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtCore import QObject, QThread, QTime, QTimer, pyqtSignal, pyqtSlot, Qt
 
 from main_window_ui import Ui_MainWindow
 from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import BpodAnalogIn
 import olfactometry
+from new_olfactometry.new_olfactometer import Cassette
 
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
@@ -112,7 +113,9 @@ Questions to research:
 
     * _____ How to block execution within a thread for a certain amount of time?
 
-    * _____ Why does infinite loop in separate cause main thread to freeze or lag?
+    * _____ Why does infinite loop in separate thread (without some sort of sleep interval) cause main thread to freeze or lag?
+
+    * _____ Why does infinite loop inside a separate thread block slots from being handled?
 '''
 
 
@@ -150,6 +153,22 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resultsPlot = ResultsPlotWorker()
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
         self.protocolFileName = ''
+        self.olfaConfigDict = {
+            "serial": {
+                "port": self.olfaSerialPort, 
+                "baudrate": 115200
+            }, 
+            "carrier": {
+                "capacity": 1000, 
+                "address": 1, 
+                "flowrate": 900
+            }, 
+            "infuser": {
+                "capacity": 100, 
+                "address": 2, 
+                "flowrate": 10
+            }
+        }
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects buttons.
         self.finalValveButton.setEnabled(False)
@@ -246,19 +265,20 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct!")
             return
 
-        try:
-            if self.olfaCheckBox.isChecked():
-                self.olfas = olfactometry.Olfactometers(parent=self)  # Import to only create object once up here.
-        except IOError:
-            QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
-            return
+        # try:
+        #     if self.olfaCheckBox.isChecked():
+        #         self.olfas = olfactometry.Olfactometers()  # I might need to create the olfactometer object inside the protocolWorker thread.
+        #         # self.olfas = Cassette(self.olfaConfigDict)
+        # except IOError:
+        #     QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
+        #     return
 
         try:
             self.myBpod = Bpod(serial_port=self.bpodSerialPort)
         except IOError:
             QMessageBox.warning(self, "Warning", "Cannot connect to bpod! Check that serial port is correct!")
             return
-        
+
         self.startButton.setEnabled(True)  # This means successful connection attempt for enabled devices.
         self.connectDevicesButton.setEnabled(False)  # Disable to prevent clicking again.
         self.connectDevicesButton.setText("Connected")
@@ -583,7 +603,11 @@ class Window(QMainWindow, Ui_MainWindow):
     def _experimentCompleteDialog(self):
         QMessageBox.information(self, "Success", "Experiment finished!")
 
+    def _cannotConnectOlfaDialog(self):
+        QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
+
     def _runInputEventThread(self):
+        logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.inputEventThread = QThread()
         logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
         self.inputEventWorker = InputEventWorker(self.myBpod)
@@ -600,6 +624,7 @@ class Window(QMainWindow, Ui_MainWindow):
         logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
 
     def _runSaveDataThread(self):
+        logging.info(f"from _runSaveDataThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.saveDataThread = QThread()
         self.saveDataWorker = SaveDataWorker(self.mouseNumber, self.rigLetter, self.adc)
         self.saveDataWorker.moveToThread(self.saveDataThread)
@@ -613,8 +638,9 @@ class Window(QMainWindow, Ui_MainWindow):
         logging.info(f"saveDataThread running? {self.saveDataThread.isRunning()}")
   
     def _runProtocolThread(self):
+        logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.olfas, self.protocolFileName, self.numTrials)
+        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaCheckBox, self.numTrials)
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)
@@ -632,9 +658,10 @@ class Window(QMainWindow, Ui_MainWindow):
         # self.protocolWorker.startSDCardLoggingSignal.connect(self._startSDCardLogging)
         # self.protocolWorker.stopSDCardLoggingSignal.connect(self._stopSDCardLogging)
         self.protocolWorker.noResponseAbortSignal.connect(self._noResponseAbortDialog)
+        self.protocolWorker.olfaNotConnectedSignal.connect(self._cannotConnectOlfaDialog)
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())
         self.protocolThread.start()
-        logging.info("protocolThread started")
+        logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")
 
     # def _runCalibrateWaterThread(self, valveNum, duration):
     #     self.calibrateWaterThread = QThread()

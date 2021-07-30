@@ -2,8 +2,10 @@ import logging
 import json
 import numpy as np
 import time
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
+
+import olfactometry
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
@@ -19,16 +21,17 @@ class ProtocolWorker(QObject):
     # saveTrialDataDictSignal = pyqtSignal(object)  # Use 'object' instead if you want to use non-strings as keys.
     saveEndOfSessionDataSignal = pyqtSignal(dict)
     noResponseAbortSignal = pyqtSignal()
+    olfaNotConnectedSignal = pyqtSignal()
     # startSDCardLoggingSignal = pyqtSignal()
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, olfaObject, protocolFileName, numTrials=1):
+    def __init__(self, bpodObject, protocolFileName, olfaChecked=True, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
-        self.analogIn = bpodObject.find_module_by_name('AnalogIn1')  # Check if analog input module is connected. This is of type <class 'pybpodapi.bpod_modules.bpod_module.BpodModule'>, not BpodAnalogIn class.
-        self.olfas = olfaObject
+        self.olfaChecked = olfaChecked
+        self.olfas = None
         self.protocolFileName = protocolFileName
         self.correctResponse = None
         self.currentOdorName = None
@@ -138,7 +141,10 @@ class ProtocolWorker(QObject):
             self.flowResultsCounterDict[str(self.currentFlow)]['Correct'] += 1
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
+            
             self.totalRewards += 1
+            sessionTotals = self.getTotalsDict()
+            self.totalsDictSignal.emit(sessionTotals)
 
         elif self.currentStateName == 'Wrong':
             self.currentResponseResult = 'Wrong'
@@ -153,7 +159,11 @@ class ProtocolWorker(QObject):
                 self.flowResultsCounterDict[str(self.currentFlow)]['left'] += 1  # increment the opposite direction because the response was wrong.
             self.flowResultsCounterDict[str(self.currentFlow)]['Wrong'] += 1
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
+            self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
+            
             self.totalPunishes += 1
+            sessionTotals = self.getTotalsDict()
+            self.totalsDictSignal.emit(sessionTotals)
 
         elif self.currentStateName == 'NoResponse':
             self.currentResponseResult = 'No Response'
@@ -167,15 +177,15 @@ class ProtocolWorker(QObject):
 
             self.flowResultsCounterDict[str(self.currentFlow)]['NoResponse'] += 1
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
+            self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
+            
             self.totalNoResponses += 1
+            sessionTotals = self.getTotalsDict()
+            self.totalsDictSignal.emit(sessionTotals)
         
         elif self.currentStateName == 'NoSniff':
             self.currentResponseResult = 'No Sniff'
             self.responseResultSignal.emit(self.currentResponseResult)
-
-        sessionTotals = self.getTotalsDict()
-        self.totalsDictSignal.emit(sessionTotals)
-        self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
 
 
     def stimulusRandomizer(self):
@@ -192,6 +202,10 @@ class ProtocolWorker(QObject):
         self.currentOdorName = self.vials[vialIndex]
         self.currentOdorConc = self.concs[vialIndex]
 
+        # self.olfas.set_carrier_flow(1000 - self.currentFlow)
+        # self.olfas.set_infuser_flow(self.currentFlow)
+        # self.olfas.set_vial(vialIndex + 5)  # Add 5 because first vial number starts at 5.
+
         ostim = {
             'olfas': {
                 'olfa_0': {
@@ -206,13 +220,62 @@ class ProtocolWorker(QObject):
         return ostim
 
     def run(self):
+        '''
+        I am no longer using a while loop inside here to perform nTrials because the while loop is supposedly blocking the protocolWorker's thread
+        from handling signals, namely QTimer's timeout signals that are emitted from the olfactometer code. Those singleShot timers are need to ensure
+        at least one second elapsed in between opening vials to prevent cross contamination. Otherwise, there is a _valve_time_lockout flag that never
+        gets cleared and so the olfactometer will not open any vial and give an error.The timeout signals never connected to their slot function
+        because of the while loop. I could not find any evidence in Qt documentation to prove this, but I suppose that is the reason. Emitting signals
+        works just fine, but slot functions do not work when the thread is stuck inside a while loop.
+        
+        Instead what I am doing now is first checking if the olfaCheckBox is checked in the main GUI, which I pass its bool value to the ProtocolWorker
+        during its initialization. I now create the olfa object here, inside the protocolWorker's thread, instead of in the main thread as before
+        so that the protocolWorker's thread will take ownership of the QTimers that the olfactometer code uses. Any QTimer must be started and
+        stopped by the thread that created it (according to the Qt docs). Then I attempt to connect to the olfactometer and run self.startTrial().
+
+        self.startTrial() executes one trial of the protocol and at the very end of the function, there is a QTimer.singleShot instead of a QThread.sleep.
+        The QTimer.singleShot's timeout signal connects the self.startTrial() function again to run the next trial. This will make the protocolWorker's
+        thread run nTrials without using a while loop that would block signals. However, the bpod's run_state_machine() function is a blocking function
+        that also does not allow signals to be connected to their slot functions while the state machine is running. But because the protocolWorker's
+        thread only runs one trial at a time, it can connect signals to their slots after the run_state_machine() function completes, unlike with a
+        while loop, in which the protocolWorker's thread could only connect signals to their slots after leaving the while loop. So what happens now is
+        timeout signals that get emitted while the run_state_machine() function is being executed do not get connected to their slot functions, but
+        instead, either: 
+            (1) the QTimer "realizes" that the slot function was not called so it keeps trying again by emitting the timeout signal at the
+                specified interval until the timeout signal reaches its slot function (for singleShot timers), or
+            (2) the QTimer starts its clock only after completion of the blocking function (also for singleShot timers).
+
+        The timeout signal for the olfactometer code (for the _valve_lockout_clear() method) gets emitted and its slot function gets called
+        after the run_state_machine() completes. It only happens for the set_dummy_vials() function, not for the set_stimulus() function. I
+        think the _valve_lockout_clear() function only gets called from a QTimer.singleShot when you close a vial. Thats when cross contamination
+        can occur when you do not wait at least one second before opening another vial. So the QTimer.singleShot seems to only be created when I
+        call set_dummy_vials() because that function closes any open valves before opening the dummy valve.
+
+        After testing, the olfactometer now works every trial and I never got an error that did not allow me to open a valve or to wait at least
+        one second before opening vial. 
+
+        I also removed the 'itiDelay' state from the state machine and replaced it with the QTimer.singleShot which will call self.startTrial() again
+        after the self.currentITI time has elapsed.
+        '''
+        try:
+            if self.olfaChecked:
+                self.olfas = olfactometry.Olfactometers()  # I might need to create the olfactometer object inside the protocolWorker thread.
+                # self.olfas = Cassette(self.olfaConfigDict)
+                self.startTrial()
+        except IOError:
+            self.olfaNotConnectedSignal.emit()
+            self.finished.emit()        
+        
+    def startTrial(self):
         self.myBpod.softcode_handler_function = self.my_softcode_handler
         finalValve = 2  # Final valve for the odor port on bpod's behavior port 2.
 
-        while self.keepRunning and (self.currentTrialNum < self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):   
-            # self.olfas = olfactometry.Olfactometers()
-            odorDict = self.stimulusRandomizer()
-            self.olfas.set_stimulus(odorDict)
+        if self.keepRunning and (self.currentTrialNum < self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
+            if self.olfas is not None:
+                # self.olfas = olfactometry.Olfactometers()
+                odorDict = self.stimulusRandomizer()
+                self.olfas.set_stimulus(odorDict)
+                # self.stimulusRandomizer()
             self.currentITI = np.random.randint(5, 10)  # inter trial interval in seconds.
             self.currentTrialNum += 1
 
@@ -296,7 +359,6 @@ class ProtocolWorker(QObject):
                     else:
                         listOfTuples.append((channelName, channelValue))                       
 
-                logging.info(listOfTuples)
                 # Now add the updated state to the state machine.
                 self.sma.add_state(
                     state_name=state['stateName'],
@@ -317,39 +379,36 @@ class ProtocolWorker(QObject):
             self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
             self.myBpod.run_state_machine(self.sma)  # Run state machine
 
-            self.currentStateName = 'exit'
+            self.olfas.set_dummy_vials()
+
+            # Update trial info for GUI
+            self.currentStateName = 'ITI'
+            self.newStateSignal.emit(self.currentStateName)
+
             endOfTrialDict = self.getEndOfTrialInfoDict()
             self.saveTrialDataDictSignal.emit(endOfTrialDict)
             logging.info("saveTrialDataDictSignal emitted")
 
             # self.stopSDCardLoggingSignal.emit()
             
-            self.olfas.set_dummy_vials()
+            QTimer.singleShot((self.currentITI * 1000), self.startTrial)
 
-            QThread.sleep(1)  # Need this (or similar blocking method) to give the 'saveDataThread' enough time to finish writing data to the buffer before the stopRunningSignal gets emitted.
-            
-            # The olfas object close at the end of each trial and a new object is
-            # created at the start of the next trial because there is an error 
-            # "Cannot poll MFCs" that only comes when trying to set_stimulus a second time
-            # but does not come when set_stimulus is called once for the first time.
+        else:
+            self.saveEndOfSessionDataSignal.emit(self.flowResultsCounterDict)
+            logging.info('saveEndOfSessionDataSignal emitting')
+            QThread.sleep(1)
 
-            # olfas.close_serials()
-            # olfas.close()
+            if (self.consecutiveNoResponses >= self.noResponseCutOff):
+                self.noResponseAbortSignal.emit()
 
-        self.saveEndOfSessionDataSignal.emit(self.flowResultsCounterDict)
-        logging.info('saveEndOfSessionDataSignal emitting')
-        QThread.sleep(1)
+            logging.info("ProtocolWorker finished")
+            self.finished.emit()
 
-        if (self.consecutiveNoResponses >= self.noResponseCutOff):
-            self.noResponseAbortSignal.emit()
 
-        logging.info("ProtocolWorker finished")
-        self.finished.emit()
-        
     def stopRunning(self):
         self.keepRunning = False
         # I should probably also check for edge case when (self.currentStateName == '') upon init of the ProtocolWorker class.
-        if not (self.currentStateName == 'exit'):
+        if not (self.currentStateName == 'ITI'):
             logging.info("attempting to abort current trial")
             self.myBpod.stop_trial()
             logging.info("current trial aborted")

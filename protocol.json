@@ -40,7 +40,7 @@
             "stateName": "Correct",
             "stateTimer": "rewardDuration",
             "stateChangeConditions": {
-                "Tup": "itiDelay"
+                "Tup": "exit"
             },
             "outputActions": {
                 "Valve": [
@@ -53,7 +53,7 @@
             "stateName": "Wrong",
             "stateTimer": 0,
             "stateChangeConditions": {
-                "Tup": "itiDelay"
+                "Tup": "exit"
             },
             "outputActions": {
                 "Serial1": "SyncByte"
@@ -63,7 +63,7 @@
             "stateName": "NoResponse",
             "stateTimer": 0,
             "stateChangeConditions": {
-                "Tup": "itiDelay"
+                "Tup": "exit"
             },
             "outputActions": {
                 "Serial1": "SyncByte"
@@ -72,16 +72,6 @@
         {
             "stateName": "NoSniff",
             "stateTimer": 0,
-            "stateChangeConditions": {
-                "Tup": "itiDelay"
-            },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
-        },
-        {
-            "stateName": "itiDelay",
-            "stateTimer": "itiDuration",
             "stateChangeConditions": {
                 "Tup": "exit"
             },
