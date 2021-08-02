@@ -104,6 +104,8 @@ Things to do:
     * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
 
     * _____ create a metadata for the .h5 file
+
+    * _____ change the worker threads to use timers instead of infinite while loops
       
 
 Questions to research:
@@ -153,7 +155,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
         self.protocolFileName = ''
 
-        self.startButton.setEnabled(False)  # do not enable start button until user connects buttons.
+        self.startButton.setEnabled(False)  # do not enable start button until user connects devices.
         self.finalValveButton.setEnabled(False)
         self.leftWaterValveButton.setEnabled(False)
         self.rightWaterValveButton.setEnabled(False)
