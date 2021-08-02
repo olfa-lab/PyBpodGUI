@@ -17,7 +17,6 @@ from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import BpodAnalogIn
 import olfactometry
-from new_olfactometry.new_olfactometer import Cassette
 
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
