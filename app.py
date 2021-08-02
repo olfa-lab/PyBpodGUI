@@ -153,22 +153,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resultsPlot = ResultsPlotWorker()
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
         self.protocolFileName = ''
-        self.olfaConfigDict = {
-            "serial": {
-                "port": self.olfaSerialPort, 
-                "baudrate": 115200
-            }, 
-            "carrier": {
-                "capacity": 1000, 
-                "address": 1, 
-                "flowrate": 900
-            }, 
-            "infuser": {
-                "capacity": 100, 
-                "address": 2, 
-                "flowrate": 10
-            }
-        }
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects buttons.
         self.finalValveButton.setEnabled(False)

@@ -263,7 +263,7 @@
       <item>
        <widget class="QPushButton" name="olfaButton">
         <property name="text">
-         <string>Olfactometer</string>
+         <string>Olfactometer GUI</string>
         </property>
         <property name="checkable">
          <bool>false</bool>

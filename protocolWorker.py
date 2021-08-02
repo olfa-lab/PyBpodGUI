@@ -5,8 +5,6 @@ import time
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
 
-import olfactometry
-
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
@@ -259,8 +257,9 @@ class ProtocolWorker(QObject):
         '''
         try:
             if self.olfaChecked:
-                self.olfas = olfactometry.Olfactometers()  # I might need to create the olfactometer object inside the protocolWorker thread.
-                # self.olfas = Cassette(self.olfaConfigDict)
+                import olfactometry
+                self.olfas = olfactometry.Olfactometers()
+
                 self.startTrial()
         except IOError:
             self.olfaNotConnectedSignal.emit()
@@ -379,7 +378,8 @@ class ProtocolWorker(QObject):
             self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
             self.myBpod.run_state_machine(self.sma)  # Run state machine
 
-            self.olfas.set_dummy_vials()
+            if self.olfas is not None:  # Check to make sure olfactometer is connected to avoid errors.
+                self.olfas.set_dummy_vials()
 
             # Update trial info for GUI
             self.currentStateName = 'ITI'
@@ -404,7 +404,8 @@ class ProtocolWorker(QObject):
             logging.info("ProtocolWorker finished")
             self.finished.emit()
 
-
+    # Now that i do not have a while loop that blocks the thread's signal handling, I can probably change this stopRunning() function
+    # so that i do not have to use lambda to call it from the main thread. Look into QThread::isInterruptionRequested().
     def stopRunning(self):
         self.keepRunning = False
         # I should probably also check for edge case when (self.currentStateName == '') upon init of the ProtocolWorker class.

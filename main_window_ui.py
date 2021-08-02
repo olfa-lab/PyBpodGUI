@@ -398,7 +398,7 @@ class Ui_MainWindow(object):
         self.bpodPortLabel.setText(_translate("MainWindow", "Port"))
         self.streamingGroupBox.setTitle(_translate("MainWindow", "Streaming"))
         self.olfaGroupBox.setTitle(_translate("MainWindow", "Olfactometry"))
-        self.olfaButton.setText(_translate("MainWindow", "Olfactometer"))
+        self.olfaButton.setText(_translate("MainWindow", "Olfactometer GUI"))
         self.olfaConfigButton.setText(_translate("MainWindow", "Configure Olfa"))
         self.olfaPortLabel.setText(_translate("MainWindow", "Port"))
         self.olfaCheckBox.setText(_translate("MainWindow", "Enable"))

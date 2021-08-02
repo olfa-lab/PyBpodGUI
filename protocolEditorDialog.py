@@ -105,7 +105,7 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         ]'''
         self.stateChangeEventComboBox.addItems(self.eventNames)
         self.stateChangeNameComboBox.addItems([
-            'Select...', 'WaitForResponse', 'leftAction', 'rightAction', 'Correct', 'Wrong', 'NoResponse', 'NoSniff', 'itiDelay', 'exit'
+            'Select...', 'WaitForResponse', 'leftAction', 'rightAction', 'Correct', 'Wrong', 'NoResponse', 'NoSniff', 'exit'
         ])
         self.outputChannels.remove('SoftCode')  # Remove this until I figure out how to allow user to configure softcodes.
         self.outputChannelNameComboBox.addItems(self.outputChannels)
@@ -419,11 +419,3 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
                 json.dump(self.allStatesDict, fname, indent=4)
                 
             self.accept()  # Closes the dialog window.
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    win = ProtocolEditorDialog()
-    win.show()
-    status = app.exec()
-    sys.exit(status)

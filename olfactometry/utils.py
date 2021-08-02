@@ -6,7 +6,7 @@ from serial.tools import list_ports
 import time
 
 
-CONFIG_FILENAME_DEFAULT = 'C:\\olfa_config.json'
+CONFIG_FILENAME_DEFAULT = 'olfa_config.json'
 
 
 def get_olfa_config(config_filename=''):
