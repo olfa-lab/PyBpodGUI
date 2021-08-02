@@ -62,7 +62,7 @@ class SimpleItem(QGraphicsItem):
 class ProtocolEditorDialog(QDialog, Ui_Dialog):
 
     def __init__(self, eventNamesList, outputChannelsList, parent=None):
-        super().__init__(parent)
+        super().__init__()
         self.setupUi(self)
         
         self.allStatesDict = {'states': []}

@@ -25,6 +25,7 @@ from streamingWorker import StreamingWorker
 from resultsPlotWorker import ResultsPlotWorker
 # from calibrateWaterWorker import CalibrateWaterWorker
 from protocolEditorDialog import ProtocolEditorDialog
+from olfaEditorDialog import OlfaEditorDialog
 
 # from matplotlib.backends.backend_qt5agg import (
 #     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
@@ -174,6 +175,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.connectDevicesButton.clicked.connect(self._connectDevices)
         self.actionNew.triggered.connect(self._launchProtocolEditor)
         self.actionOpen.triggered.connect(self.openFileNameDialog)
+        self.olfaConfigButton.clicked.connect(self._launchOlfaEditor)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
@@ -187,6 +189,10 @@ class Window(QMainWindow, Ui_MainWindow):
     def _launchOlfaGUI(self):
         if self.olfas is not None:
             self.olfas.show()
+
+    def _launchOlfaEditor(self):
+        self.olfaEditor = OlfaEditorDialog()
+        self.olfaEditor.show()
 
     def _launchProtocolEditor(self):
         if self.myBpod is not None:
