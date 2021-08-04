@@ -2,6 +2,7 @@ import logging
 import json
 import numpy as np
 import time
+from serial.serialutil import SerialException
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
 
@@ -24,13 +25,14 @@ class ProtocolWorker(QObject):
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, protocolFileName, olfaChecked=True, numTrials=1):
+    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, olfaChecked=True, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
         self.olfaChecked = olfaChecked
         self.olfas = None
         self.protocolFileName = protocolFileName
+        self.olfaConfigFileName = olfaConfigFileName
         self.correctResponse = None
         self.currentOdorName = None
         self.currentOdorConc = None
@@ -51,8 +53,8 @@ class ProtocolWorker(QObject):
         self.currentStateName = ''
         self.currentResponseResult = ''
         self.previousResponseResult = ''
-        self.vials = ["pinene0", "pinene1", "pinene2", "pinene3"]
-        self.concs = [0.1, 0.1, 0.1, 0.1]
+        self.odors = []
+        self.concs = []
         self.flows = [10, 25, 40, 60, 75, 100]
         self.flowResultsCounterDict = {}
         for flow in self.flows:
@@ -185,6 +187,14 @@ class ProtocolWorker(QObject):
             self.currentResponseResult = 'No Sniff'
             self.responseResultSignal.emit(self.currentResponseResult)
 
+    def getOdorsFromConfigFile(self):
+        with open(self.olfaConfigFileName, 'r') as configFile:
+            self.olfaConfigDict = json.load(configFile)
+        
+        for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
+            if not (vialInfo['odor'] == 'dummy'):
+                self.odors.append(vialInfo['odor'])
+                self.concs.append(vialInfo['conc'])
 
     def stimulusRandomizer(self):
         flow_threshold = np.sqrt(self.flows[0] * self.flows[-1])
@@ -196,8 +206,8 @@ class ProtocolWorker(QObject):
         else:
             self.correctResponse = 'right'
 
-        vialIndex = np.random.randint(4)  # random int for index of vial
-        self.currentOdorName = self.vials[vialIndex]
+        vialIndex = np.random.randint(len(self.odors))  # random int for index of vial
+        self.currentOdorName = self.odors[vialIndex]
         self.currentOdorConc = self.concs[vialIndex]
 
         # self.olfas.set_carrier_flow(1000 - self.currentFlow)
@@ -258,10 +268,15 @@ class ProtocolWorker(QObject):
         try:
             if self.olfaChecked:
                 import olfactometry
-                self.olfas = olfactometry.Olfactometers()
+                self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
+                self.getOdorsFromConfigFile()
+            self.startTrial()
 
-                self.startTrial()
-        except IOError:
+        except SerialException:
+            if self.olfas:
+                self.olfas.close_serials()  # close serial ports and let the user try again.
+                del self.olfas
+                self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
             self.olfaNotConnectedSignal.emit()
             self.finished.emit()        
         
@@ -401,6 +416,12 @@ class ProtocolWorker(QObject):
             if (self.consecutiveNoResponses >= self.noResponseCutOff):
                 self.noResponseAbortSignal.emit()
 
+            if self.olfas:
+                logging.info("closing olfactometer used by protocolWorker thread.")
+                self.olfas.close_serials()  # close serial ports and let the user try again.
+                del self.olfas
+                self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
+
             logging.info("ProtocolWorker finished")
             self.finished.emit()
 
@@ -413,3 +434,7 @@ class ProtocolWorker(QObject):
             logging.info("attempting to abort current trial")
             self.myBpod.stop_trial()
             logging.info("current trial aborted")
+
+    def launchOlfaGUI(self):
+        if self.olfas is not None:
+            self.olfas.show()
