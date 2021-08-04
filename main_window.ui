@@ -57,14 +57,14 @@
        <widget class="QLineEdit" name="nTrialsLineEdit"/>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="experimentNameLabel">
+       <widget class="QLabel" name="protocolFileLabel">
         <property name="text">
-         <string>Experiment Name</string>
+         <string>Protocol File:</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="experimentNameLineEdit"/>
+       <widget class="QLineEdit" name="protocolFileLineEdit"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="rigLetterLabel">
@@ -290,14 +290,14 @@
      </property>
      <layout class="QFormLayout" name="olfaFormLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="olfaPortLabel">
+       <widget class="QLabel" name="olfaFileLabel">
         <property name="text">
-         <string>Port</string>
+         <string>File</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="olfaPortLineEdit"/>
+       <widget class="QLineEdit" name="olfaFileLineEdit"/>
       </item>
       <item row="1" column="1">
        <widget class="QCheckBox" name="olfaCheckBox">
@@ -687,7 +687,14 @@
     <addaction name="actionExit"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuOlfactometer">
+    <property name="title">
+     <string>Olfactometer</string>
+    </property>
+    <addaction name="actionSelectConfigFile"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuOlfactometer"/>
   </widget>
   <action name="actionNew">
    <property name="text">
@@ -709,6 +716,11 @@
     <string>Exit</string>
    </property>
   </action>
+  <action name="actionSelectConfigFile">
+   <property name="text">
+    <string>Select config file</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>bpodPortLineEdit</tabstop>
@@ -719,7 +731,7 @@
   <tabstop>rightWaterValveDurationLineEdit</tabstop>
   <tabstop>calibLeftWaterButton</tabstop>
   <tabstop>calibRightWaterButton</tabstop>
-  <tabstop>olfaPortLineEdit</tabstop>
+  <tabstop>olfaFileLineEdit</tabstop>
   <tabstop>olfaCheckBox</tabstop>
   <tabstop>olfaButton</tabstop>
   <tabstop>olfaConfigButton</tabstop>
@@ -729,7 +741,7 @@
   <tabstop>mouseNumberLineEdit</tabstop>
   <tabstop>rigLetterLineEdit</tabstop>
   <tabstop>nTrialsLineEdit</tabstop>
-  <tabstop>experimentNameLineEdit</tabstop>
+  <tabstop>protocolFileLineEdit</tabstop>
   <tabstop>connectDevicesButton</tabstop>
   <tabstop>startButton</tabstop>
   <tabstop>stopButton</tabstop>

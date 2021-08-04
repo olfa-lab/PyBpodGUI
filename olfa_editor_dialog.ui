@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>702</width>
-    <height>430</height>
+    <height>679</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,10 +16,10 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>510</x>
-     <y>380</y>
-     <width>171</width>
-     <height>32</height>
+     <x>500</x>
+     <y>630</y>
+     <width>181</width>
+     <height>41</height>
     </rect>
    </property>
    <property name="orientation">
@@ -28,6 +28,9 @@
    <property name="standardButtons">
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
    </property>
+   <property name="centerButtons">
+    <bool>true</bool>
+   </property>
   </widget>
   <widget class="QGroupBox" name="vialsGroupBox">
    <property name="geometry">
@@ -35,7 +38,7 @@
      <x>20</x>
      <y>220</y>
      <width>661</width>
-     <height>151</height>
+     <height>241</height>
     </rect>
    </property>
    <property name="title">
@@ -45,23 +48,23 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>20</y>
+      <y>30</y>
       <width>641</width>
-      <height>91</height>
+      <height>165</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="vialsGridLayout">
-     <item row="0" column="0">
-      <layout class="QFormLayout" name="formLayout">
+     <item row="2" column="0">
+      <layout class="QFormLayout" name="vialFormLayout_5">
        <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel">
+        <widget class="QLabel" name="vialNumLabel_5">
          <property name="text">
           <string>Vial num</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit">
+        <widget class="QLineEdit" name="vialNumLineEdit_5">
          <property name="text">
           <string>5</string>
          </property>
@@ -71,29 +74,77 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="odorNameLabel">
+        <widget class="QLabel" name="vialOdorNameLabel_5">
          <property name="text">
           <string>Odor name</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="odorNameLineEdit"/>
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_5"/>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="concentrationLabel">
+        <widget class="QLabel" name="vialConcLabel_5">
          <property name="text">
           <string>Concentration</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="concentrationLineEdit"/>
+        <widget class="QLineEdit" name="vialConcLineEdit_5"/>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="5">
+      <widget class="Line" name="line_3">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="6">
+      <layout class="QFormLayout" name="vialFormLayout_8">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_8">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_8">
+         <property name="text">
+          <string>8</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_8">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_8"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_8">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_8"/>
        </item>
       </layout>
      </item>
      <item row="0" column="6">
-      <layout class="QFormLayout" name="formLayout_4">
+      <layout class="QFormLayout" name="vialFormLayout_4">
        <item row="0" column="0">
         <widget class="QLabel" name="vialNumLabel_4">
          <property name="text">
@@ -104,7 +155,7 @@
        <item row="0" column="1">
         <widget class="QLineEdit" name="vialNumLineEdit_4">
          <property name="text">
-          <string>8</string>
+          <string>4</string>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -112,72 +163,24 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="odorNameLabel_4">
+        <widget class="QLabel" name="vialOdorNameLabel_4">
          <property name="text">
           <string>Odor name</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="odorNameLineEdit_4"/>
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_4"/>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="concentrationLabel_4">
+        <widget class="QLabel" name="vialConcLabel_4">
          <property name="text">
           <string>Concentration</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="concentrationLineEdit_4"/>
-       </item>
-      </layout>
-     </item>
-     <item row="0" column="1">
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <layout class="QFormLayout" name="formLayout_2">
-       <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel_2">
-         <property name="text">
-          <string>Vial num</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit_2">
-         <property name="text">
-          <string>6</string>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="odorNameLabel_2">
-         <property name="text">
-          <string>Odor name</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="odorNameLineEdit_2"/>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="concentrationLabel_2">
-         <property name="text">
-          <string>Concentration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="concentrationLineEdit_2"/>
+        <widget class="QLineEdit" name="vialConcLineEdit_4"/>
        </item>
       </layout>
      </item>
@@ -188,8 +191,56 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="1">
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <layout class="QFormLayout" name="vialFormLayout_6">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_6">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_6">
+         <property name="text">
+          <string>6</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_6">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_6"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_6">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_6"/>
+       </item>
+      </layout>
+     </item>
      <item row="0" column="4">
-      <layout class="QFormLayout" name="formLayout_3">
+      <layout class="QFormLayout" name="valFormLayout_3">
        <item row="0" column="0">
         <widget class="QLabel" name="vialNumLabel_3">
          <property name="text">
@@ -200,6 +251,129 @@
        <item row="0" column="1">
         <widget class="QLineEdit" name="vialNumLineEdit_3">
          <property name="text">
+          <string>3</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_3">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_3"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_3">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_3"/>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="0">
+      <layout class="QFormLayout" name="vialFormLayout_1">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_1">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_1">
+         <property name="text">
+          <string>1</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_1">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_1"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_1">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_1"/>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="2">
+      <layout class="QFormLayout" name="vialFormLayout_2">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_2">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_2">
+         <property name="text">
+          <string>2</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_2">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_2"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_2">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_2"/>
+       </item>
+      </layout>
+     </item>
+     <item row="2" column="4">
+      <layout class="QFormLayout" name="vialFormLayout_7">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_7">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_7">
+         <property name="text">
           <string>7</string>
          </property>
          <property name="readOnly">
@@ -208,29 +382,50 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="odorNameLabel_3">
+        <widget class="QLabel" name="vialOdorNameLabel_7">
          <property name="text">
           <string>Odor name</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="odorNameLineEdit_3"/>
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_7"/>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="concentrationLabel_3">
+        <widget class="QLabel" name="vialConcLabel_7">
          <property name="text">
           <string>Concentration</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="concentrationLineEdit_3"/>
+        <widget class="QLineEdit" name="vialConcLineEdit_7"/>
        </item>
       </layout>
      </item>
-     <item row="0" column="5">
-      <widget class="Line" name="line_3">
+     <item row="1" column="0" colspan="7">
+      <widget class="Line" name="line_8">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="Line" name="line_9">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="Line" name="line_10">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="5">
+      <widget class="Line" name="line_11">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
@@ -242,7 +437,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>120</y>
+      <y>210</y>
       <width>181</width>
       <height>16</height>
      </rect>
@@ -275,54 +470,54 @@
     </property>
     <layout class="QFormLayout" name="mfcFormLayout_1">
      <item row="0" column="0">
-      <widget class="QLabel" name="mfcTypeLabel">
+      <widget class="QLabel" name="mfcTypeLabel_1">
        <property name="text">
         <string>MFC Type</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QComboBox" name="mfcTypeComboBox"/>
+      <widget class="QComboBox" name="mfcTypeComboBox_1"/>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="addressLabel">
+      <widget class="QLabel" name="mfcAddressLabel_1">
        <property name="text">
         <string>Address</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="addressComboBox"/>
+      <widget class="QComboBox" name="mfcAddressComboBox_1"/>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="arduinoPortNumberLabel">
+      <widget class="QLabel" name="mfcArduinoPortNumLabel_1">
        <property name="text">
         <string>Arduino Port Number</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QComboBox" name="arduinoPortNumberComboBox"/>
+      <widget class="QComboBox" name="mfcArduinoPortNumComboBox_1"/>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="capacityLabel">
+      <widget class="QLabel" name="mfcCapacityLabel_1">
        <property name="text">
         <string>Capacity</string>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QComboBox" name="capacityComboBox"/>
+      <widget class="QComboBox" name="mfcCapacityComboBox_1"/>
      </item>
      <item row="4" column="0">
-      <widget class="QLabel" name="gasLabel">
+      <widget class="QLabel" name="mfcGasLabel_1">
        <property name="text">
         <string>Gas</string>
        </property>
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QComboBox" name="gasComboBox"/>
+      <widget class="QComboBox" name="mfcGasComboBox_1"/>
      </item>
     </layout>
    </widget>
@@ -347,44 +542,44 @@
       <widget class="QComboBox" name="mfcTypeComboBox_2"/>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="addressLabel_2">
+      <widget class="QLabel" name="mfcAddressLabel_2">
        <property name="text">
         <string>Address</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="addressComboBox_2"/>
+      <widget class="QComboBox" name="mfcAddressComboBox_2"/>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="arduinoPortNumberLabel_2">
+      <widget class="QLabel" name="mfcArduinoPortNumLabel_2">
        <property name="text">
         <string>Arduino Port Number</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QComboBox" name="arduinoPortNumberComboBox_2"/>
+      <widget class="QComboBox" name="mfcArduinoPortNumComboBox_2"/>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="capacityLabel_2">
+      <widget class="QLabel" name="mfcCapacityLabel_2">
        <property name="text">
         <string>Capacity</string>
        </property>
       </widget>
      </item>
      <item row="4" column="0">
-      <widget class="QLabel" name="gasLabel_2">
+      <widget class="QLabel" name="mfcGasLabel_2">
        <property name="text">
         <string>Gas</string>
        </property>
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QComboBox" name="gasComboBox_2"/>
+      <widget class="QComboBox" name="mfcGasComboBox_2"/>
      </item>
      <item row="3" column="1">
-      <widget class="QComboBox" name="capacityComboBox_2"/>
+      <widget class="QComboBox" name="mfcCapacityComboBox_2"/>
      </item>
     </layout>
    </widget>
@@ -423,26 +618,26 @@
       <height>152</height>
      </rect>
     </property>
-    <layout class="QFormLayout" name="formLayout_5">
+    <layout class="QFormLayout" name="settingsFormLayout">
      <item row="2" column="0">
-      <widget class="QLabel" name="cassette1SNLabel">
+      <widget class="QLabel" name="cassetteSNLabel_1">
        <property name="text">
         <string>Cassette 1 SN</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QLineEdit" name="cassette1SNLineEdit"/>
+      <widget class="QLineEdit" name="cassetteSNLineEdit_1"/>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="cassette2SNLabel">
+      <widget class="QLabel" name="cassetteSNLabel_2">
        <property name="text">
         <string>Cassette 2 SN</string>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QLineEdit" name="cassette2SNLineEdit"/>
+      <widget class="QLineEdit" name="cassetteSNLineEdit_2"/>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="comPortLabel">
@@ -485,6 +680,194 @@
       <widget class="QLineEdit" name="slaveIndexLineEdit"/>
      </item>
     </layout>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="saveAsButton">
+   <property name="geometry">
+    <rect>
+     <x>430</x>
+     <y>640</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save As</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="dilutorsGroupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>480</y>
+     <width>661</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Dilutors</string>
+   </property>
+   <widget class="QWidget" name="formLayoutWidget_8">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>20</y>
+      <width>211</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <layout class="QFormLayout" name="dilutorFormLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="dilutorMFCTypeLabel_1">
+       <property name="text">
+        <string>MFC Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="dilutorMFCTypeComboBox_1"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="dilutorMFCAddressLabel_1">
+       <property name="text">
+        <string>Address</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="dilutorMFCAddressComboBox_1"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="dilutorMFCCapacityLabel_1">
+       <property name="text">
+        <string>Capacity</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="dilutorMFCCapacityComboBox_1"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="dilutorMFCGasLabel_1">
+       <property name="text">
+        <string>Gas</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="dilutorMFCGasComboBox_1"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="formLayoutWidget_9">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>20</y>
+      <width>211</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <layout class="QFormLayout" name="dilutorFormLayout_3">
+     <item row="0" column="0">
+      <widget class="QLabel" name="dilutorMFCTypeLabel_2">
+       <property name="text">
+        <string>MFC Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="dilutorMFCTypeComboBox_2"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="dilutorMFCAddressLabel_2">
+       <property name="text">
+        <string>Address</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="dilutorMFCAddressComboBox_2"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="dilutorMFCCapacityLabel_2">
+       <property name="text">
+        <string>Capacity</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="dilutorMFCCapacityComboBox_2"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="dilutorMFCGasLabel_2">
+       <property name="text">
+        <string>Gas</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="dilutorMFCGasComboBox_2"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="formLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>160</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <layout class="QFormLayout" name="dilutorFormLayout_1">
+     <item row="0" column="0">
+      <widget class="QLabel" name="dilutorComPortLabel">
+       <property name="text">
+        <string>COM Port</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="dilutorComPortLineEdit"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="dilutorTypeLabel">
+       <property name="text">
+        <string>Dilutor Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="dilutorTypeComboBox"/>
+     </item>
+    </layout>
+   </widget>
+   <widget class="Line" name="line_5">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>20</y>
+      <width>20</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_6">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>20</y>
+      <width>20</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
    </widget>
   </widget>
  </widget>

@@ -7,6 +7,7 @@ import tables
 import numpy as np
 import logging
 from datetime import datetime
+from serial.serialutil import SerialException
 
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog)
@@ -107,6 +108,18 @@ Things to do:
     * _____ create a metadata for the .h5 file
 
     * _____ change the worker threads to use timers instead of infinite while loops
+
+    * _____ allow user to run experiments that do not use olfactometer (currently, protocolWorker does nothing when olfaCheckBox is unchecked)
+
+    * _____ make protocolWorker read from olfa config file before starting experiment to store odors/concentrations for stimulusRandomizer
+
+    * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
+
+    * _____ modify saveDataWorker to handle when NoSniff occurs
+
+    * _____ use SerialException instead of BpodErrorException for when connecting to the analog input module
+
+    * _____ in olfaEditorDialog, make sure that both odor name and concentration were given for a vial before saving the file
       
 
 Questions to research:
@@ -123,6 +136,7 @@ Questions to research:
 
 class Window(QMainWindow, Ui_MainWindow):
     stopRunningSignal = pyqtSignal()
+    launchOlfaGUISignal = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -134,7 +148,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.olfaSerialPort = 'COM5'
         self.adcSerialPort = 'COM6'
         self.bpodSerialPort = 'COM7'
-        self.olfaPortLineEdit.setText(self.olfaSerialPort)
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
         self.streaming = StreamingWorker(plotLength=1000)
@@ -155,6 +168,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resultsPlot = ResultsPlotWorker()
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
         self.protocolFileName = ''
+        self.olfaConfigFileName = ''
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects devices.
         self.finalValveButton.setEnabled(False)
@@ -174,7 +188,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibRightWaterButton.clicked.connect(self._calibrateRightWaterValve)
         self.connectDevicesButton.clicked.connect(self._connectDevices)
         self.actionNew.triggered.connect(self._launchProtocolEditor)
-        self.actionOpen.triggered.connect(self.openFileNameDialog)
+        self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
+        self.actionSelectConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
         self.olfaConfigButton.clicked.connect(self._launchOlfaEditor)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
@@ -184,15 +199,27 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveDurationLineEdit.editingFinished.connect(self._recordRightWaterValveDuration)
         self.bpodPortLineEdit.editingFinished.connect(self._recordBpodSerialPort)
         self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
-        self.olfaPortLineEdit.editingFinished.connect(self._recordOlfaSerialPort)
 
     def _launchOlfaGUI(self):
-        if self.olfas is not None:
-            self.olfas.show()
+        if self.olfaConfigFileName:
+            try:
+                self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
+                self.olfas.show()
+            except SerialException:
+                if self.olfas:
+                    self.olfas.close_serials()  # close serial ports and let the user try again.
+                    del self.olfas
+                    self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
+                    QMessageBox.warning(self, "Error", "Please try again.")
+        else:
+            QMessageBox.warning(self, "Warning", "Please select an olfa config file first! Go to 'Olfactometer' menu > 'Select config file'")
 
     def _launchOlfaEditor(self):
-        self.olfaEditor = OlfaEditorDialog()
-        self.olfaEditor.show()
+        if self.olfaConfigFileName:
+            self.olfaEditor = OlfaEditorDialog(self.olfaConfigFileName)
+            self.olfaEditor.show()
+        else:
+            QMessageBox.warning(self, "Warning", "Please select an olfa config file first! Go to 'Olfactometer' menu > 'Select config file'")
 
     def _launchProtocolEditor(self):
         if self.myBpod is not None:
@@ -201,14 +228,25 @@ class Window(QMainWindow, Ui_MainWindow):
             outputs = sma.hardware.channels.output_channel_names
             self.protocolEditor = ProtocolEditorDialog(events, outputs)
             self.protocolEditor.show()
+        else:
+            QMessageBox.warning(self, "Warning", "Please connect to Bpod first. Click the 'Connect Devices' button.")
 
-    def openFileNameDialog(self):
+    def openProtocolFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","JSON Files (*.json)", options=options)
         if fileName:
             self.protocolFileName = fileName
-            self.experimentNameLineEdit.setText(fileName)
+            self.protocolFileLineEdit.setText(fileName)
+            logging.info(f"The file {fileName} has been loaded.")
+
+    def openOlfaConfigFileNameDialog(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","JSON Files (*.json)", options=options)
+        if fileName:
+            self.olfaConfigFileName = fileName
+            self.olfaFileLineEdit.setText(fileName)
             logging.info(f"The file {fileName} has been loaded.")
 
     def configureAnalogModule(self):
@@ -266,7 +304,11 @@ class Window(QMainWindow, Ui_MainWindow):
 
         try:
             self.myBpod = Bpod(serial_port=self.bpodSerialPort)
-        except IOError:
+        except (SerialException, UnicodeDecodeError):
+            if self.myBpod:
+                self.myBpod.close()
+                del self.myBpod
+                self.myBpod = None
             QMessageBox.warning(self, "Warning", "Cannot connect to bpod! Check that serial port is correct!")
             return
 
@@ -294,6 +336,13 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
 
+        # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
+        # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
+        if self.olfas:
+            self.olfas.close_serials()
+            del self.olfas
+            self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
+
         self.configureAnalogModule()
         self.startAnalogModule()
         self._runSaveDataThread()
@@ -307,6 +356,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.setEnabled(False)
         self.calibRightWaterButton.setEnabled(False)
         self.stopButton.setEnabled(True)
+        if self.olfaCheckBox.isChecked():
+            self.olfaButton.setEnabled(False)  # Disable the alfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
+            # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
+            # the protocolWorker's thread know not to use it. Only one object can access a serial port at any given time.
 
     def _endTask(self):
         self.streaming.pauseAnimation()
@@ -318,6 +371,10 @@ class Window(QMainWindow, Ui_MainWindow):
         # self._checkIfRunning()  # causes unhandled python exception when called twice. Check definition for details.
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
+        self.calibLeftWaterButton.setEnabled(True)
+        self.calibRightWaterButton.setEnabled(True)
+        if self.olfaCheckBox.isChecked():
+            self.olfaButton.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
         self._experimentCompleteDialog()
 
     def _checkIfRunning(self):
@@ -595,7 +652,12 @@ class Window(QMainWindow, Ui_MainWindow):
         QMessageBox.information(self, "Success", "Experiment finished!")
 
     def _cannotConnectOlfaDialog(self):
-        QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
+        # Since the ProtocolWorker's self.olfas object cannot access the serial port, maybe it is current in use by the main thread.
+        # So check if main thread's self.olfas exists and if so, close the serial port and delete the object.
+        if self.olfas:
+            self.olfas.close_serials()  # close serial ports and let the user try again.
+            del self.olfas
+        QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct and try again.")
 
     def _runInputEventThread(self):
         logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
@@ -631,7 +693,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaCheckBox, self.numTrials)
+        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.olfaCheckBox.isChecked(), self.numTrials)
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)
