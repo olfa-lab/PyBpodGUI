@@ -215,11 +215,8 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", "Please select an olfa config file first! Go to 'Olfactometer' menu > 'Select config file'")
 
     def _launchOlfaEditor(self):
-        if self.olfaConfigFileName:
-            self.olfaEditor = OlfaEditorDialog(self.olfaConfigFileName)
-            self.olfaEditor.show()
-        else:
-            QMessageBox.warning(self, "Warning", "Please select an olfa config file first! Go to 'Olfactometer' menu > 'Select config file'")
+        self.olfaEditor = OlfaEditorDialog(self.olfaConfigFileName)
+        self.olfaEditor.show()
 
     def _launchProtocolEditor(self):
         if self.myBpod is not None:
@@ -659,6 +656,11 @@ class Window(QMainWindow, Ui_MainWindow):
             del self.olfas
         QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct and try again.")
 
+    def _invalidFileDialog(self, error):
+        QMessageBox.warning(self, "Warning", f"Invalid protocol file or olfa config file selected. Experiment aborted.\
+            \nThe following key was not found in its respective .json file and thus caused a KeyError:\
+            \n{error}")
+
     def _runInputEventThread(self):
         logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.inputEventThread = QThread()
@@ -712,6 +714,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # self.protocolWorker.stopSDCardLoggingSignal.connect(self._stopSDCardLogging)
         self.protocolWorker.noResponseAbortSignal.connect(self._noResponseAbortDialog)
         self.protocolWorker.olfaNotConnectedSignal.connect(self._cannotConnectOlfaDialog)
+        self.protocolWorker.invalidFileSignal.connect(self._invalidFileDialog)
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")

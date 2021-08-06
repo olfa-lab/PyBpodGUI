@@ -436,7 +436,7 @@ class Ui_Dialog(object):
         self.dilutorMFCGasComboBox_2.setObjectName("dilutorMFCGasComboBox_2")
         self.dilutorFormLayout_3.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.dilutorMFCGasComboBox_2)
         self.formLayoutWidget = QtWidgets.QWidget(self.dilutorsGroupBox)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(20, 20, 160, 80))
+        self.formLayoutWidget.setGeometry(QtCore.QRect(20, 20, 160, 61))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
         self.dilutorFormLayout_1 = QtWidgets.QFormLayout(self.formLayoutWidget)
         self.dilutorFormLayout_1.setContentsMargins(0, 0, 0, 0)
@@ -463,9 +463,11 @@ class Ui_Dialog(object):
         self.line_6.setFrameShape(QtWidgets.QFrame.VLine)
         self.line_6.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line_6.setObjectName("line_6")
+        self.clearDilutorButton = QtWidgets.QPushButton(self.dilutorsGroupBox)
+        self.clearDilutorButton.setGeometry(QtCore.QRect(40, 100, 111, 23))
+        self.clearDilutorButton.setObjectName("clearDilutorButton")
 
         self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -536,3 +538,4 @@ class Ui_Dialog(object):
         self.dilutorMFCGasLabel_2.setText(_translate("Dialog", "Gas"))
         self.dilutorComPortLabel.setText(_translate("Dialog", "COM Port"))
         self.dilutorTypeLabel.setText(_translate("Dialog", "Dilutor Type"))
+        self.clearDilutorButton.setText(_translate("Dialog", "Clear Dilutor"))
