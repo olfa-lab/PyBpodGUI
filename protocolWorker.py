@@ -21,6 +21,7 @@ class ProtocolWorker(QObject):
     saveEndOfSessionDataSignal = pyqtSignal(dict)
     noResponseAbortSignal = pyqtSignal()
     olfaNotConnectedSignal = pyqtSignal()
+    invalidFileSignal = pyqtSignal(str)  # sends the key string that caused the KeyError with it to the main thread to notify the user.
     # startSDCardLoggingSignal = pyqtSignal()
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
@@ -268,8 +269,9 @@ class ProtocolWorker(QObject):
         try:
             if self.olfaChecked:
                 import olfactometry
-                self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
                 self.getOdorsFromConfigFile()
+                self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
+                
             self.startTrial()
 
         except SerialException:
@@ -278,7 +280,11 @@ class ProtocolWorker(QObject):
                 del self.olfas
                 self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
             self.olfaNotConnectedSignal.emit()
-            self.finished.emit()        
+            self.finished.emit()  
+
+        except KeyError as err:  # error reading from json file.
+            self.invalidFileSignal.emit(str(err))
+            self.finished.emit()      
         
     def startTrial(self):
         self.myBpod.softcode_handler_function = self.my_softcode_handler
