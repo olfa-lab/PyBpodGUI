@@ -83,6 +83,12 @@ Things to do:
 
     * __X__ implement ability to configure protocol
 
+    * __X__ implement ability to configure odors and/or olfa json file
+
+    * __X__ make protocolWorker read from olfa config file before starting experiment to store odors/concentrations for stimulusRandomizer
+
+    * __X__ in olfaEditorDialog, make sure that both odor name and concentration were given for a vial before saving the file
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -90,8 +96,6 @@ Things to do:
     * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
 
     * _____ implement ability to configure flow rates
-
-    * _____ implement ability to configure odors and/or olfa json file
 
     * _____ implement ability to configure analog module
 
@@ -111,15 +115,11 @@ Things to do:
 
     * _____ allow user to run experiments that do not use olfactometer (currently, protocolWorker does nothing when olfaCheckBox is unchecked)
 
-    * _____ make protocolWorker read from olfa config file before starting experiment to store odors/concentrations for stimulusRandomizer
-
     * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
 
     * _____ modify saveDataWorker to handle when NoSniff occurs
 
     * _____ use SerialException instead of BpodErrorException for when connecting to the analog input module
-
-    * _____ in olfaEditorDialog, make sure that both odor name and concentration were given for a vial before saving the file
       
 
 Questions to research:
