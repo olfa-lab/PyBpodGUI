@@ -1,14 +1,4 @@
 {
-    "intensityPercentages": [
-        10,
-        25,
-        40,
-        50,
-        60,
-        75,
-        90,
-        100
-    ],
     "states": [
         {
             "stateName": "WaitForOdor",
@@ -89,5 +79,14 @@
                 "Serial1": "SyncByte"
             }
         }
+    ],
+    "intensityPercentages": [
+        10,
+        25,
+        40,
+        60,
+        75,
+        90,
+        100
     ]
 }

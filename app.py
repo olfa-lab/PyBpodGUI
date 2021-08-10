@@ -223,7 +223,7 @@ class Window(QMainWindow, Ui_MainWindow):
             sma = StateMachine(self.myBpod)
             events = sma.hardware.channels.event_names
             outputs = sma.hardware.channels.output_channel_names
-            self.protocolEditor = ProtocolEditorDialog(events, outputs)
+            self.protocolEditor = ProtocolEditorDialog(events, outputs, self.protocolFileName)
             self.protocolEditor.show()
         else:
             QMessageBox.warning(self, "Warning", "Please connect to Bpod first. Click the 'Connect Devices' button.")
