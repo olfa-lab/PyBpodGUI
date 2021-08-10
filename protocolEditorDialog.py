@@ -9,6 +9,10 @@ from PyQt5.QtGui import QPen, QBrush
 
 from protocol_editor_dialog_ui import Ui_Dialog
 
+import logging
+logging.basicConfig(format="%(message)s", level=logging.INFO)
+
+
 
 '''
 Things to do:
@@ -26,6 +30,8 @@ Things to do:
     * _____ ability to define softcode actions
     
     * _____ ability to define loaded serial messages
+
+    * _____ make the dialog read a valid protocol file and display the file's contents so that the user can edit an existing file instead of only creating a new one.
 
 '''
 
@@ -64,7 +70,8 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
     def __init__(self, eventNamesList, outputChannelsList, parent=None):
         super().__init__()
         self.setupUi(self)
-        
+        self.showFlowRatesWidget()
+        self.intensityPercentages = []
         self.allStatesDict = {'states': []}
         self.stateDict = {
             'stateName': '',
@@ -72,7 +79,6 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             'stateChangeConditions': {},
             'outputActions': {}  # The actual bpod state machine uses list of two-tuples for output actions. But here, I will use dict for simplicity to avoid duplicates.
         }
-        
         self.eventNames = ['Select...'] + eventNamesList
         '''[
             'Select...', 'Tup', 'Serial1_1', 'Serial1_2', 'Serial1_3', 'Serial1_4', 'Serial1_5', 'Serial1_6',
@@ -113,13 +119,10 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         self.valvePorts = ['rewardValve', 'finalValve']
         self.LEDports = [1, 2, 3, 4]
 
-        self.variableAffectsComboBox.addItems(['Select...', 'change state name', 'state timer', 'valve port number', ])
-        self.variables = {}
-
         self.scene = QGraphicsScene(parent=self)
         self.graphicsView.setScene(self.scene)
         self.counter = 0
-        self.yposition = 0
+        self.xposition = 0
         self.connectSignalsSlots()
 
     def connectSignalsSlots(self):
@@ -135,8 +138,47 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         self.clearOutputActionsButton.clicked.connect(self.clearOutputActions)
         self.clearStateChangeConditionsButton.clicked.connect(self.clearStateChangeConditions)
         self.addStateButton.clicked.connect(self.addStateToView)
-        self.buttonBox.accepted.connect(self.saveFileDialog)
-        self.addVariableButton.clicked.connect(self.addVariableToList)
+        self.nextButton.clicked.connect(self.showStateMachineWidget)
+        self.backButton.clicked.connect(self.showFlowRatesWidget)
+        self.cancelButton.clicked.connect(self.reject)
+        self.saveButton.clicked.connect(self.saveFileDialog)
+        self.addOdorIntensityButton.clicked.connect(self.addOdorIntensity)
+        self.removeOdorIntensityButton.clicked.connect(self.removeOdorIntensity)
+
+    def showFlowRatesWidget(self):
+        self.stateMachineWidget.hide()
+        self.odorIntensityWidget.show()
+        self.odorIntensityWidget.move(10, 10)
+        self.cancelButton.move(20, 430)
+        self.backButton.move(110, 430)
+        self.nextButton.move(200, 430)
+        self.saveButton.move(290, 430)
+        self.resize(380, 460)
+        self.saveButton.setEnabled(False)
+        self.backButton.setEnabled(False)
+        self.nextButton.setEnabled(True)
+
+    def showStateMachineWidget(self):
+        self.odorIntensityWidget.hide()
+        self.stateMachineWidget.show()
+        self.cancelButton.move(380, 850)
+        self.backButton.move(470, 850)
+        self.nextButton.move(560, 850)
+        self.saveButton.move(650, 850)
+        self.resize(750, 900)
+        self.saveButton.setEnabled(True)
+        self.backButton.setEnabled(True)
+        self.nextButton.setEnabled(False)
+
+    def addOdorIntensity(self):
+        self.intensityPercentages.append(self.intensityPercentageSpinBox.value())
+        self.intensityPercentageListWidget.addItem(str(self.intensityPercentageSpinBox.value()))
+
+    def removeOdorIntensity(self):
+        itemRemoved = self.intensityPercentageListWidget.takeItem(self.intensityPercentageListWidget.currentRow())
+        if itemRemoved is not None:
+            self.intensityPercentages.remove(int(itemRemoved.text()))  # itemRemoved is of type QListWidgetItem.
+            del itemRemoved  # According to Qt docs, Qt does not manage items removed from a ListWidget so they need to be deleted manually.
 
     def recordStateName(self):
         self.stateDict['stateName'] = self.stateNameLineEdit.text()
@@ -365,8 +407,8 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             self.allStatesDict['states'].append(self.stateDict.copy())  # I used copy() to preserve the contents of stateChangeConditions and outputActions because their references get deleted after adding a state.
 
             stateItem = SimpleItem(
-                x=0,
-                y=self.yposition,
+                x=self.xposition,
+                y=0,
                 num=self.counter,
                 name=self.stateDict['stateName'],
                 timer=self.stateDict['stateTimer'],
@@ -374,7 +416,7 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
                 output_actions=str(self.stateDict['outputActions'])
             )
             self.scene.addItem(stateItem)
-            self.yposition += 250
+            self.xposition += 200
             self.counter += 1
 
             self.stateNameLineEdit.clear()
@@ -384,10 +426,11 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             self.clearOutputActions()
     
     def addVariableToList(self):
-        variableName = self.variableNameLineEdit.text()
-        variableType = self.variableAffectsComboBox.currentText()
-        self.variables[variableName] = variableType
-        self.variablesListWidget.addItem(f'{variableName} : {variableType}')
+        pass
+    #     variableName = self.variableNameLineEdit.text()
+    #     variableType = self.variableAffectsComboBox.currentText()
+    #     self.variables[variableName] = variableType
+    #     self.variablesListWidget.addItem(f'{variableName} : {variableType}')
 
         # if variableType == 'change state name':
         #     self.stateChangeNameComboBox.addItem(variableName)
@@ -416,6 +459,8 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "protocol.json", "All Files (*);;JSON Files (*.json);;Text Files (*.txt)", options=options)
         if fileName:
             with open(fileName, 'w') as fname:
+                if (len(self.intensityPercentages) > 0):
+                    self.allStatesDict['intensityPercentages'] = self.intensityPercentages
                 json.dump(self.allStatesDict, fname, indent=4)
                 
             self.accept()  # Closes the dialog window.
