@@ -56,17 +56,8 @@ class ProtocolWorker(QObject):
         self.previousResponseResult = ''
         self.odors = []
         self.concs = []
-        self.flows = [10, 25, 40, 60, 75, 100]
+        self.flows = []
         self.flowResultsCounterDict = {}
-        for flow in self.flows:
-            self.flowResultsCounterDict[str(flow)] = {
-                'right': 0,  # initizialize counters to zero.
-                'left': 0,
-                'Correct': 0,
-                'Wrong': 0,
-                'NoResponse': 0,
-                'Total': 0
-            }
 
     # @pyqtSlot()  # Even with this decorator, I still need to use lambda when connecting a signal to this function.
     def setLeftWaterDuration(self, duration):
@@ -96,7 +87,7 @@ class ProtocolWorker(QObject):
         return {}
 
     def getEndOfTrialInfoDict(self):
-        if self.currentStateName == 'exit':
+        if self.currentStateName == 'ITI':
             dict1 = self.getCurrentTrialInfoDict()
             dict2 = self.myBpod.session.current_trial.export()
             dict3 = {**dict1, **dict2}  # Merge both dictionaries
@@ -196,6 +187,22 @@ class ProtocolWorker(QObject):
             if not (vialInfo['odor'] == 'dummy'):
                 self.odors.append(vialInfo['odor'])
                 self.concs.append(vialInfo['conc'])
+
+        with open(self.protocolFileName, 'r') as protocolFile:
+            protocolDict = json.load(protocolFile)
+        
+        if ('intensityPercentages' in protocolDict) and (len(protocolDict['intensityPercentages']) > 0):
+            self.flows = protocolDict['intensityPercentages']
+
+            for flow in self.flows:
+                self.flowResultsCounterDict[str(flow)] = {
+                    'right': 0,  # initizialize counters to zero.
+                    'left': 0,
+                    'Correct': 0,
+                    'Wrong': 0,
+                    'NoResponse': 0,
+                    'Total': 0
+                }
 
     def stimulusRandomizer(self):
         flow_threshold = np.sqrt(self.flows[0] * self.flows[-1])
