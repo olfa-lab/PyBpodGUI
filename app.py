@@ -91,6 +91,8 @@ Things to do:
     
     * __X__ implement ability to configure flow rates
 
+    * __X__ go back to the ITI state at the end of every trial so that the user can see more lick events instead of only one
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -118,8 +120,6 @@ Things to do:
     * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
 
     * _____ use SerialException instead of BpodErrorException for when connecting to the analog input module
-
-    * _____ go back to the ITI state at the end of every trial so that the user can see more lick events instead of only one
       
 
 Questions to research:
@@ -136,7 +136,7 @@ Questions to research:
 
 class Window(QMainWindow, Ui_MainWindow):
     stopRunningSignal = pyqtSignal()
-    launchOlfaGUISignal = pyqtSignal()
+    # launchOlfaGUISignal = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -661,6 +661,9 @@ class Window(QMainWindow, Ui_MainWindow):
             \nThe following key was not found in its respective .json file and thus caused a KeyError:\
             \n{error}")
 
+    def _olfaExceptionDialog(self, error):
+        QMessageBox.warning(self, "Warning", f"Experiment aborted because the olfactometer raised the following exception:\n{error}")
+
     def _runInputEventThread(self):
         logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.inputEventThread = QThread()
@@ -714,6 +717,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # self.protocolWorker.stopSDCardLoggingSignal.connect(self._stopSDCardLogging)
         self.protocolWorker.noResponseAbortSignal.connect(self._noResponseAbortDialog)
         self.protocolWorker.olfaNotConnectedSignal.connect(self._cannotConnectOlfaDialog)
+        self.protocolWorker.olfaExceptionSignal.connect(self._olfaExceptionDialog)
         self.protocolWorker.invalidFileSignal.connect(self._invalidFileDialog)
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())
         self.protocolThread.start()

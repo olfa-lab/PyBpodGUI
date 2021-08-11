@@ -6,6 +6,9 @@ from serial.serialutil import SerialException
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
 
+import olfactometry
+from olfactometry.utils import OlfaException
+
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
@@ -21,6 +24,7 @@ class ProtocolWorker(QObject):
     saveEndOfSessionDataSignal = pyqtSignal(dict)
     noResponseAbortSignal = pyqtSignal()
     olfaNotConnectedSignal = pyqtSignal()
+    olfaExceptionSignal = pyqtSignal(str)  # sends the olfa exception error string with it to the main thread to notify the user.
     invalidFileSignal = pyqtSignal(str)  # sends the key string that caused the KeyError with it to the main thread to notify the user.
     # startSDCardLoggingSignal = pyqtSignal()
     # stopSDCardLoggingSignal = pyqtSignal()
@@ -87,7 +91,7 @@ class ProtocolWorker(QObject):
         return {}
 
     def getEndOfTrialInfoDict(self):
-        if self.currentStateName == 'ITI':
+        if self.currentStateName == 'exit':
             dict1 = self.getCurrentTrialInfoDict()
             dict2 = self.myBpod.session.current_trial.export()
             dict3 = {**dict1, **dict2}  # Merge both dictionaries
@@ -269,18 +273,15 @@ class ProtocolWorker(QObject):
 
         After testing, the olfactometer now works every trial and I never got an error that did not allow me to open a valve or to wait at least
         one second before opening vial. 
-
-        I also removed the 'itiDelay' state from the state machine and replaced it with the QTimer.singleShot which will call self.startTrial() again
-        after the self.currentITI time has elapsed.
         '''
         try:
             if self.olfaChecked:
-                import olfactometry
                 self.getOdorsFromConfigFile()
                 self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
                 
             self.startTrial()
 
+        # Note that these except clauses can only trigger from the first trial.
         except SerialException:
             if self.olfas:
                 self.olfas.close_serials()  # close serial ports and let the user try again.
@@ -291,7 +292,14 @@ class ProtocolWorker(QObject):
 
         except KeyError as err:  # error reading from json file.
             self.invalidFileSignal.emit(str(err))
-            self.finished.emit()      
+            self.finished.emit() 
+
+        except OlfaException:
+            logging.info("olfa exception")
+            olf = 'olfa exception'
+            self.olfaExceptionSignal.emit(str(olf))
+            self.stopRunning()  # This would also stop the bpod trial just in case the olfa raised the exception when the state machine is running.
+            # self.finished.emit()
         
     def startTrial(self):
         self.myBpod.softcode_handler_function = self.my_softcode_handler
@@ -299,10 +307,15 @@ class ProtocolWorker(QObject):
 
         if self.keepRunning and (self.currentTrialNum < self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
             if self.olfas is not None:
-                # self.olfas = olfactometry.Olfactometers()
                 odorDict = self.stimulusRandomizer()
-                self.olfas.set_stimulus(odorDict)
-                # self.stimulusRandomizer()
+                try:
+                    self.olfas.set_stimulus(odorDict)
+
+                except OlfaException as olf:
+                    self.olfaExceptionSignal.emit(str(olf))
+                    self.finished.emit()
+                    return  # Exit the function to avoid continuing with the code below.
+
             self.currentITI = np.random.randint(5, 10)  # inter trial interval in seconds.
             self.currentTrialNum += 1
 
@@ -360,8 +373,8 @@ class ProtocolWorker(QObject):
                 if (state['stateTimer'] == 'rewardDuration'):
                     state['stateTimer'] = rewardDuration                    
 
-                if state['stateName'] == 'itiDelay':
-                    state['stateTimer'] = self.currentITI 
+                if state['stateTimer'] == 'itiDuration':
+                    state['stateTimer'] = self.currentITI - 2  # Subtract 2 seconds because the QTimer.singleShot starts a new trial 2000 msecs after state machine completes.
 
                 for channelName, channelValue in state['outputActions'].items():
                     # Automatically add the sync byte transmission to the analog module for every state.
@@ -410,8 +423,8 @@ class ProtocolWorker(QObject):
                 self.olfas.set_dummy_vials()
 
             # Update trial info for GUI
-            self.currentStateName = 'ITI'
-            self.newStateSignal.emit(self.currentStateName)
+            self.currentStateName = 'exit'
+            # self.newStateSignal.emit(self.currentStateName)
 
             endOfTrialDict = self.getEndOfTrialInfoDict()
             self.saveTrialDataDictSignal.emit(endOfTrialDict)
@@ -419,7 +432,7 @@ class ProtocolWorker(QObject):
 
             # self.stopSDCardLoggingSignal.emit()
             
-            QTimer.singleShot((self.currentITI * 1000), self.startTrial)
+            QTimer.singleShot(2000, self.startTrial)  # Start trial in 2000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
 
         else:
             self.saveEndOfSessionDataSignal.emit(self.flowResultsCounterDict)
@@ -443,11 +456,11 @@ class ProtocolWorker(QObject):
     def stopRunning(self):
         self.keepRunning = False
         # I should probably also check for edge case when (self.currentStateName == '') upon init of the ProtocolWorker class.
-        if not (self.currentStateName == 'ITI'):
+        if not (self.currentStateName == 'exit'):
             logging.info("attempting to abort current trial")
             self.myBpod.stop_trial()
             logging.info("current trial aborted")
 
-    def launchOlfaGUI(self):
-        if self.olfas is not None:
-            self.olfas.show()
+    # def launchOlfaGUI(self):
+    #     if self.olfas is not None:
+    #         self.olfas.show()

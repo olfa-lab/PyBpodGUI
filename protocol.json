@@ -40,7 +40,7 @@
             "stateName": "Correct",
             "stateTimer": "rewardDuration",
             "stateChangeConditions": {
-                "Tup": "exit"
+                "Tup": "ITI"
             },
             "outputActions": {
                 "Valve": [
@@ -53,7 +53,7 @@
             "stateName": "Wrong",
             "stateTimer": 0,
             "stateChangeConditions": {
-                "Tup": "exit"
+                "Tup": "ITI"
             },
             "outputActions": {
                 "Serial1": "SyncByte"
@@ -63,7 +63,7 @@
             "stateName": "NoResponse",
             "stateTimer": 0,
             "stateChangeConditions": {
-                "Tup": "exit"
+                "Tup": "ITI"
             },
             "outputActions": {
                 "Serial1": "SyncByte"
@@ -72,6 +72,16 @@
         {
             "stateName": "NoSniff",
             "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
             "stateChangeConditions": {
                 "Tup": "exit"
             },
@@ -83,8 +93,9 @@
     "intensityPercentages": [
         10,
         25,
-        40,
-        60,
+        33,
+        50,
+        67,
         75,
         90,
         100
