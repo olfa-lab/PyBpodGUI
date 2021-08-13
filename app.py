@@ -16,7 +16,7 @@ from PyQt5.QtCore import QObject, QThread, QTime, QTimer, pyqtSignal, pyqtSlot, 
 from main_window_ui import Ui_MainWindow
 from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
-from BpodAnalogInputModule import BpodAnalogIn
+from BpodAnalogInputModule import AnalogInException, BpodAnalogIn
 import olfactometry
 
 from saveDataWorker import SaveDataWorker
@@ -27,6 +27,7 @@ from resultsPlotWorker import ResultsPlotWorker
 # from calibrateWaterWorker import CalibrateWaterWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
+from analogInputSettingsDialog import AnalogInputSettingsDialog
 
 # from matplotlib.backends.backend_qt5agg import (
 #     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
@@ -93,13 +94,17 @@ Things to do:
 
     * __X__ go back to the ITI state at the end of every trial so that the user can see more lick events instead of only one
 
+    * __X__ implement ability to configure analog module
+
+    * __X__ use SerialException instead of BpodErrorException for when connecting to the analog input module
+
+    * __X__ allow user to run experiments without analog input (modify saveDataWorker to not save analog data, and do not plot a signal)
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
 
     * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
-
-    * _____ implement ability to configure analog module
 
     * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
@@ -119,7 +124,7 @@ Things to do:
 
     * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
 
-    * _____ use SerialException instead of BpodErrorException for when connecting to the analog input module
+    * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
       
 
 Questions to research:
@@ -169,6 +174,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
+        self.analogInputSettings = AnalogInputSettingsDialog()
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects devices.
         self.finalValveButton.setEnabled(False)
@@ -191,6 +197,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
         self.actionSelectConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
         self.olfaConfigButton.clicked.connect(self._launchOlfaEditor)
+        self.configAnalogInputModuleButton.clicked.connect(self._launchAnalogInputSettings)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
@@ -199,6 +206,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveDurationLineEdit.editingFinished.connect(self._recordRightWaterValveDuration)
         self.bpodPortLineEdit.editingFinished.connect(self._recordBpodSerialPort)
         self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
+
+    def _launchAnalogInputSettings(self):
+        self.analogInputSettings.show()
 
     def _launchOlfaGUI(self):
         if self.olfaConfigFileName:
@@ -247,14 +257,15 @@ class Window(QMainWindow, Ui_MainWindow):
             logging.info(f"The file {fileName} has been loaded.")
 
     def configureAnalogModule(self):
-        self.adc.setSamplingRate(1000)
-        self.adc.setNactiveChannels(1)
-        # TODO: instead of passing a list, make it such that the user specifies the range of a specific channel by passing an int for the channel and a string for the range.
-        self.adc.setInputRange(['-5V:5V', '-10V:10V', '-10V:10V', '-10V:10V', '-10V:10V', '-10V:10V', '-10V:10V', '-10V:10V'])
-        self.adc.setStream2USB([1, 0, 0, 0, 0, 0, 0, 0])
-        self.adc.setSMeventsEnabled([1, 0, 0, 0, 0, 0, 0, 0])
-        self.adc.setThresholds([0, 10, 10, 10, 10, 10, 10, 10])  # The default threshold is already set to 10V during initialization, but still need to specify it for the other channels.
-        self.adc.setResetVoltages([1, -10, -10, -10, -10, -10, -10, -10])
+        settings = self.analogInputSettings.getSettings()
+        logging.info(settings)
+        self.adc.setNactiveChannels(settings['nActiveChannels'])
+        self.adc.setSamplingRate(settings['samplingRate'])
+        self.adc.setInputRange(settings['inputRanges'])
+        self.adc.setStream2USB(settings['enableUSBStreaming'])
+        self.adc.setSMeventsEnabled(settings['enableSMEventReporting'])
+        self.adc.setThresholds(settings['thresholdVoltages'])
+        self.adc.setResetVoltages(settings['resetVoltages'])
 
     def startAnalogModule(self):
         self.adc.startReportingEvents()
@@ -287,8 +298,11 @@ class Window(QMainWindow, Ui_MainWindow):
         try:
             if self.analogInputModuleCheckBox.isChecked():
                 self.adc = BpodAnalogIn(serial_port=self.adcSerialPort)
-        except BpodErrorException:
+        except SerialException:
             QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct!")
+            return
+        except AnalogInException as err:
+            QMessageBox.warning(self, "Warning", f"Analog Input Module Error.\n{err}")
             return
 
         # try:
@@ -340,8 +354,11 @@ class Window(QMainWindow, Ui_MainWindow):
             del self.olfas
             self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
 
-        self.configureAnalogModule()
-        self.startAnalogModule()
+        # Check if adc was created which would mean the user enabled the checkbox and the analog input module was connected.
+        if self.adc:
+            self.configureAnalogModule()
+            self.startAnalogModule()
+        
         self._runSaveDataThread()
         self._runInputEventThread()
         self._runProtocolThread()
@@ -360,8 +377,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _endTask(self):
         self.streaming.pauseAnimation()
-        self.stopAnalogModule()
-        # self._getSDCardLog()
+        if self.adc:
+            self.stopAnalogModule()
+            # self._getSDCardLog()
+        
         self.stopRunningSignal.emit()
         logging.info("stopRunningSignal emitted")
         
