@@ -88,16 +88,15 @@ class SaveDataWorker(QObject):
     analogDataSignal = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
-    def __init__(self, mouseNum, rigLetter, analogInModule):
+    def __init__(self, mouseNum, rigLetter, analogInModule=None):
         super(SaveDataWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
-        self.adc = analogInModule
         dateTimeString = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         fileName = f"results/Mouse_{mouseNum}_Rig_{rigLetter}_{dateTimeString}.h5"
         if not os.path.isdir('results'):
             os.mkdir('results')
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
-        self.voltsGroup = self.h5file.create_group(where='/', name='voltages', title='Voltages Per Trial')
+
         self.licksGroup = self.h5file.create_group(where='/', name='lickTimes', title='Lick Timestamps Per Trial')
         self.table = self.h5file.create_table(where='/', name='trial_data', description=SessionData, title='Trial Data')
         self.trial = self.table.row
@@ -110,18 +109,25 @@ class SaveDataWorker(QObject):
         }
         self.keepRunning = True
         self.newData = False
+        self.trialNum = 1
         self.infoDict = {}
         self.finalResultsDict = {}
-        self.analogDataBufferSize = 10
-        self.analogDataBuffer = np.zeros(shape=self.analogDataBufferSize, dtype='float32')
-        self.trialNum = 1
-        self.stateNum = 0
-        self.maxVoltage = 5
-        self.counter = 0
-        self.previousTimer = 0
-        self.t_start = 0
-        self.samplingPeriod = 1 / 1000
-        self.bpodTime = 0
+
+        self.adc = analogInModule
+        if self.adc:
+            self.maxVoltage = self.adc.getChannelInputVoltageMax(0)  # Assuming user is using channel 0.
+            self.samplingPeriod = 1 / (self.adc.getSamplingRate())
+            self.analogDataBufferSize = 10
+            self.analogDataBuffer = np.zeros(shape=self.analogDataBufferSize, dtype='float32')
+            self.stateNum = 0
+            self.counter = 0
+            self.previousTimer = 0
+            self.t_start = 0
+            self.bpodTime = 0
+            self.voltsGroup = self.h5file.create_group(where='/', name='voltages', title='Voltages Per Trial')
+            self.voltTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum}', description=VoltageData, title=f'Trial {self.trialNum} Voltage Data')
+            self.voltsRow = self.voltTable.row
+        
 
     def receiveInfoDict(self, infoDict):
         self.newData = True
@@ -177,10 +183,7 @@ class SaveDataWorker(QObject):
         self.statesTable.flush()
    
     def run(self):
-        self.voltTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum}', description=VoltageData, title=f'Trial {self.trialNum} Voltage Data')
-        self.voltsRow = self.voltTable.row
-
-        self.t_start = time.perf_counter()
+        # self.t_start = time.perf_counter()
         while self.keepRunning:
             if self.newData:
                 self.newData = False  # reset
@@ -247,27 +250,27 @@ class SaveDataWorker(QObject):
                 
                 self.trial.append()
                 self.table.flush()
-
                 self.saveStatesTimestamps()
-
-                # The trial data above comes at the end of a trial, so write the voltages to the disk, and create a new table for the next trial's voltages
-                self.voltTable.flush()
                 self.trialNum += 1  # increment trial number.
-                self.stateNum = 0  # reset state number back to zero.
-                self.bpodTime = 0  # reset timestamps for samples back to zero.
-                
-                # Re-iterate through the volts table row by row to update the bpodTime so it corresponds to the bpod's trial start time instead of starting it at zero.
-                # self.bpodTime = self.infoDict['Trial start timestamp']
-                # for voltsRow in self.voltTable.iterrows():
-                #     voltsRow['bpodTime'] = self.bpodTime
-                #     self.bpodTime += self.samplingPeriod
-                #     voltsRow.update()
-                # self.voltTable.flush()
 
-                self.voltTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum}', description=VoltageData, title=f'Trial {self.trialNum} Voltage Data')
-                self.voltsRow = self.voltTable.row
+                if self.adc:
+                    # The trial data above comes at the end of a trial, so write the voltages to the disk, and create a new table for the next trial's voltages
+                    self.voltTable.flush()
+                    self.stateNum = 0  # reset state number back to zero.
+                    self.bpodTime = 0  # reset timestamps for samples back to zero.
+                    
+                    # Re-iterate through the volts table row by row to update the bpodTime so it corresponds to the bpod's trial start time instead of starting it at zero.
+                    # self.bpodTime = self.infoDict['Trial start timestamp']
+                    # for voltsRow in self.voltTable.iterrows():
+                    #     voltsRow['bpodTime'] = self.bpodTime
+                    #     self.bpodTime += self.samplingPeriod
+                    #     voltsRow.update()
+                    # self.voltTable.flush()
+
+                    self.voltTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum}', description=VoltageData, title=f'Trial {self.trialNum} Voltage Data')
+                    self.voltsRow = self.voltTable.row
             
-            else:
+            elif self.adc:
                 analogData = self.adc.getSampleFromUSB()
 
                 # Uses the computer's clock to make the timestamps for the samples and period in between each sample.
@@ -312,10 +315,14 @@ class SaveDataWorker(QObject):
                     self.analogDataBuffer[self.counter] = voltages[0]
                     self.counter += 1
 
-        self.table.flush()
-        self.voltTable.flush()
-        logging.info("session data has been written to disk")
+            else:
+                QThread.sleep(1)  # Need this or else entire application will become severely unresponsive.
 
+        if self.adc:
+            self.voltTable.flush()
+
+        self.table.flush()
+        logging.info("session data has been written to disk")
         self.saveFinalResults()
         self.h5file.close()
         logging.info("h5 file closed")
