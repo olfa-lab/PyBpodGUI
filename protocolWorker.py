@@ -374,7 +374,7 @@ class ProtocolWorker(QObject):
                     state['stateTimer'] = rewardDuration                    
 
                 if state['stateTimer'] == 'itiDuration':
-                    state['stateTimer'] = self.currentITI - 2  # Subtract 2 seconds because the QTimer.singleShot starts a new trial 2000 msecs after state machine completes.
+                    state['stateTimer'] = self.currentITI - 5  # Subtract 5 seconds because the QTimer.singleShot starts a new trial 5000 msecs after state machine completes.
 
                 for channelName, channelValue in state['outputActions'].items():
                     # Automatically add the sync byte transmission to the analog module for every state.
@@ -432,7 +432,17 @@ class ProtocolWorker(QObject):
 
             # self.stopSDCardLoggingSignal.emit()
             
-            QTimer.singleShot(2000, self.startTrial)  # Start trial in 2000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
+            # Start trial in 5000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
+            # The time duration in between trials must be greater than (2.1 * MFC polling interval) which is from olfactometer.py under the
+            # check_flows method. The default value for the MFC polling interval is 2.0 seconds, so the time in between trials must be greater
+            # than 4.2 seconds. The reason is that run_state_machine() is a blocking function that blocks QTimer timeout signals from connecting
+            # to their slots. The QTimer responsible for polling the MFCs cannot do so while the state machine is running. Only after the
+            # run_state_machine function completes can the QTimer connect the timeout signals to their slot, so we need to wait more than the
+            # MFC polling interval time to allow the QTimer timeout signal to fire and connect to its slot to poll the MFCs. If we do not wait
+            # long enough and instead we start the next trial before the QTimer timeout signal emits, we will end up blocking it again which
+            # will result in OlfaException("MFC polling is not ok.") because more than 4.2 seconds elapsed since the last MFC polling occurred,
+            # which makes the program think something is wrong with the MFCs.
+            QTimer.singleShot(5000, self.startTrial)
 
         else:
             self.saveEndOfSessionDataSignal.emit(self.flowResultsCounterDict)
