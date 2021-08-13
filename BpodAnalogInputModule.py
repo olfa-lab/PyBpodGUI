@@ -1,17 +1,17 @@
 from pybpodapi.com.arcom import ArCOM, ArduinoTypes
-from pybpodapi.exceptions.bpod_error import BpodErrorException
 import time
 import numpy as np
 
 
+class AnalogInException(Exception):
+    pass
+
+
 class BpodAnalogIn(object):
     
-    def __init__(self, serial_port='COM6'):
+    def __init__(self, serial_port):
 
-        try:
-            self.Port = ArCOM().open(serial_port=serial_port, baudrate=1312500, timeout=1)  # ArCOM Serial port
-        except IOError:
-            raise BpodErrorException('Error: unable to connect to Bpod Analog Input module.')
+        self.Port = ArCOM().open(serial_port=serial_port, baudrate=1312500, timeout=1)  # ArCOM Serial port
 
         # Private variables
         self._CurrentFirmwareVersion = 1
@@ -34,18 +34,11 @@ class BpodAnalogIn(object):
         self._USBStreamEnabled = 0
         self._ModuleStreamEnabled = 0
         self._nChannelsStreaming2USB = 0  # Number of channels that enabled USB streaming.
-        # self._thread = None
-        # self._isReceiving = False
-        # self._isRun = True
-        # 2 bytes per sample for each streaming channel.
-        # self._rawData = bytearray(6)
-
-
 
         # Public variables
         self.nActiveChannels = self._nPhysicalChannels  # Number of channels to sample (consecutive, beginning with channel 1)
         self.SamplingRate = 1000  # 1Hz-50kHz, affects all channels
-        self.InputRange = [''] * self._nPhysicalChannels  # A cell array of strings indicating voltage range for 12-bit conversion. Valid ranges are in ValidRanges (above)
+        self.InputRange = ['-10V:10V'] * self._nPhysicalChannels  # A cell array of strings indicating voltage range for 12-bit conversion. Valid ranges are in ValidRanges (above). Default is '-10V:10V'.
         self.Thresholds = [10] * self._nPhysicalChannels    # Threshold (V) for each channel. Analog signal crossing the threshold generates an event. Initialized to max voltage of default range
         self.ResetVoltages = [-10] * self._nPhysicalChannels  # Voltage must cross ResetValue (V) before another threshold event can occur
         self.SMeventsEnabled = [0] * self._nPhysicalChannels  # Logical vector indicating channels that generate events
@@ -55,9 +48,7 @@ class BpodAnalogIn(object):
         self.Stream2USB = [0] * self._nPhysicalChannels  # Logical vector indicating channels to stream to USB when streaming is enabled
         self.USBStreamFile = ''  # Full path to file for data acquired with scope() GUI. If empty, scope() data is not saved.
 
-       
-
-
+    
         # Tell the analog input module that the USB initiated new connection so reset all state variables.
         msg = ArduinoTypes.get_uint8_array([self._opMenuByte, ord('O')])
         self.Port.write_array(msg)
@@ -79,8 +70,35 @@ class BpodAnalogIn(object):
             self._Initialized = 1
 
         else:
-            raise BpodErrorException('Error: The serial port {0} returned an unexpected handshake signature.'.format(serial_port))
+            raise AnalogInException('Error: The serial port {0} returned an unexpected handshake signature.'.format(serial_port))
 
+
+    def getSamplingRate(self):
+        return self.SamplingRate
+
+    def getChannelInputVoltageMax(self, channelNum):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error getting channel's max input voltage: Must use a value from 0-7 for channelNum")
+        elif (self.InputRange[channelNum] == '-10V:10V'):
+            return 10
+        elif (self.InputRange[channelNum] == '-5V:5V'):
+            return 5
+        elif (self.InputRange[channelNum] == '-2.5V:2.5V'):
+            return 2.5
+        elif (self.InputRange[channelNum] == '0V:10V'):
+            return 10
+
+    def getChannelInputVoltageMin(self, channelNum):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error getting channel's min input voltage: Must use a value from 0-7 for channelNum")
+        elif (self.InputRange[channelNum] == '-10V:10V'):
+            return -10
+        elif (self.InputRange[channelNum] == '-5V:5V'):
+            return -5
+        elif (self.InputRange[channelNum] == '-2.5V:2.5V'):
+            return -2.5
+        elif (self.InputRange[channelNum] == '0V:10V'):
+            return 0
 
     def setNsamplesToLog(self, nSamples):
         if self._Initialized:
@@ -101,10 +119,10 @@ class BpodAnalogIn(object):
     def setSamplingRate(self, sf):
         if self._Initialized:
             if self._USBstream2File:
-                raise BpodErrorException('Error: The analog input module sampling rate cannot be changed while streaming to a file.')
+                raise AnalogInException('Error: The analog input module sampling rate cannot be changed while streaming to a file.')
 
             if (sf < 1) or (sf > 10000):
-                raise BpodErrorException('Error setting sampling rate: valid rates are in range: [1, 10000] Hz')
+                raise AnalogInException('Error setting sampling rate: valid rates are in range: [1, 10000] Hz')
 
             msgHeader = ArduinoTypes.get_uint8_array(array=[self._opMenuByte, ord('F')])
             msgBody = ArduinoTypes.get_uint32_array(array=[sf])
@@ -118,7 +136,7 @@ class BpodAnalogIn(object):
     def setStreamPrefix(self, prefix):
         if self._Initialized:
             if (len(prefix) > 1):
-                raise BpodErrorException('Error setting prefix: the prefix must be a single byte.')
+                raise AnalogInException('Error setting prefix: the prefix must be a single byte.')
             
             msg = ArduinoTypes.get_uint8_array(array=[self._opMenuByte, ord('P'), prefix])            
             self.Port.write_array(msg)
@@ -130,10 +148,10 @@ class BpodAnalogIn(object):
     def setNactiveChannels(self, nChannels):
         if self._Initialized:
             if self._USBstream2File:
-                raise BpodErrorException('Error: The analog input module active channel set cannot be changed while streaming to a file.')
+                raise AnalogInException('Error: The analog input module active channel set cannot be changed while streaming to a file.')
             
             if (nChannels < 1) or (nChannels > self._nPhysicalChannels):
-                raise BpodErrorException('Error setting active channel count: nChannels must be in the range 1: {0}'.format(self._nPhysicalChannels))
+                raise AnalogInException('Error setting active channel count: nChannels must be in the range 1: {0}'.format(self._nPhysicalChannels))
             
             msg = ArduinoTypes.get_uint8_array(array=[self._opMenuByte, ord('A'), nChannels])            
             self.Port.write_array(msg)
@@ -146,9 +164,10 @@ class BpodAnalogIn(object):
         # 0: '-10V - 10V', 1: '-5V - 5V', 2: '-2.5V - 2.5V', 3: '0V - 10V'
         if self._Initialized:
             if self._USBstream2File:
-                raise BpodErrorException('Error: The analog input module voltage range cannot be changed while streaming to a file.')
+                raise AnalogInException('Error: The analog input module voltage range cannot be changed while streaming to a file.')
             
-            # TODO: Need to check if list parameter is of length self._nPhysicalChannels.
+            if not (len(value) == self._nPhysicalChannels):
+                raise AnalogInException('Error setting input voltage ranges: The given list of input voltage ranges must be of length {0}'.format(self._nPhysicalChannels))
 
             InputRangeIndices = [0] * self._nPhysicalChannels  # Initializes all channels to default range of -10V:10V.
             for i in range(0, self._nPhysicalChannels):
@@ -156,7 +175,7 @@ class BpodAnalogIn(object):
                 if RangeString in self._ValidRanges:
                     RangeIndex = self._ValidRanges[RangeString]
                 else:
-                    raise BpodErrorException("Invalid range specified: {0}. Valid ranges are: {1}".format(RangeString, self._ValidRanges))
+                    raise AnalogInException("Invalid range specified: '{0}'. Valid ranges are: {1}".format(RangeString, self._ValidRanges))
                 
                 InputRangeIndices[i] = RangeIndex
             
@@ -208,15 +227,26 @@ class BpodAnalogIn(object):
             self._Initialized = 1
         else:
             self.InputRange = value
+    
+
+    def setChannelInputRange(self, channelNum, rangeString):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error setting channel input voltage range: Must use a value from 0-7 for channelNum")
         
+        else:
+            listOfInputRanges = self.InputRange.copy()
+            listOfInputRanges[channelNum] = rangeString
+            self.setInputRange(listOfInputRanges)
+
         
     def setThresholds(self, value):
         if self._Initialized:
+            if not (len(value) == self._nPhysicalChannels):
+                raise AnalogInException('Error setting threshold voltages: The given list of threshold voltages must be of length {0}'.format(self._nPhysicalChannels))
 
-            # TODO: Need to check if list parameter is of length self._nPhysicalChannels.
             for i in range(self._nPhysicalChannels):
                 if (value[i] < self._InputRangeLimits[self._rangeIndices[i]][0]) or (value[i] > self._InputRangeLimits[self._rangeIndices[i]][1]):
-                    raise BpodErrorException('Error setting threshold: the threshold for channel {0} is not within the channel\'s voltage range of: '.format(i, self.InputRange[i]))
+                    raise AnalogInException('Error setting threshold: the threshold for channel {0} is not within the channel\'s voltage range of: '.format(i, self.InputRange[i]))
             
             #Rescale thresholds according to voltage range.
             ResetValueBits = self._Volts2Bits(self.ResetVoltages, self._rangeIndices)
@@ -228,15 +258,25 @@ class BpodAnalogIn(object):
             self._confirmTransmission('thresholds')
         
         self.Thresholds = value
+    
+
+    def setChannelThreshold(self, channelNum, voltage):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error setting channel threshold voltage: Must use a value from 0-7 for channelNum")
+        else:
+            listOfThresholds = self.Thresholds.copy()
+            listOfThresholds[channelNum] = voltage
+            self.setThresholds(listOfThresholds)
 
         
     def setResetVoltages(self, value):
         if self._Initialized:
-            # TODO: Need to check if list parameter is of length self._nPhysicalChannels.
+            if not (len(value) == self._nPhysicalChannels):
+                raise AnalogInException('Error setting reset voltages: The given list of reset voltages must be of length {0}'.format(self._nPhysicalChannels))
 
             for i in range(self._nPhysicalChannels):
                 if (value[i] < self._InputRangeLimits[self._rangeIndices[i]][0]) or (value[i] > self._InputRangeLimits[self._rangeIndices[i]][1]):
-                    raise BpodErrorException('Error setting threshold reset voltage: the value for channel {0} is not within the channel\'s voltage range: '.format(i, self.InputRange[i]))
+                    raise AnalogInException('Error setting threshold reset voltage: the value for channel {0} is not within the channel\'s voltage range: '.format(i, self.InputRange[i]))
             
             #Rescale thresholds according to voltage range.
             ResetValueBits = self._Volts2Bits(value, self._rangeIndices)
@@ -249,11 +289,20 @@ class BpodAnalogIn(object):
         
         self.ResetVoltages = value
 
+
+    def setChannelResetVoltage(self, channelNum, voltage):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error setting channel reset voltage: Must use a value from 0-7 for channelNum")
+        else:
+            listOfResetVoltages = self.ResetVoltages.copy()
+            listOfResetVoltages[channelNum] = voltage
+            self.setResetVoltages(listOfResetVoltages)
+
         
     def setSMeventsEnabled(self, value):
         if self._Initialized:
             if not (len(value) == self._nPhysicalChannels):
-                raise BpodErrorException('Error setting events enabled: value is not of length {0}'.format(self._nPhysicalChannels))
+                raise AnalogInException('Error setting events enabled: list given is not of length {0}'.format(self._nPhysicalChannels))
 
             sumOfVals = 0
             for i in range(self._nPhysicalChannels):
@@ -261,7 +310,7 @@ class BpodAnalogIn(object):
                     sumOfVals += 1
 
             if not (sumOfVals == self._nPhysicalChannels):
-                raise BpodErrorException('Error setting events enabled: enabled state must be 0 or 1')
+                raise AnalogInException('Error setting events enabled: enabled state must be 0 or 1')
             
             msgHeader = ArduinoTypes.get_uint8_array([self._opMenuByte, ord('K')])
             msgBody = ArduinoTypes.get_uint8_array(value)
@@ -270,6 +319,15 @@ class BpodAnalogIn(object):
             self._confirmTransmission('events enabled')
         
         self.SMeventsEnabled = value
+
+
+    def setChannelSMeventsEnabled(self, channelNum, value):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error setting channel SM events enabled: Must use a value from 0-7 for channelNum")
+        else:
+            listOfSMeventsEnabled = self.SMeventsEnabled.copy()
+            listOfSMeventsEnabled[channelNum] = value
+            self.setSMeventsEnabled(listOfSMeventsEnabled)
 
         
     def startModuleStream(self):
@@ -383,7 +441,7 @@ class BpodAnalogIn(object):
     def setStream2USB(self, value):
         if self._Initialized:
             if not (len(value) == self._nPhysicalChannels):
-                raise BpodErrorException('Error setting Stream2USB channels: value is not of length {0}'.format(self._nPhysicalChannels))
+                raise AnalogInException('Error setting Stream2USB channels: value is not of length {0}'.format(self._nPhysicalChannels))
 
             sumOfVals = 0
             for i in range(self._nPhysicalChannels):
@@ -391,7 +449,7 @@ class BpodAnalogIn(object):
                     sumOfVals += 1
 
             if not (sumOfVals == self._nPhysicalChannels):
-                raise BpodErrorException('Error setting Stream2USB channels: enabled state must be 0 or 1')
+                raise AnalogInException('Error setting Stream2USB channels: enabled state must be 0 or 1')
             
             msgHeader = ArduinoTypes.get_uint8_array([self._opMenuByte, ord('C')])
             msgBody = ArduinoTypes.get_uint8_array((value + self.Stream2Module))  # Order matters here.
@@ -402,11 +460,20 @@ class BpodAnalogIn(object):
         self.Stream2USB = value
         self._nChannelsStreaming2USB = sum(value)
 
+    
+    def setChannelStream2USB(self, channelNum, value):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error setting channel Stream2USB: Must use a value from 0-7 for channelNum")
+        else:
+            listOfStream2USB = self.Stream2USB.copy()
+            listOfStream2USB[channelNum] = value
+            self.setStream2USB(listOfStream2USB)
+
         
     def setStream2Module(self, value):
         if self._Initialized:
             if not (len(value) == self._nPhysicalChannels):
-                raise BpodErrorException('Error setting Stream2Module channels: value is not of length {0}'.format(self._nPhysicalChannels))
+                raise AnalogInException('Error setting Stream2Module channels: value is not of length {0}'.format(self._nPhysicalChannels))
 
             sumOfVals = 0
             for i in range(self._nPhysicalChannels):
@@ -414,7 +481,7 @@ class BpodAnalogIn(object):
                     sumOfVals += 1
 
             if not (sumOfVals == self._nPhysicalChannels):
-                raise BpodErrorException('Error setting Stream2Module channels: enabled state must be 0 or 1')
+                raise AnalogInException('Error setting Stream2Module channels: enabled state must be 0 or 1')
             
             msgHeader = ArduinoTypes.get_uint8_array([self._opMenuByte, ord('C')])
             msgBody = ArduinoTypes.get_uint8_array((self.Stream2USB + value))  # Order matters here.
@@ -423,6 +490,15 @@ class BpodAnalogIn(object):
             self._confirmTransmission('stream to Module')
         
         self.Stream2Module = value
+
+
+    def setChannelStream2Module(self, channelNum, value):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error setting channel Stream2Module: Must use a value from 0-7 for channelNum")
+        else:
+            listOfStream2Module = self.Stream2Module.copy()
+            listOfStream2Module[channelNum] = value
+            self.setStream2Module(listOfStream2Module)
 
 
     def getFirmwareVersion(self):
@@ -479,16 +555,14 @@ class BpodAnalogIn(object):
 
     def close(self):
         self.Port.close()
-        print('Analog Input Module disconnected.')
-
     
     # Private methods
     def _confirmTransmission(self, paramName):
         Confirmed = self.Port.read_uint8()
         if Confirmed == 0:
-            raise BpodErrorException('Error setting {0}: the module denied your request.'.format(paramName))
+            raise AnalogInException('Error setting {0}: the module denied your request.'.format(paramName))
         elif Confirmed != 1:
-            raise BpodErrorException('Error setting {0}: module did not acknowledge new value.'.format(paramName))
+            raise AnalogInException('Error setting {0}: module did not acknowledge new value.'.format(paramName))
         
 
     def _Volts2Bits(self, VoltVector, RangeIndices):
