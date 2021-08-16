@@ -55,9 +55,6 @@ class SessionData(tables.IsDescription):
     odorFlow = tables.UInt8Col(pos=5)
     leftLicksCount = tables.UInt8Col(pos=6)
     rightLicksCount = tables.UInt8Col(pos=7)
-    responseWindowStartTime = tables.Float32Col(pos=8)
-    responseWindowEndTime = tables.Float32Col(pos=9)
-    responseTimeElapsed = tables.Float32Col(pos=10)
     itiDuration = tables.UInt8Col(pos=11)
     trialStartTime = tables.Float32Col(pos=12)
     trialEndTime = tables.Float32Col(pos=13)
@@ -198,9 +195,6 @@ class SaveDataWorker(QObject):
                 self.trial['odorName'] = self.infoDict['currentOdorName']
                 self.trial['odorConc'] = self.infoDict['currentOdorConc']
                 self.trial['odorFlow'] = self.infoDict['currentFlow']
-                self.trial['responseWindowStartTime'] = self.infoDict['States timestamps']['WaitForResponse'][0][0]
-                self.trial['responseWindowEndTime'] = self.infoDict['States timestamps']['WaitForResponse'][0][1]
-                self.trial['responseTimeElapsed'] = self.trial['responseWindowEndTime'] - self.trial['responseWindowStartTime']
                 self.trial['itiDuration'] = self.infoDict['currentITI']
                 self.trial['trialStartTime'] = self.infoDict['Trial start timestamp']
                 self.trial['trialEndTime'] = self.infoDict['Trial end timestamp']
