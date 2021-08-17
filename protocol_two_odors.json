@@ -1,0 +1,151 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForFirstOdor",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Tup": "WaitForFirstSniff"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForFirstSniff",
+            "stateTimer": 10,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "PresentFirstOdor",
+                "Tup": "NoSniff"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "PresentFirstOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "FirstDelay"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "FirstDelay",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForSecondOdor"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForSecondOdor",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Tup": "WaitForSecondSniff"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForSecondSniff",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "PresentSecondOdor",
+                "Tup": "NoSniff"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "PresentSecondOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Port1In": "Correct",
+                "Port3In": "Wrong",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoSniff",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        }
+    ]
+}

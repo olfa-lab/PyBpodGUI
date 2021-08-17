@@ -1,0 +1,105 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForOdor",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Tup": "WaitForSniff"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForSniff",
+            "stateTimer": 10,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "WaitForResponse",
+                "Tup": "NoSniff"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 10,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoSniff",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "SyncByte"
+            }
+        }
+    ],
+    "intensityPercentages": [
+        10,
+        25,
+        33,
+        50,
+        67,
+        75,
+        90,
+        100
+    ]
+}
