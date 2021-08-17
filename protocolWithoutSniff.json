@@ -6,7 +6,9 @@
             "stateChangeConditions": {
                 "Tup": "WaitForResponse"
             },
-            "outputActions": {}
+            "outputActions": {
+                "Olfactometer": "set_stimulus"
+            }
         },
         {
             "stateName": "WaitForResponse",
@@ -56,7 +58,9 @@
             "stateChangeConditions": {
                 "Tup": "exit"
             },
-            "outputActions": {}
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials"
+            }
         }
     ],
     "intensityPercentages": [
