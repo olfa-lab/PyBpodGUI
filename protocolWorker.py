@@ -116,11 +116,25 @@ class ProtocolWorker(QObject):
         return totals
 
     def my_softcode_handler(self, softcode):
-        # I will reserve softcode 1 to be an automatic output from every state so that the my_softcode_handler function gets called at every
-        # state to update the GUI info and emit the necessary signals. If user selects a different softcode other than 1, the instructions
-        # below will still be executed. However, I'm still not sure how to implement a way to allow a user to configure softcode actions.
+        # I will reserve softcode 1 to be an automatic output from every state (that does not already have a softcode) so that the
+        # my_softcode_handler function gets called at every state to update the GUI info and emit the necessary signals. If user selects
+        # a different softcode other than 1, the instructions below will still be executed. However, I'm still not sure how to implement
+        # a way to allow a user to configure softcode actions.
         if softcode == 1:
             pass
+
+        elif softcode == 2:
+            try:
+                self.olfas.set_stimulus(self.odorDict)
+
+            except OlfaException as olf:
+                self.olfaExceptionSignal.emit(str(olf))
+                self.stopRunning()
+                # self.finished.emit()
+                return  # Exit the function to avoid continuing with the code below.
+
+        elif softcode == 3:
+            self.olfas.set_dummy_vials()
 
         # Update trial info for GUI
         self.currentStateName = self.sma.state_names[self.sma.current_state]
@@ -307,14 +321,7 @@ class ProtocolWorker(QObject):
 
         if self.keepRunning and (self.currentTrialNum < self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
             if self.olfas is not None:
-                odorDict = self.stimulusRandomizer()
-                try:
-                    self.olfas.set_stimulus(odorDict)
-
-                except OlfaException as olf:
-                    self.olfaExceptionSignal.emit(str(olf))
-                    self.finished.emit()
-                    return  # Exit the function to avoid continuing with the code below.
+                self.odorDict = self.stimulusRandomizer()
 
             self.currentITI = np.random.randint(5, 10)  # inter trial interval in seconds.
             self.currentTrialNum += 1
@@ -345,7 +352,19 @@ class ProtocolWorker(QObject):
             listOfTuples = []
 
             for state in self.stateMachine['states']:
-                # Automatically add a softcode in every state to call my_softcode_handler function so that GUI gets updated and signals get emitted.
+                if 'Olfactometer' in state['outputActions']:
+                    # Replace 'Olfactometer': 'set_stimulus' with SoftCode 2.
+                    if (state['outputActions']['Olfactometer'] == 'set_stimulus'):
+                        state['outputActions']['SoftCode'] = 2  # SoftCode 2 is reserved for set_stimulus.
+                        del state['outputActions']['Olfactometer']  # Delete 'Olfactometer' because its not a valid output channel.
+                    
+                    # Replace 'Olfactometer': 'set_dummy_vials' with SoftCode 3.
+                    elif (state['outputActions']['Olfactometer'] == 'set_dummy_vials'):
+                        state['outputActions']['SoftCode'] = 3  # SoftCode 3 is reserved for set_dummy_vials.
+                        del state['outputActions']['Olfactometer']  # Delete 'Olfactometer because its not a valid output channel.
+
+                # Automatically add a softcode in every state (if the state does not have it already) to call my_softcode_handler
+                # function so that GUI gets updated and signals get emitted.
                 if 'SoftCode' not in state['outputActions']:
                     state['outputActions']['SoftCode'] = 1  # SoftCode 1 is reserved for this purpose.
 
@@ -383,9 +402,6 @@ class ProtocolWorker(QObject):
                         # go into the tuple instead of 'SyncByte'. This way the state machine can replace the byte value with the loaded
                         # serial message. 
                         channelValue = stateNum
-                        # I also update the state['outputActions'] dictionary with stateNum as the value instead of 'SyncByte'
-                        # for consistency, which also causes this if statement to be enter only once at the beginning of the experiment instead
-                        # of before the start of every trial. But either way it should not make any difference...
                         state['outputActions'][channelName] = stateNum
                         self.myBpod.load_serial_message(
                             serial_channel=int(channelName[-1]),
@@ -418,9 +434,6 @@ class ProtocolWorker(QObject):
 
             self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
             self.myBpod.run_state_machine(self.sma)  # Run state machine
-
-            if self.olfas is not None:  # Check to make sure olfactometer is connected to avoid errors.
-                self.olfas.set_dummy_vials()
 
             # Update trial info for GUI
             self.currentStateName = 'exit'
