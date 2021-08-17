@@ -108,7 +108,7 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             'Condition6', 'Condition7', 'Condition8', 'Condition9', 'Condition10', 'Condition11', 'Condition12', 'Condition13', 'Condition14',
             'Condition15', 'Condition16'
         ]'''
-        self.outputChannels = ['Select...', 'LED', 'Valve'] + outputChannelsList
+        self.outputChannels = ['Select...', 'Olfactometer', 'LED', 'Valve'] + outputChannelsList
         '''[
             'Select...', 'Serial1', 'Serial2', 'Serial3', 'Serial4', 'Serial5', 'SoftCode',
             'BNC1', 'BNC2', 'PWM1', 'PWM2', 'PWM3', 'PWM4', 'Valve1', 'Valve2',
@@ -132,11 +132,13 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         self.connectSignalsSlots()
 
     def connectSignalsSlots(self):
-        self.stateNameLineEdit.editingFinished.connect(self.recordStateName)
+        self.stateNameComboBox.lineEdit().editingFinished.connect(self.recordStateName)
+        self.stateNameComboBox.currentIndexChanged.connect(self.recordStateName)
         self.stateTimerComboBox.lineEdit().editingFinished.connect(self.recordStateTimer)
+        # self.stateTimerComboBox.currentIndexChanged.connect(self.recordStateTimer)
         self.stateChangeEventComboBox.currentTextChanged.connect(self.recordStateChangeEvent)
-        self.stateChangeNameComboBox.currentTextChanged.connect(self.recordStateChangeName)
-        self.stateChangeNameComboBox.lineEdit().editingFinished.connect(self.updateStateChangeNameComboBox)  # self.stateChangeNameComboBox is editable so I can use the editingFinished signal for QLineEdit.
+        self.stateChangeNameComboBox.lineEdit().editingFinished.connect(self.recordStateChangeName)  # self.stateChangeNameComboBox is editable so I can use the editingFinished signal for QLineEdit.
+        self.stateChangeNameComboBox.currentIndexChanged.connect(self.recordStateChangeName)
         self.outputChannelNameComboBox.currentTextChanged.connect(self.recordOutputChannelName)
         self.outputChannelValueComboBox.currentTextChanged.connect(self.recordOutputChannelValue)
         self.addStateChangeConditionButton.clicked.connect(self.addStateChangeCondition)
@@ -144,6 +146,7 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         self.clearOutputActionsButton.clicked.connect(self.clearOutputActions)
         self.clearStateChangeConditionsButton.clicked.connect(self.clearStateChangeConditions)
         self.addStateButton.clicked.connect(self.addStateToView)
+        self.removeStateButton.clicked.connect(self.removeStateFromView)
         self.nextButton.clicked.connect(self.showStateMachineWidget)
         self.backButton.clicked.connect(self.showFlowRatesWidget)
         self.cancelButton.clicked.connect(self.reject)
@@ -219,8 +222,15 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             self.intensityPercentages.remove(int(itemRemoved.text()))  # itemRemoved is of type QListWidgetItem.
             del itemRemoved  # According to Qt docs, Qt does not manage items removed from a ListWidget so they need to be deleted manually.
 
-    def recordStateName(self):
-        self.stateDict['stateName'] = self.stateNameLineEdit.text()
+    def recordStateName(self, index=None):
+        if index is None:
+            stateName = self.stateNameComboBox.currentText()
+        else:
+            stateName = self.stateNameComboBox.itemText(index)
+
+        self.stateDict['stateName'] = stateName
+        if (self.stateNameComboBox.findText(stateName) == -1):  # -1 means the Text was not found in the combobox
+            self.stateNameComboBox.addItem(stateName)  # Only add to combobox if not already in it to avoid duplicates.
 
     def recordStateTimer(self):
         try:
@@ -235,17 +245,24 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             if (self.stateChangeNameComboBox.currentIndex() > 0):
                 self.addStateChangeConditionButton.setEnabled(True)  # Enable the button now since valid selections were made.
 
-    def recordStateChangeName(self, changeStateName):
-        # Check that user made a selection for both stateChangeEvent and stateChangeName first.
-        # Index 0 is 'Select...' which is not a valid selection. Index -1 means no selection at all.
-        if (self.stateChangeEventComboBox.currentIndex() > 0):
-            if (self.stateChangeNameComboBox.currentIndex() > 0):
-                self.addStateChangeConditionButton.setEnabled(True)  # Enable the button now since valid selections were made.
-
-    def updateStateChangeNameComboBox(self):
-        changeStateName = self.stateChangeNameComboBox.currentText()
-        if (self.stateChangeNameComboBox.findText(changeStateName) == -1):  # -1 means the Text was not found in the combobox
-            self.stateChangeNameComboBox.addItem(changeStateName)  # Only add to combobox if not already in it to avoid duplicates.
+    def recordStateChangeName(self, index=None):
+        if index is None:
+            logging.info('editing finished')
+            stateChangeName = self.stateChangeNameComboBox.currentText()
+            findIndex = self.stateChangeNameComboBox.findText(stateChangeName)
+            if (findIndex == -1):  # -1 means the Text was not found in the combobox
+                self.stateChangeNameComboBox.addItem(stateChangeName)  # Only add to combobox if not already in it to avoid duplicates.
+                length = self.stateChangeNameComboBox.count()
+                self.stateChangeNameComboBox.setCurrentIndex(length - 1)  # set index to the last item in the combobox, which was just appended.
+            else:
+                self.stateChangeNameComboBox.setCurrentIndex(findIndex)  # item already in combobox so use its index.
+        else:   
+            logging.info('current index changed')     
+            # Check that user made a selection for both stateChangeEvent and stateChangeName first.
+            # Index 0 is 'Select...' which is not a valid selection. Index -1 means no selection at all.
+            if (self.stateChangeEventComboBox.currentIndex() > 0):
+                if (index > 0):
+                    self.addStateChangeConditionButton.setEnabled(True)  # Enable the button now since valid selections were made.
 
     def addStateChangeCondition(self):
         if (self.stateChangeEventComboBox.currentIndex() > 0):
@@ -268,6 +285,8 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
                     self.stateDict['stateChangeConditions'][eventName] = changeStateName
                     itemToAdd = f"{eventName} --> {changeStateName}"
                     self.stateChangeConditionsListWidget.addItem(itemToAdd)
+
+                    self.stateNameComboBox.addItem(changeStateName)  # Also add to the stateNameComboBox for convenience when creating the next state.
                 
                 self.addStateChangeConditionButton.setEnabled(False)  # Disable the button until new valid selections are made, to avoid adding duplicate to the listWidget.
 
@@ -282,6 +301,10 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         if (self.outputChannelNameComboBox.currentIndex() <= 0):  # Index 0 is 'Select...' which is invalid. Index -1 is no selection at all.
             self.outputChannelValueComboBox.clear()  # Clear the value combobox to avoid mixing invalid output channel name with valid value.
 
+        elif (channelName == 'Olfactometer'):
+            self.outputChannelValueComboBox.clear()
+            self.outputChannelValueComboBox.addItems(['Command...', 'set_stimulus', 'set_dummy_vials'])
+        
         elif (channelName == 'LED'):
             self.outputChannelValueComboBox.clear()
 
@@ -375,8 +398,6 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
                         #     # Last character in the string is the port number (i.e 'PWM1' and 'Valve1') so remove that port number so it does not get added to the outputChannelValueComboBox.
                         #     # This will prevent the user from duplicating the port. For example, if 'Valve2' was used already, do not allow the user to select 'Valve' channel 2.
                         #     self.valvePorts.remove(int(channelName[-1]))  # self.valvePorts is list of ints.
-                    
-
 
                         self.stateDict['outputActions'][channelName] = channelValue
                         # remove from combobox to avoid errors if user selects it again after it was already added (i.e. ValueError when removing twice from self.LEDports)
@@ -458,11 +479,14 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             self.xposition += 200
             self.counter += 1
 
-            self.stateNameLineEdit.clear()
+            self.stateNameComboBox.lineEdit().clear()
             self.stateTimerComboBox.setCurrentIndex(0)
             
             self.clearStateChangeConditions()
             self.clearOutputActions()
+    
+    def removeStateFromView(self):
+        pass
     
     # def openFileNameDialog(self):
     #     options = QFileDialog.Options()
