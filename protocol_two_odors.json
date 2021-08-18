@@ -85,8 +85,8 @@
             "stateName": "WaitForResponse",
             "stateTimer": 5,
             "stateChangeConditions": {
-                "Port1In": "Correct",
-                "Port3In": "Wrong",
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
                 "Tup": "NoResponse"
             },
             "outputActions": {
@@ -147,5 +147,6 @@
                 "Serial1": "SyncByte"
             }
         }
-    ]
+    ],
+    "experimentType": "twoOdorMatch"
 }
