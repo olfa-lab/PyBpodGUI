@@ -372,7 +372,8 @@ class ProtocolWorker(QObject):
             if self.olfaChecked:
                 self.getOdorsFromConfigFile()
                 self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
-                
+
+            self.myBpod.softcode_handler_function = self.my_softcode_handler    
             self.startTrial()
 
         # Note that these except clauses can only trigger from the first trial.
@@ -396,7 +397,6 @@ class ProtocolWorker(QObject):
             # self.finished.emit()
         
     def startTrial(self):
-        self.myBpod.softcode_handler_function = self.my_softcode_handler
         finalValve = 2  # Final valve for the odor port on bpod's behavior port 2.
 
         if self.keepRunning and (self.currentTrialNum < self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
@@ -522,7 +522,7 @@ class ProtocolWorker(QObject):
             self.stimIndex = 0
             # self.stopSDCardLoggingSignal.emit()
             
-            # Start trial in 1000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
+            # Start the next trial in 1000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
             QTimer.singleShot(1000, self.startTrial)
 
         else:
