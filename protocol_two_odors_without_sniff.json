@@ -1,0 +1,153 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForFirstOdor",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Tup": "WaitForFirstPoke"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForFirstPoke",
+            "stateTimer": 10,
+            "stateChangeConditions": {
+                "Port2In": "PresentFirstOdor",
+                "Tup": "NoPoke"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "PresentFirstOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "FirstDelay"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "FirstDelay",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForSecondOdor"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForSecondOdor",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Tup": "WaitForSecondPoke"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForSecondPoke",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Port2In": "PresentSecondOdor",
+                "Tup": "NoPoke"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "PresentSecondOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "NoPoke",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "SyncByte"
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {
+                "Serial1": "SyncByte"
+            }
+        }
+    ],
+    "experimentType": "twoOdorMatch"
+}
