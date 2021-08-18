@@ -62,6 +62,7 @@ class ProtocolWorker(QObject):
         self.concs = []
         self.flows = []
         self.flowResultsCounterDict = {}
+        self.stimIndex = 0
 
     # @pyqtSlot()  # Even with this decorator, I still need to use lambda when connecting a signal to this function.
     def setLeftWaterDuration(self, duration):
@@ -125,7 +126,18 @@ class ProtocolWorker(QObject):
 
         elif softcode == 2:
             try:
-                self.olfas.set_stimulus(self.odorDict)
+                # I manually call the _poll_mfcs() function here because the olfactometer.py uses a QTimer for which its timeout slot connects to
+                # _poll_mfcs() at an interval set by mfc_polling_interval, but QTimers do not connect to their timeout slots while the state machine
+                # is running because run_state_machine is a blocking function. QTimers do not even work here when called inside the my_softcode_handler
+                # function. They only connect to their timeout slots after the run_state_machine function completes. So to prevent olfactometer.py
+                # from raising the OlfaException("MFC polling is not OK") when set_stimulus is called a second time for the second odor or for the
+                # second trial, I manually call the slot that the QTimer is supposed to connect to, which is _poll_mfcs(). I do this before calling
+                # set_stimulus() because inside set_stimulus(), there is a call to check_flows(), which checks the elapsed time since the last time
+                # the mfc were polled. By polling the mfcs right before calling set_stimulus(), the elapsed time will never be long enough to raise
+                # the OlfaException.
+                self.olfas.olfas[0]._poll_mfcs()
+                self.olfas.set_stimulus(self.stimulus[self.stimIndex])
+                self.stimIndex += 1
 
             except OlfaException as olf:
                 self.olfaExceptionSignal.emit(str(olf))
@@ -135,6 +147,14 @@ class ProtocolWorker(QObject):
 
         elif softcode == 3:
             self.olfas.set_dummy_vials()
+            # I manually call the _valve_lockout_clear() function here because the olfactometer.py uses a QTimer.singleShot to call it 1 second
+            # after set_dummy_vial, but QTimers do not connect to their timeout slots while the state machine is running because run_state_machine
+            # is a blocking function. QTimers do not even work when called here inside the my_softcode_handler function. They only connect to their
+            # timeout slots after the run_state_machine function completes. So I manually call _valve_lockout_clear() so that set_stimulus() can be
+            # called a second time for the second odor. Otherwise, the olfactometer will present an error "Cannot open vial. Must wait 1 second
+            # after last valve closed to prevent cross=contamination." I assume that 1 second will elapse between the state that called
+            # set_dummy_vials() and the state that will call set_stimulus() again for the second odor.
+            self.olfas.olfas[0]._valve_lockout_clear()
 
         # Update trial info for GUI
         self.currentStateName = self.sma.state_names[self.sma.current_state]
@@ -209,9 +229,27 @@ class ProtocolWorker(QObject):
         with open(self.protocolFileName, 'r') as protocolFile:
             protocolDict = json.load(protocolFile)
         
-        if ('intensityPercentages' in protocolDict) and (len(protocolDict['intensityPercentages']) > 0):
-            self.flows = protocolDict['intensityPercentages']
+        if (protocolDict['experimentType'] == 'oneOdorIntensity'):
+            self.stimulusFunction = self.oneOdorIntensityRandomizer
 
+            if (len(protocolDict['intensityPercentages']) > 0):
+                self.flows = protocolDict['intensityPercentages']
+                for flow in self.flows:
+                    self.flowResultsCounterDict[str(flow)] = {
+                        'right': 0,  # initizialize counters to zero.
+                        'left': 0,
+                        'Correct': 0,
+                        'Wrong': 0,
+                        'NoResponse': 0,
+                        'Total': 0
+                    }
+            else:
+                raise KeyError('No intensity percentages given.')
+
+        elif (protocolDict['experimentType'] == 'twoOdorMatch'):
+            self.stimulusFunction = self.twoOdorMatchRandomizer
+            self.flows.append(100)  # Assume only one flow rate, which is max.
+            self.currentFlow = 100   
             for flow in self.flows:
                 self.flowResultsCounterDict[str(flow)] = {
                     'right': 0,  # initizialize counters to zero.
@@ -220,13 +258,13 @@ class ProtocolWorker(QObject):
                     'Wrong': 0,
                     'NoResponse': 0,
                     'Total': 0
-                }
+                }      
 
-    def stimulusRandomizer(self):
+    def oneOdorIntensityRandomizer(self):
         flow_threshold = np.sqrt(self.flows[0] * self.flows[-1])
         
         self.currentFlow = np.random.choice(self.flows)
-        #If flow is lower than flow_threshold == ~30 , 'Left' is correct. Otherwise, 'Right' is correct
+        #If flow is lower than flow_threshold == ~30 , 'left' is correct. Otherwise, 'right' is correct
         if self.currentFlow < flow_threshold:
             self.correctResponse = 'left'
         else:
@@ -235,10 +273,6 @@ class ProtocolWorker(QObject):
         vialIndex = np.random.randint(len(self.odors))  # random int for index of vial
         self.currentOdorName = self.odors[vialIndex]
         self.currentOdorConc = self.concs[vialIndex]
-
-        # self.olfas.set_carrier_flow(1000 - self.currentFlow)
-        # self.olfas.set_infuser_flow(self.currentFlow)
-        # self.olfas.set_vial(vialIndex + 5)  # Add 5 because first vial number starts at 5.
 
         ostim = {
             'olfas': {
@@ -251,7 +285,53 @@ class ProtocolWorker(QObject):
                 }
             }
         }
-        return ostim
+        return [ostim]
+
+    def twoOdorMatchRandomizer(self):
+        vialIndex = np.random.randint(len(self.odors))  # random int for index of vial
+        odorName0 = self.odors[vialIndex]
+        odorConc0 = self.concs[vialIndex]
+
+        vialIndex = np.random.randint(len(self.odors))  # random int for index of vial
+        odorName1 = self.odors[vialIndex]
+        odorConc1 = self.concs[vialIndex]
+
+        self.currentOdorName = f"{odorName0}, {odorName1}"
+        self.currentOdorConc = f"{odorConc0}, {odorConc1}"
+
+        # If the two odor names and concentrations are the same, 'right' is correct. If different, 'left' is correct.
+        if (odorName0 == odorName1) and (odorConc0 == odorConc1):
+            self.correctResponse = 'right'
+        else:
+            self.correctResponse = 'left'
+
+        ostim0 = {
+            'olfas': {
+                'olfa_0': {
+                    'dilutors': {},
+                    'mfc_0_flow': 1000 - self.currentFlow,
+                    'mfc_1_flow': self.currentFlow,
+                    'odor': odorName0,
+                    'vialconc': odorConc0
+                }
+            }
+        }
+        ostim1 = {
+            'olfas': {
+                'olfa_0': {
+                    'dilutors': {},
+                    'mfc_0_flow': 1000 - self.currentFlow,
+                    'mfc_1_flow': self.currentFlow,
+                    'odor': odorName1,
+                    'vialconc': odorConc1
+                }
+            }
+        }
+        return [ostim0, ostim1]
+
+    def stimulusFunction(self):
+        # Will be overloaded with another function.
+        pass
 
     def run(self):
         '''
@@ -320,8 +400,18 @@ class ProtocolWorker(QObject):
         finalValve = 2  # Final valve for the odor port on bpod's behavior port 2.
 
         if self.keepRunning and (self.currentTrialNum < self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
+            # load protocol from json file. I do this every trial because I need to reset some values back to their original as read
+            # from the file, so instead of looping through the self.stateMachine dictionary a second time just to reset the values
+            # after parsing it and adding the state to the state machine, I'll just re-read the file and all value will go back to
+            # original. I need the values to go back to their original because the way I check for variables like "leftAction" and 
+            # "rightAction" results in them only being modified the first trial. These variables change every trial according to 
+            # self.correctResponse, so I need to update what gets added to the state machine every trial. Otherwise, the state change
+            # condition for 'Port1In' will always stay the same instead of changing depending on self.correctResponse.
+            with open(self.protocolFileName, 'r') as protocolFile:
+                self.stateMachine = json.load(protocolFile)
+
             if self.olfas is not None:
-                self.odorDict = self.stimulusRandomizer()
+                self.stimulus = self.stimulusFunction()
 
             self.currentITI = np.random.randint(5, 10)  # inter trial interval in seconds.
             self.currentTrialNum += 1
@@ -337,16 +427,6 @@ class ProtocolWorker(QObject):
                 rewardValve = 3  # Right reward valve connected to bpod behavior port 3.
                 rewardDuration = self.rightWaterDuration
 
-            # load protocol from json file. I do this every trial because I need to reset some values back to their original as read
-            # from the file, so instead of looping through the self.stateMachine dictionary a second time just to reset the values
-            # after parsing it and adding the state to the state machine, I'll just re-read the file and all value will go back to
-            # original. I need the values to go back to their original because the way I check for variables like "leftAction" and 
-            # "rightAction" results in them only being modified the first trial. These variables change every trial according to 
-            # self.correctResponse, so I need to update what gets added to the state machine every trial. Otherwise, the state change
-            # condition for 'Port1In' will always stay the same instead of changing depending on self.correctResponse.
-            with open(self.protocolFileName, 'r') as protocolFile:
-                self.stateMachine = json.load(protocolFile)
-            
             self.sma = StateMachine(self.myBpod)
             stateNum = 1
             listOfTuples = []
@@ -393,7 +473,7 @@ class ProtocolWorker(QObject):
                     state['stateTimer'] = rewardDuration                    
 
                 if state['stateTimer'] == 'itiDuration':
-                    state['stateTimer'] = self.currentITI - 5  # Subtract 5 seconds because the QTimer.singleShot starts a new trial 5000 msecs after state machine completes.
+                    state['stateTimer'] = self.currentITI  # - 5  # Subtract 5 seconds because the QTimer.singleShot starts a new trial 5000 msecs after state machine completes.
 
                 for channelName, channelValue in state['outputActions'].items():
                     # Automatically add the sync byte transmission to the analog module for every state.
@@ -435,27 +515,15 @@ class ProtocolWorker(QObject):
             self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
             self.myBpod.run_state_machine(self.sma)  # Run state machine
 
-            # Update trial info for GUI
             self.currentStateName = 'exit'
-            # self.newStateSignal.emit(self.currentStateName)
-
             endOfTrialDict = self.getEndOfTrialInfoDict()
             self.saveTrialDataDictSignal.emit(endOfTrialDict)
             logging.info("saveTrialDataDictSignal emitted")
-
+            self.stimIndex = 0
             # self.stopSDCardLoggingSignal.emit()
             
-            # Start trial in 5000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
-            # The time duration in between trials must be greater than (2.1 * MFC polling interval) which is from olfactometer.py under the
-            # check_flows method. The default value for the MFC polling interval is 2.0 seconds, so the time in between trials must be greater
-            # than 4.2 seconds. The reason is that run_state_machine() is a blocking function that blocks QTimer timeout signals from connecting
-            # to their slots. The QTimer responsible for polling the MFCs cannot do so while the state machine is running. Only after the
-            # run_state_machine function completes can the QTimer connect the timeout signals to their slot, so we need to wait more than the
-            # MFC polling interval time to allow the QTimer timeout signal to fire and connect to its slot to poll the MFCs. If we do not wait
-            # long enough and instead we start the next trial before the QTimer timeout signal emits, we will end up blocking it again which
-            # will result in OlfaException("MFC polling is not ok.") because more than 4.2 seconds elapsed since the last MFC polling occurred,
-            # which makes the program think something is wrong with the MFCs.
-            QTimer.singleShot(5000, self.startTrial)
+            # Start trial in 1000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
+            QTimer.singleShot(1000, self.startTrial)
 
         else:
             self.saveEndOfSessionDataSignal.emit(self.flowResultsCounterDict)
