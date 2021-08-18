@@ -51,7 +51,7 @@ class SessionData(tables.IsDescription):
     correctResponse = tables.StringCol(5, pos=1)
     responseResult = tables.StringCol(16, pos=2)
     odorName = tables.StringCol(32, pos=3)  # Size of strings added to the column does not need to exactly match the size given during initialization.
-    odorConc = tables.Float32Col(pos=4)
+    odorConc = tables.StringCol(16, pos=4)  # I use StringCol instead of Float32Col because of experiments that use two odors will send out two concs as a single string.
     odorFlow = tables.UInt8Col(pos=5)
     leftLicksCount = tables.UInt8Col(pos=6)
     rightLicksCount = tables.UInt8Col(pos=7)
@@ -193,7 +193,7 @@ class SaveDataWorker(QObject):
                 self.trial['correctResponse'] = self.infoDict['correctResponse']
                 self.trial['responseResult'] = self.infoDict['responseResult']
                 self.trial['odorName'] = self.infoDict['currentOdorName']
-                self.trial['odorConc'] = self.infoDict['currentOdorConc']
+                self.trial['odorConc'] = str(self.infoDict['currentOdorConc'])  # convert to string in case it is a float.
                 self.trial['odorFlow'] = self.infoDict['currentFlow']
                 self.trial['itiDuration'] = self.infoDict['currentITI']
                 self.trial['trialStartTime'] = self.infoDict['Trial start timestamp']
