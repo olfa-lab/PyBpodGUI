@@ -12,7 +12,7 @@
         },
         {
             "stateName": "WaitForResponse",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "Port1In": "leftAction",
                 "Port3In": "rightAction",
@@ -65,12 +65,12 @@
     ],
     "intensityPercentages": [
         10,
-        25,
-        33,
-        50,
-        67,
-        75,
-        90,
+        13,
+        18,
+        24,
+        32,
+        41,
+        56,
         100
     ],
     "experimentType": "oneOdorIntensity"

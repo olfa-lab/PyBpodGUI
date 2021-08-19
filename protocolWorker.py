@@ -413,7 +413,7 @@ class ProtocolWorker(QObject):
             if self.olfas is not None:
                 self.stimulus = self.stimulusFunction()
 
-            self.currentITI = np.random.randint(5, 10)  # inter trial interval in seconds.
+            self.currentITI = np.random.randint(8, 13)  # inter trial interval in seconds.
             self.currentTrialNum += 1
 
             if self.correctResponse == 'left':
