@@ -42,6 +42,9 @@ class InputEventWorker(QObject):
                         self.inputEventSignal.emit(['L', 1])  # Correct lick
                     elif self.correctResponse == 'right':
                         self.inputEventSignal.emit(['L', 0])  # Wrong lick
+                    elif self.correctResponse == '':
+                        self.inputEventSignal.emit(['L', 1])  # Just show green dot for the lick.
+
 
             # Right Lick
             if 'Port3In' in eventsDict:
@@ -52,6 +55,9 @@ class InputEventWorker(QObject):
                         self.inputEventSignal.emit(['R', 1])  # Correct lick
                     elif self.correctResponse == 'left':
                         self.inputEventSignal.emit(['R', 0])  # Wrong lick
+                    elif self.correctResponse == '':
+                        self.inputEventSignal.emit(['R', 1])  # Just show green dot for the lick.
+
 
             time.sleep(0.1)  # Without this sleep, the plotter launches but is extremely unresponsive.
         logging.info("InputEventWorker Finished")
