@@ -1,0 +1,57 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForLick",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Port1In": "LeftLick",
+                "Port3In": "RightLick"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "LeftLick",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Port3In": "RightReward"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "RightLick",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Port1In": "LeftReward"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "LeftReward",
+            "stateTimer": 0.2,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [1]
+            }
+        },
+        {
+            "stateName": "RightReward",
+            "stateTimer": 0.2,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [3]
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": 1,
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {}
+        }
+    ]
+}
