@@ -126,26 +126,26 @@ class StreamingWorker(QObject):
         correct = params[1]
         if (direction == 'R'):
             if (correct == 1):
-                self.lickRightCorrect = 2  # Y-axis max range is 2.5 so make right licks on top half of plot.
+                self.lickRightCorrect = 4  # Y-axis max range is 2.5 so make right licks on top half of plot.
                 self.lickRightWrong = np.nan
                 self.lickLeftCorrect = np.nan
                 self.lickLeftWrong = np.nan
             elif (correct == 0):
                 self.lickRightCorrect = np.nan
-                self.lickRightWrong = 2
+                self.lickRightWrong = 4
                 self.lickLeftCorrect = np.nan
                 self.lickLeftWrong = np.nan
         elif (direction == 'L'):
             if (correct == 1):
                 self.lickRightCorrect = np.nan
                 self.lickRightWrong = np.nan
-                self.lickLeftCorrect = -2  # Y-axis min range is -2.5 so make left licks on bottom half of plot.
+                self.lickLeftCorrect = -4  # Y-axis min range is -2.5 so make left licks on bottom half of plot.
                 self.lickLeftWrong = np.nan
             elif (correct == 0):
                 self.lickRightCorrect = np.nan
                 self.lickRightWrong = np.nan
                 self.lickLeftCorrect = np.nan
-                self.lickLeftWrong = -2
+                self.lickLeftWrong = -4
 
     def pauseAnimation(self):
         if not self.paused:
