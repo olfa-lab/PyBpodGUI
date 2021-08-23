@@ -38,7 +38,7 @@ class ProtocolWorker(QObject):
         self.olfas = None
         self.protocolFileName = protocolFileName
         self.olfaConfigFileName = olfaConfigFileName
-        self.correctResponse = None
+        self.correctResponse = ''
         self.currentOdorName = None
         self.currentOdorConc = None
         self.currentFlow = None
