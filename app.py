@@ -22,7 +22,9 @@ import olfactometry
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
 from protocolWorker import ProtocolWorker
-from streamingWorker import StreamingWorker
+# from streamingWorker import StreamingWorker
+from newStreamingWorker import StreamingWorker
+
 from resultsPlotWorker import ResultsPlotWorker
 # from calibrateWaterWorker import CalibrateWaterWorker
 from protocolEditorDialog import ProtocolEditorDialog
@@ -100,6 +102,8 @@ Things to do:
 
     * __X__ allow user to run experiments without analog input (modify saveDataWorker to not save analog data, and do not plot a signal)
 
+    * __X__ allow user to run experiments that do not use olfactometer
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -112,15 +116,13 @@ Things to do:
 
     * _____ implement progress bar for state machine during trial run
 
-    * _____ use pyqtgraph instead of matplotlib for the streaming plot to check if faster sampling/plotting is possible
+    * _____ make the streaming plotter run faster/smoother (maybe try pyqtgraph or blitting)
 
     * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
 
     * _____ create a metadata for the .h5 file
 
     * _____ change the worker threads to use timers instead of infinite while loops
-
-    * _____ allow user to run experiments that do not use olfactometer (currently, protocolWorker does nothing when olfaCheckBox is unchecked)
 
     * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
 
@@ -155,9 +157,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bpodSerialPort = 'COM7'
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
-        self.streaming = StreamingWorker(plotLength=1000)
+        self.streaming = StreamingWorker(maxt=100, dt=0.1)
         self.streamingGroupBoxVLayout.addWidget(self.streaming.getFigure())
-        self.streaming.setupAnimation()
         self.saveDataWorker = None
         self.mouseNumber = None
         self.rigLetter = None
@@ -304,14 +305,6 @@ class Window(QMainWindow, Ui_MainWindow):
         except AnalogInException as err:
             QMessageBox.warning(self, "Warning", f"Analog Input Module Error.\n{err}")
             return
-
-        # try:
-        #     if self.olfaCheckBox.isChecked():
-        #         self.olfas = olfactometry.Olfactometers()  # I might need to create the olfactometer object inside the protocolWorker thread.
-        #         # self.olfas = Cassette(self.olfaConfigDict)
-        # except IOError:
-        #     QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct!")
-        #     return
 
         try:
             self.myBpod = Bpod(serial_port=self.bpodSerialPort)
@@ -757,9 +750,16 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    # Check whether there is already a running QApplication (e.g., if running
+    # from an IDE).
+    qapp = QApplication.instance()
+    if not qapp:
+        qapp = QApplication(sys.argv)
+
     win = Window()
     win.show()
-    status = app.exec()
+    win.activateWindow()
+    win.raise_()
+    status = qapp.exec_()
     win.closeDevices()
     sys.exit(status)
