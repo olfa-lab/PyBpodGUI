@@ -37,6 +37,10 @@ class AnalogInputSettingsDialog(QDialog, Ui_Dialog):
             'enableUSBStreaming': [0, 0, 0, 0, 0, 0, 0, 0],
             'enableModuleStreaming': [0, 0, 0, 0, 0, 0, 0, 0]
         }
+        self.inputVoltageRangeComboBox_1.setCurrentIndex(1)  # Set to '-5V:5V'
+        self.resetVoltageDoubleSpinBox_1.setValue(2.0)
+        self.enableSMEventReportingCheckBox_1.setChecked(True)
+        self.enableUSBStreamingCheckBox_1.setChecked(True)
 
     def getSettings(self):
         return self.settingsDict
