@@ -12,7 +12,7 @@
         },
         {
             "stateName": "WaitForResponse",
-            "stateTimer": 3,
+            "stateTimer": 5,
             "stateChangeConditions": {
                 "Port1In": "leftAction",
                 "Port3In": "rightAction",
