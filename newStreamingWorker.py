@@ -28,20 +28,20 @@ class StreamingWorker(QObject):
         self.tdata = [0]
         self.ydata = [0]
         self.lickRightCorrectData = [np.nan]
-        self.lickRightWrongData = [np.nan]
+        # self.lickRightWrongData = [np.nan]
         self.lickLeftCorrectData = [np.nan]
-        self.lickLeftWrongData = [np.nan]
+        # self.lickLeftWrongData = [np.nan]
         self.line = Line2D(self.tdata, self.ydata, animated=True)
         self.lickRightCorrectLine = Line2D(self.tdata, self.lickRightCorrectData, color='g', marker='>', animated=True)
-        self.lickRightWrongLine = Line2D(self.tdata, self.lickRightWrongData, color='r', marker='>', animated=True)
+        # self.lickRightWrongLine = Line2D(self.tdata, self.lickRightWrongData, color='r', marker='>', animated=True)
         self.lickLeftCorrectLine = Line2D(self.tdata, self.lickLeftCorrectData, color='g', marker='<', animated=True)
-        self.lickLeftWrongLine = Line2D(self.tdata, self.lickLeftWrongData, color='r', marker='<', animated=True)
+        # self.lickLeftWrongLine = Line2D(self.tdata, self.lickLeftWrongData, color='r', marker='<', animated=True)
         self.ax.add_line(self.line)
         self.ax.add_line(self.lickRightCorrectLine)
-        self.ax.add_line(self.lickRightWrongLine)
+        # self.ax.add_line(self.lickRightWrongLine)
         self.ax.add_line(self.lickLeftCorrectLine)
-        self.ax.add_line(self.lickLeftWrongLine)
-        self.ax.set_ylim(-5.0, 5.0)
+        # self.ax.add_line(self.lickLeftWrongLine)
+        self.ax.set_ylim(-5.0, 10.0)
         self.ax.set_xlim(0, self.maxt)
 
         self.analogData = np.zeros(self.maxt)
@@ -57,9 +57,9 @@ class StreamingWorker(QObject):
         self.previousTimer = 0
         self.counter = 0
         self.lickRightCorrect = np.nan
-        self.lickRightWrong = np.nan
+        # self.lickRightWrong = np.nan
         self.lickLeftCorrect = np.nan
-        self.lickLeftWrong = np.nan
+        # self.lickLeftWrong = np.nan
         self.paused = False
         self.isRun = False
         self.isSetup = True
@@ -82,9 +82,9 @@ class StreamingWorker(QObject):
             self.tdata = [self.tdata[-1]]
             self.ydata = [self.ydata[-1]]
             self.lickRightCorrectData = [self.lickRightCorrectData[-1]]
-            self.lickRightWrongData = [self.lickRightWrongData[-1]]
+            # self.lickRightWrongData = [self.lickRightWrongData[-1]]
             self.lickLeftCorrectData = [self.lickLeftCorrectData[-1]]
-            self.lickLeftWrongData = [self.lickLeftWrongData[-1]]
+            # self.lickLeftWrongData = [self.lickLeftWrongData[-1]]
             self.ax.set_xlim(self.tdata[0], self.tdata[0] + self.maxt)
             self.ax.figure.canvas.draw()
 
@@ -102,24 +102,19 @@ class StreamingWorker(QObject):
             self.tdata.append(t)
             self.ydata.append(y[i])
             self.lickRightCorrectData.append(self.lickRightCorrect)
-            self.lickRightWrongData.append(self.lickRightWrong)
+            # self.lickRightWrongData.append(self.lickRightWrong)
             self.lickLeftCorrectData.append(self.lickLeftCorrect)
-            self.lickLeftWrongData.append(self.lickLeftWrong)
+            # self.lickLeftWrongData.append(self.lickLeftWrong)
             self.nDataPointsPlotted += 1
 
         self.line.set_data(self.tdata, self.ydata)
         self.lickRightCorrectLine.set_data(self.tdata, self.lickRightCorrectData)
-        self.lickRightWrongLine.set_data(self.tdata, self.lickRightWrongData)
+        # self.lickRightWrongLine.set_data(self.tdata, self.lickRightWrongData)
         self.lickLeftCorrectLine.set_data(self.tdata, self.lickLeftCorrectData)
-        self.lickLeftWrongLine.set_data(self.tdata, self.lickLeftWrongData)
+        # self.lickLeftWrongLine.set_data(self.tdata, self.lickLeftWrongData)
 
-        # Reset lick values.
-        self.lickRightCorrect = np.nan
-        self.lickRightWrong = np.nan
-        self.lickLeftCorrect = np.nan
-        self.lickLeftWrong = np.nan
-
-        return self.line, self.lickRightCorrectLine, self.lickRightWrongLine, self.lickLeftCorrectLine, self.lickLeftWrongLine,
+        # return self.line, self.lickRightCorrectLine, self.lickRightWrongLine, self.lickLeftCorrectLine, self.lickLeftWrongLine,
+        return self.line, self.lickRightCorrectLine, self.lickLeftCorrectLine,
 
     def getData(self, data):
         self.analogData = data
@@ -140,29 +135,26 @@ class StreamingWorker(QObject):
 
     def setInputEvent(self, params):
         direction = params[0]
-        correct = params[1]
+        enable = params[1]
+        correct = params[2]
         if (direction == 'R'):
-            if (correct == 1):
-                self.lickRightCorrect = 2  # Y-axis max range is 2.5 so make right licks on top half of plot.
-                self.lickRightWrong = np.nan
-                self.lickLeftCorrect = np.nan
-                self.lickLeftWrong = np.nan
-            elif (correct == 0):
+            if (enable == 1):
+                self.lickRightCorrect = 9  # Y-axis max range is 2.5 so make right licks on top half of plot.
+                if (correct == 1):
+                    self.lickRightCorrectLine.set_color('g')
+                elif (correct == 0):
+                    self.lickRightCorrectLine.set_color('r')
+            elif (enable == 0):
                 self.lickRightCorrect = np.nan
-                self.lickRightWrong = 2
-                self.lickLeftCorrect = np.nan
-                self.lickLeftWrong = np.nan
         elif (direction == 'L'):
-            if (correct == 1):
-                self.lickRightCorrect = np.nan
-                self.lickRightWrong = np.nan
-                self.lickLeftCorrect = -2  # Y-axis min range is -2.5 so make left licks on bottom half of plot.
-                self.lickLeftWrong = np.nan
-            elif (correct == 0):
-                self.lickRightCorrect = np.nan
-                self.lickRightWrong = np.nan
+            if (enable == 1):
+                self.lickLeftCorrect = 7  # Y-axis min range is -2.5 so make left licks on bottom half of plot.
+                if (correct == 1):
+                    self.lickLeftCorrectLine.set_color('g')
+                elif (correct == 0):
+                    self.lickLeftCorrectLine.set_color('r')
+            elif (enable == 0):
                 self.lickLeftCorrect = np.nan
-                self.lickLeftWrong = -2
 
     def pauseAnimation(self):
         if not self.paused:

@@ -27,6 +27,8 @@ class InputEventWorker(QObject):
         logging.info("InputEventThread is running")
         currentPort1In = 0
         currentPort3In = 0
+        currentPort1Out = 0
+        currentPort3Out = 0
         while self.keepRunning:
             try:
                 eventsDict = self.myBpod.session.current_trial.get_all_timestamps_by_event()
@@ -39,12 +41,11 @@ class InputEventWorker(QObject):
                 if newPort1In != currentPort1In:  # Compare timestamps to check if its actually a new event.
                     currentPort1In = newPort1In
                     if self.correctResponse == 'left':
-                        self.inputEventSignal.emit(['L', 1])  # Correct lick
+                        self.inputEventSignal.emit(['L', 1, 1])  # Correct lick
                     elif self.correctResponse == 'right':
-                        self.inputEventSignal.emit(['L', 0])  # Wrong lick
+                        self.inputEventSignal.emit(['L', 1, 0])  # Wrong lick
                     elif self.correctResponse == '':
-                        self.inputEventSignal.emit(['L', 1])  # Just show green dot for the lick.
-
+                        self.inputEventSignal.emit(['L', 1, 1])  # Just show green dot for the lick.
 
             # Right Lick
             if 'Port3In' in eventsDict:
@@ -52,12 +53,33 @@ class InputEventWorker(QObject):
                 if newPort3In != currentPort3In:  # Compare timestamps to check if its actually a new event.
                     currentPort3In = newPort3In
                     if self.correctResponse == 'right':
-                        self.inputEventSignal.emit(['R', 1])  # Correct lick
+                        self.inputEventSignal.emit(['R', 1, 1])  # Correct lick
                     elif self.correctResponse == 'left':
-                        self.inputEventSignal.emit(['R', 0])  # Wrong lick
+                        self.inputEventSignal.emit(['R', 1, 0])  # Wrong lick
                     elif self.correctResponse == '':
-                        self.inputEventSignal.emit(['R', 1])  # Just show green dot for the lick.
+                        self.inputEventSignal.emit(['R', 1, 1])  # Just show green dot for the lick.
 
+            if 'Port1Out' in eventsDict:
+                newPort1Out = eventsDict['Port1Out'][-1]
+                if (currentPort1Out != newPort1Out):  # Compare timestamps to check if its actually a new event.
+                    currentPort1Out = newPort1Out
+                    if self.correctResponse == 'left':
+                        self.inputEventSignal.emit(['L', 0, 1])  # Correct lick
+                    elif self.correctResponse == 'right':
+                        self.inputEventSignal.emit(['L', 0, 0])  # Wrong lick
+                    elif self.correctResponse == '':
+                        self.inputEventSignal.emit(['L', 0, 1])  # Just show green dot for the lick.
+            
+            if 'Port3Out' in eventsDict:
+                newPort3Out = eventsDict['Port3Out'][-1]
+                if (currentPort3Out != newPort3Out):  # Compare timestamps to check if its actually a new event.
+                    currentPort3Out = newPort3Out
+                    if self.correctResponse == 'right':
+                        self.inputEventSignal.emit(['R', 0, 1])  # Correct lick
+                    elif self.correctResponse == 'left':
+                        self.inputEventSignal.emit(['R', 0, 0])  # Wrong lick
+                    elif self.correctResponse == '':
+                        self.inputEventSignal.emit(['R', 0, 1])  # Just show green dot for the lick.
 
             time.sleep(0.1)  # Without this sleep, the plotter launches but is extremely unresponsive.
         logging.info("InputEventWorker Finished")
