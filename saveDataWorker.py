@@ -114,7 +114,7 @@ class SaveDataWorker(QObject):
         if self.adc:
             self.maxVoltage = self.adc.getChannelInputVoltageMax(0)  # Assuming user is using channel 0.
             self.samplingPeriod = 1 / (self.adc.getSamplingRate())
-            self.analogDataBufferSize = 1
+            self.analogDataBufferSize = 4
             self.analogDataBuffer = np.zeros(shape=self.analogDataBufferSize, dtype='float32')
             self.stateNum = 0
             self.counter = 0

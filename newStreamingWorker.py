@@ -91,6 +91,10 @@ class StreamingWorker(QObject):
         # t = self.tdata[-1] + self.dt
         # self.tdata.append(t)
         # self.ydata.append(y)
+        # self.lickRightCorrectData.append(self.lickRightCorrect)
+        # self.lickRightWrongData.append(self.lickRightWrong)
+        # self.lickLeftCorrectData.append(self.lickLeftCorrect)
+        # self.lickLeftWrongData.append(self.lickLeftWrong)
         # self.nDataPointsPlotted += 1
 
         for i in range(len(y)):
@@ -129,7 +133,7 @@ class StreamingWorker(QObject):
 
     def animate(self):
         # pass a generator in "emitter" to produce data for the update func
-        self.anim = animation.FuncAnimation(self.fig, self.update, self.emitter, interval=1, blit=True)
+        self.anim = animation.FuncAnimation(self.fig, self.update, self.emitter, interval=7, blit=True)
 
     def getFigure(self):
         return self.dynamic_canvas

@@ -157,7 +157,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bpodSerialPort = 'COM7'
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
-        self.streaming = StreamingWorker(maxt=100, dt=0.1)
+        self.streaming = StreamingWorker(maxt=10, dt=0.001)
         self.streamingGroupBoxVLayout.addWidget(self.streaming.getFigure())
         self.saveDataWorker = None
         self.mouseNumber = None
