@@ -130,8 +130,6 @@ Things to do:
 
     * _____ show the number of times each flow rate and odor was used throughout the experiment, either with a plot or with QLineEdit fields.
 
-    * _____ change the resultsPlot to show the percentage of left correct licks instead of just left licks.
-
     * _____ before aborting the experiment due to too many consecutive No Response results, create an optional feature that opens the water valves for a few milliseconds to attempt to re-motivate the mouse
 
     * _____ make the No Response cutoff user-adjustable and allow it to be disabled.
@@ -654,9 +652,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
         for k, v in flowResultsDict.items():
             numLeft = v['left']
-            numTotal = v['Total']
-            if not (numTotal == 0):
-                percent = round((float(numLeft) / float(numTotal) * 100), 2)
+            # numTotal = v['Total']  # I do not want to use this because if the mouse does not response many times, it will increase the denominator and lower the percentage.
+            numResponses = v['Correct'] + v['Wrong']  # I only want the denominator to be the total number of actual responses.
+            if not (numResponses == 0):
+                percent = round((float(numLeft) / float(numResponses) * 100), 2)
             else:
                 percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
             xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
