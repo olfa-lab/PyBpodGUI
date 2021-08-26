@@ -4,10 +4,22 @@
             "stateName": "WaitForOdor",
             "stateTimer": 5,
             "stateChangeConditions": {
-                "Tup": "WaitForResponse"
+                "Tup": "PresentOdor"
             },
             "outputActions": {
                 "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "PresentOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
             }
         },
         {
@@ -18,11 +30,7 @@
                 "Port3In": "rightAction",
                 "Tup": "NoResponse"
             },
-            "outputActions": {
-                "Valve": [
-                    "finalValve"
-                ]
-            }
+            "outputActions": {}
         },
         {
             "stateName": "Correct",
