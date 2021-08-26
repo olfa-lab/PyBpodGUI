@@ -86,7 +86,7 @@ class InputEventWorker(QObject):
                 # In which case they would never get disabled and would be plotted as a continuous line until the lick sensor is touched and then released.
                 self.inputEventSignal.emit([])  # Empty list will be processed as the instruction to disable the left and right lick lines.
 
-            time.sleep(0.1)  # Without this sleep, the plotter launches but is extremely unresponsive.
+            time.sleep(0.01)  # Without this sleep, the plotter launches but is extremely unresponsive.
         logging.info("InputEventWorker Finished")
         self.finished.emit()
 
