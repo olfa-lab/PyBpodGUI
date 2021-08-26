@@ -127,6 +127,16 @@ Things to do:
     * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
 
     * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
+
+    * _____ show the number of times each flow rate and odor was used throughout the experiment, either with a plot or with QLineEdit fields.
+
+    * _____ change the resultsPlot to show the percentage of left correct licks instead of just left licks.
+
+    * _____ before aborting the experiment due to too many consecutive No Response results, create an optional feature that opens the water valves for a few milliseconds to attempt to re-motivate the mouse
+
+    * _____ make the No Response cutoff user-adjustable and allow it to be disabled.
+
+    * _____ make the ITI user-adjustable.
       
 
 Questions to research:
@@ -719,6 +729,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
         self.protocolWorker.trialStartSignal.connect(lambda x: self.inputEventWorker.newTrialSlot(x))
         self.protocolWorker.newStateSignal.connect(self._updateCurrentState)
+        self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
         self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateResultsPlot)
