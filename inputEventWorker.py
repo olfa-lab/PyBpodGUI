@@ -41,45 +41,50 @@ class InputEventWorker(QObject):
                 if newPort1In != currentPort1In:  # Compare timestamps to check if its actually a new event.
                     currentPort1In = newPort1In
                     if self.correctResponse == 'left':
-                        self.inputEventSignal.emit(['L', 1, 1])  # Correct lick
+                        self.inputEventSignal.emit(['L', 1, 1])  # left, enabled, correct
                     elif self.correctResponse == 'right':
-                        self.inputEventSignal.emit(['L', 1, 0])  # Wrong lick
+                        self.inputEventSignal.emit(['L', 1, 0])  # left, enabled, wrong
                     elif self.correctResponse == '':
-                        self.inputEventSignal.emit(['L', 1, 1])  # Just show green dot for the lick.
+                        self.inputEventSignal.emit(['L', 1, 1])  # left, enabled, correct (used when the protocol does not make use of self.correctResponse)
 
             # Right Lick
             if 'Port3In' in eventsDict:
-                newPort3In = eventsDict['Port3In'][-1]
+                newPort3In = eventsDict['Port3In'][-1]  # latest addition to the list of timestamps.
                 if newPort3In != currentPort3In:  # Compare timestamps to check if its actually a new event.
                     currentPort3In = newPort3In
                     if self.correctResponse == 'right':
-                        self.inputEventSignal.emit(['R', 1, 1])  # Correct lick
+                        self.inputEventSignal.emit(['R', 1, 1])  # right, enabled, correct
                     elif self.correctResponse == 'left':
-                        self.inputEventSignal.emit(['R', 1, 0])  # Wrong lick
+                        self.inputEventSignal.emit(['R', 1, 0])  # right, enabled, wrong
                     elif self.correctResponse == '':
-                        self.inputEventSignal.emit(['R', 1, 1])  # Just show green dot for the lick.
+                        self.inputEventSignal.emit(['R', 1, 1])  # right, enabled, correct (used when the protocol does not make use of self.correctResponse)
 
             if 'Port1Out' in eventsDict:
-                newPort1Out = eventsDict['Port1Out'][-1]
+                newPort1Out = eventsDict['Port1Out'][-1]  # latest addition to the list of timestamps.
                 if (currentPort1Out != newPort1Out):  # Compare timestamps to check if its actually a new event.
                     currentPort1Out = newPort1Out
                     if self.correctResponse == 'left':
-                        self.inputEventSignal.emit(['L', 0, 1])  # Correct lick
+                        self.inputEventSignal.emit(['L', 0, 1])  # left, disabled, correct
                     elif self.correctResponse == 'right':
-                        self.inputEventSignal.emit(['L', 0, 0])  # Wrong lick
+                        self.inputEventSignal.emit(['L', 0, 0])  # left, disabled, wrong
                     elif self.correctResponse == '':
-                        self.inputEventSignal.emit(['L', 0, 1])  # Just show green dot for the lick.
+                        self.inputEventSignal.emit(['L', 0, 1])  # left, disabled, correct (used when the protocol does not make use of self.correctResponse)
             
             if 'Port3Out' in eventsDict:
-                newPort3Out = eventsDict['Port3Out'][-1]
+                newPort3Out = eventsDict['Port3Out'][-1]  # latest addition to the list of timestamps.
                 if (currentPort3Out != newPort3Out):  # Compare timestamps to check if its actually a new event.
                     currentPort3Out = newPort3Out
                     if self.correctResponse == 'right':
-                        self.inputEventSignal.emit(['R', 0, 1])  # Correct lick
+                        self.inputEventSignal.emit(['R', 0, 1])  # right, disabled, correct
                     elif self.correctResponse == 'left':
-                        self.inputEventSignal.emit(['R', 0, 0])  # Wrong lick
+                        self.inputEventSignal.emit(['R', 0, 0])  # right, disabled, wrong
                     elif self.correctResponse == '':
-                        self.inputEventSignal.emit(['R', 0, 1])  # Just show green dot for the lick.
+                        self.inputEventSignal.emit(['R', 0, 1])  # right, disabled, correct (used when the protocol does not make use of self.correctResponse)
+
+            if ('Port1In' not in eventsDict) and ('Port1Out' not in eventsDict) and ('Port3In' not in eventsDict) and ('Port3Out' not in eventsDict):
+                # Since eventsDict does not contain any of the above, disable the lick lines in case they were enabled from the previous trial and the next trial started before the lick sensor was released.
+                # In which case they would never get disabled and would be plotted as a continuous line until the lick sensor is touched and then released.
+                self.inputEventSignal.emit([])  # Empty list will be processed as the instruction to disable the left and right lick lines.
 
             time.sleep(0.1)  # Without this sleep, the plotter launches but is extremely unresponsive.
         logging.info("InputEventWorker Finished")
