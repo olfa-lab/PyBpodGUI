@@ -27,22 +27,20 @@ class StreamingWorker(QObject):
         self.maxt = maxt
         self.tdata = [0]
         self.ydata = [0]
-        self.lickRightCorrectData = [np.nan]
-        # self.lickRightWrongData = [np.nan]
-        self.lickLeftCorrectData = [np.nan]
-        # self.lickLeftWrongData = [np.nan]
+        self.lickRightData = [np.nan]
+        self.lickLeftData = [np.nan]
         self.line = Line2D(self.tdata, self.ydata, animated=True)
-        self.lickRightCorrectLine = Line2D(self.tdata, self.lickRightCorrectData, color='g', marker='>', animated=True)
-        # self.lickRightWrongLine = Line2D(self.tdata, self.lickRightWrongData, color='r', marker='>', animated=True)
-        self.lickLeftCorrectLine = Line2D(self.tdata, self.lickLeftCorrectData, color='g', marker='<', animated=True)
-        # self.lickLeftWrongLine = Line2D(self.tdata, self.lickLeftWrongData, color='r', marker='<', animated=True)
+        self.lickRightLine = Line2D(self.tdata, self.lickRightData, color='b', marker='>', animated=True)
+        self.lickLeftLine = Line2D(self.tdata, self.lickLeftData, color='b', marker='<', animated=True)
         self.ax.add_line(self.line)
-        self.ax.add_line(self.lickRightCorrectLine)
-        # self.ax.add_line(self.lickRightWrongLine)
-        self.ax.add_line(self.lickLeftCorrectLine)
-        # self.ax.add_line(self.lickLeftWrongLine)
-        self.ax.set_ylim(-5.0, 10.0)
+        self.ax.add_line(self.lickRightLine)
+        self.ax.add_line(self.lickLeftLine)
+        self.ax.set_ylim(-6.0, 6.0)
         self.ax.set_xlim(0, self.maxt)
+        self.span = self.ax.axvspan(0, 0, color='blue', alpha=0.2)
+        self.spanStart = 0
+        self.spanEnd = 0
+        self.spanColor = 'b'
 
         self.analogData = np.zeros(self.maxt)
         self.nTotalDataPoints = 0
@@ -53,13 +51,14 @@ class StreamingWorker(QObject):
         self.elapsed = self.ax.text(0.70, 0.80, '', transform=self.ax.transAxes)
         self.nTotalDataPointsText = self.ax.text(0.70, 0.70, '', transform=self.ax.transAxes)
         self.nDataPointsPlottedText = self.ax.text(0.70, 0.60, '', transform=self.ax.transAxes)
+        self.lickRightText = self.ax.text(-0.15, 0.90, 'Right Lick', transform=self.ax.transAxes)
+        self.lickLeftText = self.ax.text(-0.15, 0.05, 'Left Lick', transform=self.ax.transAxes)
         self.plotTimer = 0
         self.previousTimer = 0
         self.counter = 0
-        self.lickRightCorrect = np.nan
-        # self.lickRightWrong = np.nan
-        self.lickLeftCorrect = np.nan
-        # self.lickLeftWrong = np.nan
+        self.lickRight = np.nan
+        self.lickLeft = np.nan
+        self.activateResponseWindow = False
         self.paused = False
         self.isRun = False
         self.isSetup = True
@@ -81,10 +80,8 @@ class StreamingWorker(QObject):
         if lastt > self.tdata[0] + self.maxt:  # reset the arrays
             self.tdata = [self.tdata[-1]]
             self.ydata = [self.ydata[-1]]
-            self.lickRightCorrectData = [self.lickRightCorrectData[-1]]
-            # self.lickRightWrongData = [self.lickRightWrongData[-1]]
-            self.lickLeftCorrectData = [self.lickLeftCorrectData[-1]]
-            # self.lickLeftWrongData = [self.lickLeftWrongData[-1]]
+            self.lickRightData = [self.lickRightData[-1]]
+            self.lickLeftData = [self.lickLeftData[-1]]
             self.ax.set_xlim(self.tdata[0], self.tdata[0] + self.maxt)
             self.ax.figure.canvas.draw()
 
@@ -101,20 +98,23 @@ class StreamingWorker(QObject):
             t = self.tdata[-1] + self.dt
             self.tdata.append(t)
             self.ydata.append(y[i])
-            self.lickRightCorrectData.append(self.lickRightCorrect)
-            # self.lickRightWrongData.append(self.lickRightWrong)
-            self.lickLeftCorrectData.append(self.lickLeftCorrect)
-            # self.lickLeftWrongData.append(self.lickLeftWrong)
+            self.lickRightData.append(self.lickRight)
+            self.lickLeftData.append(self.lickLeft)
             self.nDataPointsPlotted += 1
 
         self.line.set_data(self.tdata, self.ydata)
-        self.lickRightCorrectLine.set_data(self.tdata, self.lickRightCorrectData)
-        # self.lickRightWrongLine.set_data(self.tdata, self.lickRightWrongData)
-        self.lickLeftCorrectLine.set_data(self.tdata, self.lickLeftCorrectData)
-        # self.lickLeftWrongLine.set_data(self.tdata, self.lickLeftWrongData)
+        self.lickRightLine.set_data(self.tdata, self.lickRightData)
+        self.lickLeftLine.set_data(self.tdata, self.lickLeftData)
 
-        # return self.line, self.lickRightCorrectLine, self.lickRightWrongLine, self.lickLeftCorrectLine, self.lickLeftWrongLine,
-        return self.line, self.lickRightCorrectLine, self.lickLeftCorrectLine,
+        if self.activateResponseWindow:
+            self.spanEnd = self.tdata[-1]  # Make the responseWindow grow with sniff signal.
+            # set_xy() takes an (N, 2) list of the verticies of the polygon. Since axvspan is a rectangle, there are 5 verticies in order to create a complete closed circuit.
+            self.span.set_xy([[self.spanStart, -6.0], [self.spanStart, 6.0], [self.spanEnd, 6.0], [self.spanEnd, -6.0], [self.spanStart, -6.0]])
+        else:
+            # This else statements keeps the responseWindow showing until the canvas gets redrawn. Need to do something with self.span in order to be able to return it.
+            self.span.set_xy([[self.spanStart, -6.0], [self.spanStart, 6.0], [self.spanEnd, 6.0], [self.spanEnd, -6.0], [self.spanStart, -6.0]])
+
+        return self.line, self.lickRightLine, self.lickLeftLine, self.span,
 
     def getData(self, data):
         self.analogData = data
@@ -133,28 +133,57 @@ class StreamingWorker(QObject):
     def getFigure(self):
         return self.dynamic_canvas
 
+    def checkResponseWindow(self, stateName):
+        # This function gets the newStateSignal from protocolWorker.
+        if stateName == 'WaitForResponse':
+            self.spanStart = self.tdata[-1]
+            self.span.set_color('b')  # reset color to blue until lick occurs.
+            self.activateResponseWindow = True
+            self.spanColor = 'b'  # also reset the color variable to blue.
+        else:
+            if self.activateResponseWindow:  
+                # This if statement ensures the span color is set only once: when the 'WaitForResponse' state completes and transitions to the next state.
+                # Otherwise, every state that is not named 'WaitForResponse' will call set_color(). I used a QTimer.singleShot to set the span color because
+                # there seems to be a timing conflict (or thats what I think is happening) where the checkResponseWindow() function is called by the
+                # protocolWorker thread's newStateSignal and it finishes execution before the setInputEvent() function has a chance to change the span color
+                # variable based on the type of lick detected by the inputEventWorker thread. Perhaps the newStateSignal is emitted first and then comes the
+                # inputEventSignal. Both signals are handled by the main thread (i think) because both slot functions (setInputEvent() and checkResponseWindow())
+                # are inside StreamingWorker which is running on the main thread. So maybe two pyqtSignals cannot be handled simultaneously on the same thread?
+                # Or maybe they do, but checkResponseWindow() executes faster/finishes earlier than setInputEvent does? This solution works most of the time,
+                # except for the rare cases when the left sensor is touched and then the right sensor is touched very shortly after, and vise versa, such that
+                # the span color variable changes more than once within the QTimer.singleShot's duration. This can cause the span color to be set incorrectly;
+                # opposite to the actual response result. A better solution might be to check if the stateName equals "Correct", "Wrong", or "No Response" 
+                # using the string sent by the protocolWorker thread's newStateSignal or responseResultSignal.
+                QTimer.singleShot(100, lambda: self.span.set_color(self.spanColor))
+                self.activateResponseWindow = False
+
     def setInputEvent(self, params):
-        direction = params[0]
-        enable = params[1]
-        correct = params[2]
-        if (direction == 'R'):
-            if (enable == 1):
-                self.lickRightCorrect = 9  # Y-axis max range is 2.5 so make right licks on top half of plot.
-                if (correct == 1):
-                    self.lickRightCorrectLine.set_color('g')
-                elif (correct == 0):
-                    self.lickRightCorrectLine.set_color('r')
-            elif (enable == 0):
-                self.lickRightCorrect = np.nan
-        elif (direction == 'L'):
-            if (enable == 1):
-                self.lickLeftCorrect = 7  # Y-axis min range is -2.5 so make left licks on bottom half of plot.
-                if (correct == 1):
-                    self.lickLeftCorrectLine.set_color('g')
-                elif (correct == 0):
-                    self.lickLeftCorrectLine.set_color('r')
-            elif (enable == 0):
-                self.lickLeftCorrect = np.nan
+        if (len(params) == 0):
+            # Stop plotting the licks.
+            self.lickRight = np.nan
+            self.lickLeft = np.nan
+        else:
+            direction = params[0]
+            enable = params[1]
+            correct = params[2]
+            if (direction == 'R'):
+                if (enable == 1):
+                    self.lickRight = 5  # Y-axis max range is 6.0 so make right licks on top half of plot.
+                    if (correct == 1):
+                        self.spanColor = 'g'
+                    elif (correct == 0):
+                        self.spanColor = 'r'
+                elif (enable == 0):
+                    self.lickRight = np.nan
+            elif (direction == 'L'):
+                if (enable == 1):
+                    self.lickLeft = -5  # Y-axis min range is -6.0 so make left licks on bottom half of plot.
+                    if (correct == 1):
+                        self.spanColor = 'g'
+                    elif (correct == 0):
+                        self.spanColor = 'r'
+                elif (enable == 0):
+                    self.lickLeft = np.nan
 
     def pauseAnimation(self):
         if not self.paused:
