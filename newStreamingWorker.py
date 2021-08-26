@@ -111,7 +111,7 @@ class StreamingWorker(QObject):
             # set_xy() takes an (N, 2) list of the verticies of the polygon. Since axvspan is a rectangle, there are 5 verticies in order to create a complete closed circuit.
             self.span.set_xy([[self.spanStart, -6.0], [self.spanStart, 6.0], [self.spanEnd, 6.0], [self.spanEnd, -6.0], [self.spanStart, -6.0]])
         else:
-            # This else statements keeps the responseWindow showing until the canvas gets redrawn. Need to do something with self.span in order to be able to return it.
+            # This else statement keeps the responseWindow showing until the canvas gets redrawn because I need to do something with self.span in order to be able to return it.
             self.span.set_xy([[self.spanStart, -6.0], [self.spanStart, 6.0], [self.spanEnd, 6.0], [self.spanEnd, -6.0], [self.spanStart, -6.0]])
 
         return self.line, self.lickRightLine, self.lickLeftLine, self.span,
@@ -140,6 +140,18 @@ class StreamingWorker(QObject):
             self.span.set_color('b')  # reset color to blue until lick occurs.
             self.activateResponseWindow = True
             self.spanColor = 'b'  # also reset the color variable to blue.
+        elif stateName == 'Correct':
+            self.span.set_color('g')
+            self.activateResponseWindow = False
+        elif stateName == 'Wrong':
+            self.span.set_color('r')
+            self.activateResponseWindow = False
+        elif stateName == 'NoResponse':
+            # No need to set span color here as it is already blue.
+            self.activateResponseWindow = False
+        
+        # This else statement is here to end the response window and set its color based on the inputEventSignal received from the inputEventWorker thread,
+        # instead of based on the stateName.
         else:
             if self.activateResponseWindow:  
                 # This if statement ensures the span color is set only once: when the 'WaitForResponse' state completes and transitions to the next state.
