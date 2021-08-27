@@ -30,7 +30,7 @@ class ProtocolWorker(QObject):
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, olfaChecked=True, numTrials=1):
+    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, olfaChecked=True, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
@@ -52,8 +52,8 @@ class ProtocolWorker(QObject):
         self.nTrials = numTrials
         self.leftPort = 1
         self.rightPort = 3
-        self.leftWaterDuration = 0.1  # seconds
-        self.rightWaterDuration = 0.1  # seconds
+        self.leftWaterDuration = leftWaterValveDuration
+        self.rightWaterDuration = rightWaterValveDuration
         self.keepRunning = True
         self.currentStateName = ''
         self.currentResponseResult = ''

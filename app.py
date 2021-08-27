@@ -135,7 +135,8 @@ Things to do:
     * _____ make the No Response cutoff user-adjustable and allow it to be disabled.
 
     * _____ make the ITI user-adjustable.
-      
+
+    * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias      
 
 Questions to research:
 
@@ -184,6 +185,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
         self.analogInputSettings = AnalogInputSettingsDialog()
+        self.protocolWorker = None
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects devices.
         self.finalValveButton.setEnabled(False)
@@ -719,7 +721,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.olfaCheckBox.isChecked(), self.numTrials)
+        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.leftWaterValveDuration, self.rightWaterValveDuration, self.olfaCheckBox.isChecked(), self.numTrials)
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)
