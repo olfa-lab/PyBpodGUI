@@ -165,7 +165,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bpodSerialPort = 'COM7'
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
-        self.streaming = StreamingWorker(maxt=10, dt=0.001)
+        self.streaming = StreamingWorker(maxt=20, dt=0.001)
         self.streamingGroupBoxVLayout.addWidget(self.streaming.getFigure())
         self.saveDataWorker = None
         self.mouseNumber = None
@@ -372,7 +372,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibRightWaterButton.setEnabled(False)
         self.stopButton.setEnabled(True)
         if self.olfaCheckBox.isChecked():
-            self.olfaButton.setEnabled(False)  # Disable the alfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
+            self.olfaButton.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
             # the protocolWorker's thread know not to use it. Only one object can access a serial port at any given time.
 
@@ -696,7 +696,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.inputEventWorker.finished.connect(self.inputEventWorker.deleteLater)
         self.inputEventThread.finished.connect(self.inputEventThread.deleteLater)
         self.inputEventWorker.inputEventSignal.connect(self.streaming.setInputEvent)
-        self.stopRunningSignal.connect(lambda: self.inputEventWorker.stopRunning())  # Need to use lambda, to explicitly make function call (from the main thread). Because the inputEventThread will never call it since its in a infinite loop.
+        self.stopRunningSignal.connect(self.inputEventWorker.stopRunning)
         logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
         logging.info("attempting to start inputEventThread")
         self.inputEventThread.start()
@@ -712,7 +712,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.saveDataWorker.finished.connect(self.saveDataWorker.deleteLater)
         self.saveDataThread.finished.connect(self.saveDataThread.deleteLater)
         self.saveDataWorker.analogDataSignal.connect(self.streaming.getData)
-        self.stopRunningSignal.connect(lambda: self.saveDataWorker.stopRunning())
+        self.stopRunningSignal.connect(lambda: self.saveDataWorker.stopRunning())  # Need to use lambda, to explicitly make function call (from the main thread). Because the saveDataWorker thread will never call it since its in a infinite loop.
         self.saveDataThread.start()
         logging.info(f"saveDataThread running? {self.saveDataThread.isRunning()}")
   
@@ -726,7 +726,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.finished.connect(self._endTask)  # This serves to stop the other threads when the protocol thread completes all trials.
         self.protocolWorker.finished.connect(self.protocolWorker.deleteLater)
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
-        self.protocolWorker.trialStartSignal.connect(lambda x: self.inputEventWorker.newTrialSlot(x))
+        self.protocolWorker.trialStartSignal.connect(self.inputEventWorker.newTrialSlot)
         self.protocolWorker.newStateSignal.connect(self._updateCurrentState)
         self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
