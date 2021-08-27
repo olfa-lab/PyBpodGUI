@@ -171,15 +171,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.saveDataWorker = None
         self.mouseNumber = None
         self.rigLetter = None
-        self.numTrials = None
+        self.numTrials = self.nTrialsSpinBox.value()
         self.experimentName = None
         self.leftWaterValve = 1
         self.finalValve = 2
         self.rightWaterValve = 3
-        self.leftWaterValveDuration = 100  # milliseconds
-        self.leftWaterValveDurationLineEdit.setText(str(self.leftWaterValveDuration))
-        self.rightWaterValveDuration = 100  # milliseconds
-        self.rightWaterValveDurationLineEdit.setText(str(self.rightWaterValveDuration))
+        self.leftWaterValveDuration = self.leftWaterValveDurationSpinBox.value()
+        self.rightWaterValveDuration = self.rightWaterValveDurationSpinBox.value()
         self.resultsPlot = ResultsPlotWorker()
         self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
         self.protocolFileName = ''
@@ -212,9 +210,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
-        self.nTrialsLineEdit.editingFinished.connect(self._recordNumTrials)
-        self.leftWaterValveDurationLineEdit.editingFinished.connect(self._recordLeftWaterValveDuration)
-        self.rightWaterValveDurationLineEdit.editingFinished.connect(self._recordRightWaterValveDuration)
+        self.nTrialsSpinBox.valueChanged.connect(self._recordNumTrials)
+        self.leftWaterValveDurationSpinBox.valueChanged.connect(self._recordLeftWaterValveDuration)
+        self.rightWaterValveDurationSpinBox.valueChanged.connect(self._recordRightWaterValveDuration)
         self.bpodPortLineEdit.editingFinished.connect(self._recordBpodSerialPort)
         self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
 
@@ -583,18 +581,18 @@ class Window(QMainWindow, Ui_MainWindow):
     def _recordRigLetter(self):
         self.rigLetter = self.rigLetterLineEdit.text()
 
-    def _recordNumTrials(self):
-        self.numTrials = int(self.nTrialsLineEdit.text())
+    def _recordNumTrials(self, value):
+        self.numTrials = value
 
-    def _recordLeftWaterValveDuration(self):
-        self.leftWaterValveDuration = int(self.leftWaterValveDurationLineEdit.text())
+    def _recordLeftWaterValveDuration(self, value):
+        self.leftWaterValveDuration = value
         if self.protocolWorker is not None:
-            self.protocolWorker.setLeftWaterDuration(self.leftWaterValveDuration)
+            self.protocolWorker.setLeftWaterDuration(value)
 
-    def _recordRightWaterValveDuration(self):
-        self.rightWaterValveDuration = int(self.rightWaterValveDurationLineEdit.text())
+    def _recordRightWaterValveDuration(self, value):
+        self.rightWaterValveDuration = value
         if self.protocolWorker is not None:
-            self.protocolWorker.setRightWaterDuration(self.rightWaterValveDuration)
+            self.protocolWorker.setRightWaterDuration(value)
 
     def _recordBpodSerialPort(self):
         self.bpodSerialPort = self.bpodPortLineEdit.text()
