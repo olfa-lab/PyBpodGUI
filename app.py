@@ -192,9 +192,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.setEnabled(False)
         self.calibRightWaterButton.setEnabled(False)
 
-        # self.currentTrialSubwindow.showShaded()
-        # self.streamingSubwindow.showShaded()
-        # self.resultsSubwindow.showShaded()
+        self.mdiArea.addSubWindow(self.currentTrialSubwindow)
+        self.mdiArea.addSubWindow(self.resultsSubwindow)
+        self.mdiArea.addSubWindow(self.streamingSubwindow)
         self.mdiArea.tileSubWindows()
 
     def _connectSignalsSlots(self):
