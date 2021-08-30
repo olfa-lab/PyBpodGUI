@@ -52,8 +52,8 @@ class ProtocolWorker(QObject):
         self.nTrials = numTrials
         self.leftPort = 1
         self.rightPort = 3
-        self.leftWaterDuration = leftWaterValveDuration
-        self.rightWaterDuration = rightWaterValveDuration
+        self.leftWaterDuration = leftWaterValveDuration / 1000  # convert to seconds
+        self.rightWaterDuration = rightWaterValveDuration / 1000  # convert to seconds
         self.keepRunning = True
         self.currentStateName = ''
         self.currentResponseResult = ''
