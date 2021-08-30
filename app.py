@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog)
 from PyQt5.QtCore import QObject, QThread, QTime, QTimer, pyqtSignal, pyqtSlot, Qt
 
-from main_window_ui import Ui_MainWindow
+from main_window_ui_2 import Ui_MainWindow
 from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import AnalogInException, BpodAnalogIn
@@ -192,8 +192,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.setEnabled(False)
         self.calibRightWaterButton.setEnabled(False)
 
+        # self.currentTrialSubwindow.showShaded()
+        # self.streamingSubwindow.showShaded()
+        # self.resultsSubwindow.showShaded()
+        self.mdiArea.tileSubWindows()
+
     def _connectSignalsSlots(self):
-        self.olfaButton.clicked.connect(self._launchOlfaGUI)
+        
         self.startButton.clicked.connect(self._runTask)
         self.stopButton.clicked.connect(self._endTask)
         self.finalValveButton.clicked.connect(self._toggleFinalValve)
@@ -202,11 +207,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.clicked.connect(self._calibrateLeftWaterValve)
         self.calibRightWaterButton.clicked.connect(self._calibrateRightWaterValve)
         self.connectDevicesButton.clicked.connect(self._connectDevices)
+        
         self.actionNew.triggered.connect(self._launchProtocolEditor)
         self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
-        self.actionSelectConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
-        self.olfaConfigButton.clicked.connect(self._launchOlfaEditor)
-        self.configAnalogInputModuleButton.clicked.connect(self._launchAnalogInputSettings)
+        self.actionSelectOlfaConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
+        self.actionConfigureOlfaSettings.triggered.connect(self._launchOlfaEditor)
+        self.actionConfigureAnalogInSettings.triggered.connect(self._launchAnalogInputSettings)
+        self.actionLaunchOlfaGUI.triggered.connect(self._launchOlfaGUI)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
