@@ -16,6 +16,7 @@ class ProtocolWorker(QObject):
     trialStartSignal = pyqtSignal(str)  # sends correct response with it for use by inputEventThread.
     newTrialInfoSignal = pyqtSignal(dict)  # sends current trial info with it to update GUI.
     newStateSignal = pyqtSignal(str)  # sends current state with it to update GUI.
+    stateNumSignal = pyqtSignal(int)  
     responseResultSignal = pyqtSignal(str)  # sends the response result of the current trial with it to update the GUI.
     totalsDictSignal = pyqtSignal(dict)  # sends the session totals with it to update the GUI.
     flowResultsCounterDictSignal = pyqtSignal(dict) # sends the results for each flow rate with it to update the GUI's results plot.
@@ -30,7 +31,7 @@ class ProtocolWorker(QObject):
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, olfaChecked=True, numTrials=1):
+    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, itiMin, itiMax, olfaChecked=True, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
@@ -43,17 +44,19 @@ class ProtocolWorker(QObject):
         self.currentOdorConc = None
         self.currentFlow = None
         self.currentTrialNum = 0
-        self.totalRewards = 0
-        self.totalPunishes = 0
+        self.totalCorrect = 0
+        self.totalWrong = 0
         self.totalNoResponses = 0
         self.consecutiveNoResponses = 0
         self.noResponseCutOff = 10
         self.currentITI = None
+        self.itiMin = itiMin
+        self.itiMax = itiMax
         self.nTrials = numTrials
         self.leftPort = 1
         self.rightPort = 3
-        self.leftWaterDuration = leftWaterValveDuration
-        self.rightWaterDuration = rightWaterValveDuration
+        self.leftWaterDuration = leftWaterValveDuration / 1000  # convert to seconds
+        self.rightWaterDuration = rightWaterValveDuration / 1000  # convert to seconds
         self.keepRunning = True
         self.currentStateName = ''
         self.currentResponseResult = ''
@@ -70,6 +73,12 @@ class ProtocolWorker(QObject):
 
     def setRightWaterDuration(self, duration):
         self.rightWaterDuration = duration / 1000  # Convert to seconds.
+
+    def setMinITI(self, value):
+        self.itiMin = value
+
+    def setMaxITI(self, value):
+        self.itiMax = value
     
     def getCorrectResponse(self):
         return self.correctResponse
@@ -86,7 +95,8 @@ class ProtocolWorker(QObject):
                 'currentITI': self.currentITI,
                 'currentOdorName': self.currentOdorName,
                 'currentOdorConc': self.currentOdorConc,
-                'currentFlow': self.currentFlow
+                'currentFlow': self.currentFlow,
+                'nStates': self.sma.total_states_added
             }
             return trialDict
         return {}
@@ -103,14 +113,14 @@ class ProtocolWorker(QObject):
 
     def calculateTotalPercentCorrect(self):
         logging.info('calculating total percent correct')
-        percent = round(((float(self.totalRewards) / float(self.currentTrialNum)) * 100), 2)  # I used 'self.currentTrialNum' instead of 'self.nTrials' to ensure the percentage only counts the number of completed trials incase the experiment is aborted early.
+        percent = round(((float(self.totalCorrect) / float(self.currentTrialNum)) * 100), 2)  # I used 'self.currentTrialNum' instead of 'self.nTrials' to ensure the percentage only counts the number of completed trials incase the experiment is aborted early.
         logging.info(f"percent correct is {percent}")
         return percent
 
     def getTotalsDict(self):
         totals = {
-            'totalRewards': self.totalRewards,
-            'totalPunishes': self.totalPunishes,
+            'totalCorrect': self.totalCorrect,
+            'totalWrong': self.totalWrong,
             'totalNoResponses': self.totalNoResponses,
             'totalPercentCorrect': self.calculateTotalPercentCorrect()
         }
@@ -159,6 +169,7 @@ class ProtocolWorker(QObject):
         # Update trial info for GUI
         self.currentStateName = self.sma.state_names[self.sma.current_state]
         self.newStateSignal.emit(self.currentStateName)
+        self.stateNumSignal.emit(self.sma.current_state)
         
         if self.currentStateName == 'Correct':
             self.currentResponseResult = 'Correct'
@@ -172,7 +183,7 @@ class ProtocolWorker(QObject):
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             
-            self.totalRewards += 1
+            self.totalCorrect += 1
             sessionTotals = self.getTotalsDict()
             self.totalsDictSignal.emit(sessionTotals)
 
@@ -191,7 +202,7 @@ class ProtocolWorker(QObject):
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             
-            self.totalPunishes += 1
+            self.totalWrong += 1
             sessionTotals = self.getTotalsDict()
             self.totalsDictSignal.emit(sessionTotals)
 
@@ -413,7 +424,12 @@ class ProtocolWorker(QObject):
             if self.olfas is not None:
                 self.stimulus = self.stimulusFunction()
 
-            self.currentITI = np.random.randint(5, 9)  # inter trial interval in seconds.
+            if (self.itiMin == self.itiMax):  # If they are equal, then self.currentITI will be the same every trial.
+                self.currentITI = self.itiMin
+            else:
+                # Since they are different, randomly choose a value for self.currentITI every trial. Add 1 to the randint's upperbound to include itiMax in the range of possible integers (since the upperbound is non-inclusive).
+                self.currentITI = np.random.randint(self.itiMin, self.itiMax + 1)
+            
             self.currentTrialNum += 1
 
             if self.correctResponse == 'left':
