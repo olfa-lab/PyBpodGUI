@@ -10,8 +10,9 @@ from datetime import datetime
 from serial.serialutil import SerialException
 
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog)
+    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow)
 from PyQt5.QtCore import QObject, QThread, QTime, QTimer, pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtGui import QCloseEvent
 
 from main_window_ui_2 import Ui_MainWindow
 from pybpodapi.protocol import Bpod, StateMachine
@@ -150,6 +151,27 @@ Questions to research:
 '''
 
 
+class MyQMdiSubWindow(QMdiSubWindow):
+    '''
+    I re-implemented the QMdiSubWindow class by sub-classing it into my own version that contains a 'closed' signal
+    that gets emitted whenever the subwindow is closed. The original QMdiSubWindow implementation does not have such
+    notifier signal, which is why I created this implementation. I override the original class's closeEvent method
+    so it emits the close signal when the subwindow is closed.
+    '''
+
+    closed = pyqtSignal(str)
+
+    # This method is the result of VScode's auto-complete text. I only wrote the line that emits the closed signal.
+    def closeEvent(self, closeEvent: QCloseEvent) -> None:
+        self.closed.emit(self.objectName())
+        return super().closeEvent(closeEvent)
+
+    # Out of curiosity, I tried this version of the above method instead, and it works the same.
+    # def closeEvent(self, closeEvent):
+    #     self.closed.emit(self.objectName())
+    #     closeEvent.accept()
+
+
 class Window(QMainWindow, Ui_MainWindow):
     stopRunningSignal = pyqtSignal()
     # launchOlfaGUISignal = pyqtSignal()
@@ -167,19 +189,21 @@ class Window(QMainWindow, Ui_MainWindow):
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
         self.streaming = StreamingWorker(maxt=20, dt=0.001)
-        self.streamingGroupBoxVLayout.addWidget(self.streaming.getFigure())
         self.saveDataWorker = None
         self.mouseNumber = None
         self.rigLetter = None
         self.numTrials = self.nTrialsSpinBox.value()
         self.experimentName = None
+        self.itiMin = self.itiMinSpinBox.value()
+        self.itiMax = self.itiMaxSpinBox.value()
+        self.itiMinSpinBox.setMaximum(self.itiMax)  # I do not want the itiMinSpinBox to be higher than the itiMaxSpinBox's current value.
+        self.itiMaxSpinBox.setMinimum(self.itiMin)  # I do not want the itiMaxSpinBox to be lower than the itiMinSpinBox's current value.
         self.leftWaterValve = 1
         self.finalValve = 2
         self.rightWaterValve = 3
         self.leftWaterValveDuration = self.leftWaterValveDurationSpinBox.value()
         self.rightWaterValveDuration = self.rightWaterValveDurationSpinBox.value()
         self.resultsPlot = ResultsPlotWorker()
-        self.resultsPlotVLayout.addWidget(self.resultsPlot.getWidget())
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
         self.analogInputSettings = AnalogInputSettingsDialog()
@@ -192,13 +216,31 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.setEnabled(False)
         self.calibRightWaterButton.setEnabled(False)
 
-        self.mdiArea.addSubWindow(self.currentTrialSubwindow)
-        self.mdiArea.addSubWindow(self.resultsSubwindow)
-        self.mdiArea.addSubWindow(self.streamingSubwindow)
-        self.mdiArea.tileSubWindows()
+        self.currentTrialSubWindow = MyQMdiSubWindow()
+        self.currentTrialSubWindow.closed.connect(self._updateViewMenu)
+        self.currentTrialSubWindow.setObjectName("currentTrialSubWindow")
+        self.currentTrialSubWindow.setWidget(self.currentTrialSubwindowWidget)
+        self.currentTrialSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        self.currentTrialSubWindow.resize(720, 230)
+        self.mdiArea.addSubWindow(self.currentTrialSubWindow)
+        
+        self.resultsSubWindow = MyQMdiSubWindow()
+        self.resultsSubWindow.closed.connect(self._updateViewMenu)
+        self.resultsSubWindow.setObjectName("resultsSubWindow")
+        self.resultsSubWindow.setWidget(self.resultsPlot.getWidget())
+        self.resultsSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        self.resultsSubWindow.resize(300, 300)
+        self.mdiArea.addSubWindow(self.resultsSubWindow)
+
+        self.streamingSubWindow = MyQMdiSubWindow()
+        self.streamingSubWindow.closed.connect(self._updateViewMenu)
+        self.streamingSubWindow.setObjectName("streamingSubWindow")
+        self.streamingSubWindow.setWidget(self.streaming.getFigure())
+        self.streamingSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        self.streamingSubWindow.resize(1000, 300)
+        self.mdiArea.addSubWindow(self.streamingSubWindow)
 
     def _connectSignalsSlots(self):
-        
         self.startButton.clicked.connect(self._runTask)
         self.stopButton.clicked.connect(self._endTask)
         self.finalValveButton.clicked.connect(self._toggleFinalValve)
@@ -214,14 +256,61 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionConfigureOlfaSettings.triggered.connect(self._launchOlfaEditor)
         self.actionConfigureAnalogInSettings.triggered.connect(self._launchAnalogInputSettings)
         self.actionLaunchOlfaGUI.triggered.connect(self._launchOlfaGUI)
+        self.actionViewStreaming.toggled.connect(self._viewStreamingSubWindow)
+        self.actionViewResultsPlot.toggled.connect(self._viewResultsPlotSubWindow)
+        self.actionViewCurrentTrialInfo.toggled.connect(self._viewCurrentTrialSubWindow)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
+        self.bpodPortLineEdit.editingFinished.connect(self._recordBpodSerialPort)
+        self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
+        
         self.nTrialsSpinBox.valueChanged.connect(self._recordNumTrials)
         self.leftWaterValveDurationSpinBox.valueChanged.connect(self._recordLeftWaterValveDuration)
         self.rightWaterValveDurationSpinBox.valueChanged.connect(self._recordRightWaterValveDuration)
-        self.bpodPortLineEdit.editingFinished.connect(self._recordBpodSerialPort)
-        self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
+        self.itiMinSpinBox.valueChanged.connect(self._recordMinITI)
+        self.itiMaxSpinBox.valueChanged.connect(self._recordMaxITI)
+
+    def _updateViewMenu(self, objectName):
+        if (objectName == self.streamingSubWindow.objectName()):
+            self.actionViewStreaming.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
+        elif (objectName == self.resultsSubWindow.objectName()):
+            self.actionViewResultsPlot.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
+        elif (objectName == self.currentTrialSubWindow.objectName()):
+            self.actionViewCurrentTrialInfo.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
+    
+    def _viewStreamingSubWindow(self, checked):
+        if checked:
+            # I also need to show the subWindow's internal widget because for some reason it does not show automatically
+            # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
+            # despite the subWindow object not being deleted and not being removed from the mdiArea's subWindowList, and the subWindow's
+            # internal widget object not being deleted either, all due to the setAttribute(Qt.WA_DeleteOnClose, False) declared above.
+            self.streamingSubWindow.show()
+            self.streamingSubWindow.widget().show()
+        else:
+            self.streamingSubWindow.hide()
+
+    def _viewResultsPlotSubWindow(self, checked):
+        if checked:
+            # I also need to show the subWindow's internal widget because for some reason it does not show automatically
+            # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
+            # despite the subWindow object not being deleted and not being removed from the mdiArea's subWindowList, and the subWindow's
+            # internal widget object not being deleted either, all due to the setAttribute(Qt.WA_DeleteOnClose, False) declared above.
+            self.resultsSubWindow.show()
+            self.resultsSubWindow.widget().show()
+        else:
+            self.resultsSubWindow.hide()
+
+    def _viewCurrentTrialSubWindow(self, checked):
+        if checked:
+            # I also need to show the subWindow's internal widget because for some reason it does not show automatically
+            # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
+            # despite the subWindow object not being deleted and not being removed from the mdiArea's subWindowList, and the subWindow's
+            # internal widget object not being deleted either, all due to the setAttribute(Qt.WA_DeleteOnClose, False) declared above.
+            self.currentTrialSubWindow.show()
+            self.currentTrialSubWindow.widget().show()
+        else:
+            self.currentTrialSubWindow.hide()
 
     def _launchAnalogInputSettings(self):
         self.analogInputSettings.show()
@@ -379,7 +468,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibRightWaterButton.setEnabled(False)
         self.stopButton.setEnabled(True)
         if self.olfaCheckBox.isChecked():
-            self.olfaButton.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
+            self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
             # the protocolWorker's thread know not to use it. Only one object can access a serial port at any given time.
 
@@ -398,8 +487,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.setEnabled(True)
         self.calibRightWaterButton.setEnabled(True)
         if self.olfaCheckBox.isChecked():
-            self.olfaButton.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
+            self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
         self._experimentCompleteDialog()
+        self.currentTrialProgressBar.setValue(0)
+        self.currentTrialProgressBarLabel.setText('')
 
     def _checkIfRunning(self):
         # When this function is called for the first time upon clicking the stop button
@@ -495,13 +586,13 @@ class Window(QMainWindow, Ui_MainWindow):
             self.timer = QTimer(self)
             self.timer.timeout.connect(self._calibrateLeftWaterValveToggler)
 
-            self.progress = QProgressDialog("Calibrating left water valve...", "Cancel", 0, 100, self)
-            self.progress.setWindowModality(Qt.WindowModal)
+            self.waterFlushProgress = QProgressDialog("Flushing left water valve...", "Cancel", 0, 100, self)
+            self.waterFlushProgress.setWindowModality(Qt.WindowModal)
 
             self.timer.start(self.leftWaterValveDuration)
 
     def _calibrateLeftWaterValveToggler(self):
-        if self.progress.wasCanceled():  # first check if user cancelled.
+        if self.waterFlushProgress.wasCanceled():  # first check if user cancelled.
             self._closeValve(self.leftWaterValve)
             self.timer.stop()
 
@@ -512,7 +603,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.startButton.setEnabled(True)
 
         elif (self.timerCounter < 100):
-            self.progress.setValue(self.timerCounter)  # update the progress bar.
+            self.waterFlushProgress.setValue(self.timerCounter)  # update the progress bar.
             if self.isOpen:
                 self._closeValve(self.leftWaterValve)
                 self.isOpen = False
@@ -521,7 +612,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.isOpen = True
                 self.timerCounter += 1  # increment inside if-else statement so that the valve opens 100 times.
         else:
-            self.progress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
+            self.waterFlushProgress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
             self._closeValve(self.leftWaterValve)
             self.timer.stop()
 
@@ -546,13 +637,13 @@ class Window(QMainWindow, Ui_MainWindow):
             self.timer = QTimer(self)
             self.timer.timeout.connect(self._calibrateRightWaterValveToggler)
 
-            self.progress = QProgressDialog("Calibrating right water valve...", "Cancel", 0, 100, self)
-            self.progress.setWindowModality(Qt.WindowModal)
+            self.waterFlushProgress = QProgressDialog("Flushing right water valve...", "Cancel", 0, 100, self)
+            self.waterFlushProgress.setWindowModality(Qt.WindowModal)
 
             self.timer.start(self.rightWaterValveDuration)
 
     def _calibrateRightWaterValveToggler(self):
-        if self.progress.wasCanceled():  # first check if user cancelled.
+        if self.waterFlushProgress.wasCanceled():  # first check if user cancelled.
             self._closeValve(self.rightWaterValve)
             self.timer.stop()
 
@@ -563,7 +654,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.startButton.setEnabled(True)
 
         elif (self.timerCounter < 100):
-            self.progress.setValue(self.timerCounter)  # update the progress bar.
+            self.waterFlushProgress.setValue(self.timerCounter)  # update the progress bar.
             if self.isOpen:
                 self._closeValve(self.rightWaterValve)
                 self.isOpen = False
@@ -572,7 +663,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.isOpen = True
                 self.timerCounter += 1  # increment inside if-else statement so that the valve opens 100 times.
         else:
-            self.progress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
+            self.waterFlushProgress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
             self._closeValve(self.rightWaterValve)
             self.timer.stop()
 
@@ -590,6 +681,18 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _recordNumTrials(self, value):
         self.numTrials = value
+
+    def _recordMinITI(self, value):
+        self.itiMin = value
+        self.itiMaxSpinBox.setMinimum(value)  # Do not allow itiMaxSpinBox to hold a value less than itiMinSpinBox's current value.
+        if self.protocolWorker is not None:
+            self.protocolWorker.setMinITI(value)
+
+    def _recordMaxITI(self, value):
+        self.itiMax = value
+        self.itiMinSpinBox.setMaximum(value)  # Do not allow itiMinSpinBox to hold a value greater than itiMaxSpinBox's current value.
+        if self.protocolWorker is not None:
+            self.protocolWorker.setMaxITI(value)
 
     def _recordLeftWaterValveDuration(self, value):
         self.leftWaterValveDuration = value
@@ -612,14 +715,18 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _updateCurrentState(self, stateName):
         self.currentStateLineEdit.setText(stateName)
+        self.currentTrialProgressBarLabel.setText(stateName)
+        
+    def _updateCurrentTrialProgressBar(self, value):
+        self.currentTrialProgressBar.setValue(value + 1)
 
     def _updateResponseResult(self, result):
         self.responseResultLineEdit.setText(result)
 
     def _updateSessionTotals(self, totalsDict):
         logging.info('attempting to update session totals')
-        self.totalRewardsLineEdit.setText(str(totalsDict['totalRewards']))
-        self.totalWrongLicksLineEdit.setText(str(totalsDict['totalPunishes']))
+        self.totalCorrectLineEdit.setText(str(totalsDict['totalCorrect']))
+        self.totalWrongLineEdit.setText(str(totalsDict['totalWrong']))
         self.totalNoResponsesLineEdit.setText(str(totalsDict['totalNoResponses']))
         self.totalPercentCorrectLineEdit.setText(str(totalsDict['totalPercentCorrect']))
 
@@ -627,12 +734,13 @@ class Window(QMainWindow, Ui_MainWindow):
         trialInfo = trialInfoDict
         # Check if not empty.
         if trialInfo:
-            self.trialLineEdit.setText("{0} of {1}".format(trialInfo['currentTrialNum'], trialInfo['nTrials']))
+            self.trialNumLineEdit.setText(str(trialInfo['currentTrialNum']))
             self.correctResponseLineEdit.setText(trialInfo['correctResponse'])
             self.itiLineEdit.setText(str(trialInfo['currentITI']))
             self.odorNameLineEdit.setText(trialInfo['currentOdorName'])
             self.odorConcentrationLineEdit.setText(str(trialInfo['currentOdorConc']))
             self.currentFlowLineEdit.setText(str(trialInfo['currentFlow']))
+            self.currentTrialProgressBar.setRange(0, trialInfo['nStates'])
 
     def _updateResultsPlot(self, flowResultsDict):
         if not self.resultsPlot.isXAxisSetup():
@@ -726,7 +834,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.leftWaterValveDuration, self.rightWaterValveDuration, self.olfaCheckBox.isChecked(), self.numTrials)
+        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.leftWaterValveDuration, self.rightWaterValveDuration, self.itiMin, self.itiMax, self.olfaCheckBox.isChecked(), self.numTrials)
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)
@@ -736,6 +844,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.trialStartSignal.connect(self.inputEventWorker.newTrialSlot)
         self.protocolWorker.newStateSignal.connect(self._updateCurrentState)
         self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
+        self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
         self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateResultsPlot)
