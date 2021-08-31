@@ -17,9 +17,9 @@
    <widget class="QMdiArea" name="mdiArea">
     <property name="geometry">
      <rect>
-      <x>9</x>
+      <x>-1</x>
       <y>-1</y>
-      <width>1131</width>
+      <width>1141</width>
       <height>861</height>
      </rect>
     </property>
@@ -29,103 +29,71 @@
     <property name="activationOrder">
      <enum>QMdiArea::CreationOrder</enum>
     </property>
-    <widget class="QWidget" name="resultsSubwindow">
-     <property name="windowTitle">
-      <string>Results</string>
-     </property>
-     <widget class="QWidget" name="verticalLayoutWidget_5">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>461</width>
-        <height>291</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="resultsPlotVLayout"/>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="streamingSubwindow">
-     <property name="windowTitle">
-      <string>Streaming</string>
-     </property>
-     <widget class="QWidget" name="verticalLayoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>1071</width>
-        <height>271</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="streamingGroupBoxVLayout"/>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="currentTrialSubwindow">
+    <widget class="QWidget" name="currentTrialSubwindowWidget">
      <property name="windowTitle">
       <string>Current Trial Info</string>
      </property>
      <widget class="QWidget" name="formLayoutWidget_4">
       <property name="geometry">
        <rect>
-        <x>30</x>
+        <x>10</x>
         <y>10</y>
         <width>241</width>
-        <height>111</height>
+        <height>101</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="currentTrialFormLayout_1">
        <item row="0" column="0">
-        <widget class="QLabel" name="trialLabel">
+        <widget class="QLabel" name="trialNumLabel">
          <property name="text">
-          <string>Trial</string>
+          <string>Trial Number</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="trialLineEdit">
+        <widget class="QLineEdit" name="trialNumLineEdit">
          <property name="readOnly">
           <bool>true</bool>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="correctResponseLabel">
+        <widget class="QLabel" name="itiLabel">
          <property name="text">
-          <string>Correct Response</string>
+          <string>Current ITI</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="correctResponseLineEdit">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="itiLabel">
-         <property name="text">
-          <string>ITI</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
         <widget class="QLineEdit" name="itiLineEdit">
          <property name="readOnly">
           <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="currentStateLabel">
          <property name="text">
           <string>Current State Name</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="2" column="1">
         <widget class="QLineEdit" name="currentStateLineEdit">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="responseResultLabel">
+         <property name="text">
+          <string>Response Result</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="responseResultLineEdit">
          <property name="readOnly">
           <bool>true</bool>
          </property>
@@ -136,10 +104,10 @@
      <widget class="QWidget" name="formLayoutWidget_5">
       <property name="geometry">
        <rect>
-        <x>280</x>
+        <x>270</x>
         <y>10</y>
         <width>211</width>
-        <height>111</height>
+        <height>101</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="currentTrialFormLayout_2">
@@ -171,15 +139,8 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="responseResultLabel">
-         <property name="text">
-          <string>Response Result</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="responseResultLineEdit">
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="currentFlowLineEdit">
          <property name="readOnly">
           <bool>true</bool>
          </property>
@@ -192,8 +153,15 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="currentFlowLineEdit">
+       <item row="3" column="0">
+        <widget class="QLabel" name="correctResponseLabel">
+         <property name="text">
+          <string>Correct Response</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="correctResponseLineEdit">
          <property name="readOnly">
           <bool>true</bool>
          </property>
@@ -207,33 +175,33 @@
         <x>500</x>
         <y>10</y>
         <width>187</width>
-        <height>111</height>
+        <height>101</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="sessionTotalsFormLayout">
        <item row="0" column="0">
-        <widget class="QLabel" name="totalRewardsLabel">
+        <widget class="QLabel" name="totalCorrectLabel">
          <property name="text">
-          <string>Total Rewards:</string>
+          <string>Total Correct:</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="totalRewardsLineEdit">
+        <widget class="QLineEdit" name="totalCorrectLineEdit">
          <property name="readOnly">
           <bool>true</bool>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="totalWrongLicksLabel">
+        <widget class="QLabel" name="totalWrongLabel">
          <property name="text">
-          <string>Total Wrong Licks:</string>
+          <string>Total Wrong:</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="totalWrongLicksLineEdit">
+        <widget class="QLineEdit" name="totalWrongLineEdit">
          <property name="readOnly">
           <bool>true</bool>
          </property>
@@ -268,6 +236,38 @@
         </widget>
        </item>
       </layout>
+     </widget>
+     <widget class="QProgressBar" name="currentTrialProgressBar">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>150</y>
+        <width>681</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="textVisible">
+       <bool>false</bool>
+      </property>
+      <property name="invertedAppearance">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="currentTrialProgressBarLabel">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>221</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
      </widget>
     </widget>
    </widget>
@@ -306,9 +306,9 @@
     <property name="title">
      <string>View</string>
     </property>
-    <addaction name="actionStreaming"/>
-    <addaction name="actionResultsPlot"/>
-    <addaction name="actionCurrentTrialInfo"/>
+    <addaction name="actionViewStreaming"/>
+    <addaction name="actionViewResultsPlot"/>
+    <addaction name="actionViewCurrentTrialInfo"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOlfactometer"/>
@@ -316,7 +316,7 @@
    <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QDockWidget" name="dockWidget">
+  <widget class="QDockWidget" name="experimentSetupDockWidget">
    <property name="minimumSize">
     <size>
      <width>223</width>
@@ -329,14 +329,14 @@
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
+   <widget class="QWidget" name="experimentSetupDockWidgetContents">
     <widget class="QWidget" name="formLayoutWidget_2">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>10</y>
        <width>211</width>
-       <height>251</height>
+       <height>221</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="setupDetailsFormLayout">
@@ -446,9 +446,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>270</y>
+       <y>290</y>
        <width>211</width>
-       <height>121</height>
+       <height>111</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="sessionButtonsVLayout">
@@ -491,9 +491,49 @@
       </item>
      </layout>
     </widget>
+    <widget class="QWidget" name="gridLayoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>9</x>
+       <y>240</y>
+       <width>211</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="itiGridLayout">
+      <item row="1" column="0">
+       <widget class="QSpinBox" name="itiMinSpinBox">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="itiMinLabel">
+        <property name="text">
+         <string>Minimum ITI</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="itiMaxLabel">
+        <property name="text">
+         <string>Maximum ITI</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="itiMaxSpinBox">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockWidget_2">
+  <widget class="QDockWidget" name="bpodControlDockWidget">
    <property name="minimumSize">
     <size>
      <width>223</width>
@@ -506,7 +546,7 @@
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2">
+   <widget class="QWidget" name="bpodControlDockWidgetContents">
     <widget class="QWidget" name="formLayoutWidget">
      <property name="geometry">
       <rect>
@@ -659,7 +699,7 @@
     <string>Configure settings</string>
    </property>
   </action>
-  <action name="actionStreaming">
+  <action name="actionViewStreaming">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -670,7 +710,7 @@
     <string>Streaming</string>
    </property>
   </action>
-  <action name="actionResultsPlot">
+  <action name="actionViewResultsPlot">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -681,7 +721,7 @@
     <string>Results Plot</string>
    </property>
   </action>
-  <action name="actionCurrentTrialInfo">
+  <action name="actionViewCurrentTrialInfo">
    <property name="checkable">
     <bool>true</bool>
    </property>
