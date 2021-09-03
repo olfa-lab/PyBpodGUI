@@ -31,7 +31,7 @@ class ProtocolWorker(QObject):
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, itiMin, itiMax, olfaChecked=True, numTrials=1):
+    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
@@ -48,7 +48,8 @@ class ProtocolWorker(QObject):
         self.totalWrong = 0
         self.totalNoResponses = 0
         self.consecutiveNoResponses = 0
-        self.noResponseCutOff = 10
+        self.noResponseCutOff = noResponseCutoff
+        self.autoWaterCutoff = autoWaterCutoff
         self.currentITI = None
         self.itiMin = itiMin
         self.itiMax = itiMax
@@ -79,6 +80,12 @@ class ProtocolWorker(QObject):
 
     def setMaxITI(self, value):
         self.itiMax = value
+
+    def setNoResponseCutoff(self, value):
+        self.noResponseCutOff = value
+
+    def setAutoWaterCutoff(self, value):
+        self.autoWaterCutoff = value
     
     def getCorrectResponse(self):
         return self.correctResponse
@@ -537,6 +544,14 @@ class ProtocolWorker(QObject):
             logging.info("saveTrialDataDictSignal emitted")
             self.stimIndex = 0
             # self.stopSDCardLoggingSignal.emit()
+
+            if (self.consecutiveNoResponses == self.autoWaterCutoff):
+                self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.leftPort, value=1)
+                self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.rightPort, value=1)
+                QTimer.singleShot(1000, lambda: self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.leftPort, value=0))
+                QTimer.singleShot(1000, lambda: self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.righttPort, value=0))
+
+                # self.autoWaterCutoff = self.noResponseCutOff + 1  # Set autoWaterCutoff to be 1 more than noResponseCutoff so that this if statement does not execute more than once, and aborts the experiment if mouse still does not lick.
             
             # Start the next trial in 1000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
             QTimer.singleShot(1000, self.startTrial)

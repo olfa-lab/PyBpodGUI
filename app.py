@@ -25,7 +25,7 @@ from inputEventWorker import InputEventWorker
 from protocolWorker import ProtocolWorker
 # from streamingWorker import StreamingWorker
 from newStreamingWorker import StreamingWorker
-
+from flowUsagePlotWorker import FlowUsagePlotWorker
 from resultsPlotWorker import ResultsPlotWorker
 # from calibrateWaterWorker import CalibrateWaterWorker
 from protocolEditorDialog import ProtocolEditorDialog
@@ -105,6 +105,10 @@ Things to do:
 
     * __X__ allow user to run experiments that do not use olfactometer
 
+    * __X__ make the ITI user-adjustable.
+
+    * __X__ implement progress bar for state machine during trial run
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -114,8 +118,6 @@ Things to do:
     * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
     * _____ implement validators for the line edits to restrict input values
-
-    * _____ implement progress bar for state machine during trial run
 
     * _____ make the streaming plotter run faster/smoother (maybe try pyqtgraph or blitting)
 
@@ -135,9 +137,9 @@ Things to do:
 
     * _____ make the No Response cutoff user-adjustable and allow it to be disabled.
 
-    * _____ make the ITI user-adjustable.
+    * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias
 
-    * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias      
+    * _____ get rid of variables that hold the value/text in fields like lineEdits, spinBoxes, and comboBoxes because it is redundant. 
 
 Questions to research:
 
@@ -148,6 +150,8 @@ Questions to research:
     * _____ Why does infinite loop in separate thread (without some sort of sleep interval) cause main thread to freeze or lag?
 
     * _____ Why does infinite loop inside a separate thread block slots from being handled?
+
+    * _____ When a signal is connected to multiple slots, does pyqt execute all of those slots simultaneously or sequentially?
 '''
 
 
@@ -188,11 +192,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bpodSerialPort = 'COM7'
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
-        self.streaming = StreamingWorker(maxt=20, dt=0.001)
         self.saveDataWorker = None
         self.mouseNumber = None
         self.rigLetter = None
         self.numTrials = self.nTrialsSpinBox.value()
+        self.noResponseCutoff = self.noResponseCutoffSpinBox.value()
+        self.noResponseCutoffSpinBox.setMaximum(self.numTrials)
+        self.autoWaterCutoff = self.autoWaterCutoffSpinBox.value()
+        self.autoWaterCutoffSpinBox.setMaximum(self.noResponseCutoff - 1)
         self.experimentName = None
         self.itiMin = self.itiMinSpinBox.value()
         self.itiMax = self.itiMaxSpinBox.value()
@@ -203,7 +210,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValve = 3
         self.leftWaterValveDuration = self.leftWaterValveDurationSpinBox.value()
         self.rightWaterValveDuration = self.rightWaterValveDurationSpinBox.value()
-        self.resultsPlot = ResultsPlotWorker()
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
         self.analogInputSettings = AnalogInputSettingsDialog()
@@ -223,15 +229,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.currentTrialSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         self.currentTrialSubWindow.resize(720, 230)
         self.mdiArea.addSubWindow(self.currentTrialSubWindow)
-        
-        self.resultsSubWindow = MyQMdiSubWindow()
-        self.resultsSubWindow.closed.connect(self._updateViewMenu)
-        self.resultsSubWindow.setObjectName("resultsSubWindow")
-        self.resultsSubWindow.setWidget(self.resultsPlot.getWidget())
-        self.resultsSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        self.resultsSubWindow.resize(300, 300)
-        self.mdiArea.addSubWindow(self.resultsSubWindow)
 
+        self.streaming = StreamingWorker(maxt=20, dt=0.001)
         self.streamingSubWindow = MyQMdiSubWindow()
         self.streamingSubWindow.closed.connect(self._updateViewMenu)
         self.streamingSubWindow.setObjectName("streamingSubWindow")
@@ -239,6 +238,24 @@ class Window(QMainWindow, Ui_MainWindow):
         self.streamingSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         self.streamingSubWindow.resize(1000, 300)
         self.mdiArea.addSubWindow(self.streamingSubWindow)
+
+        self.resultsPlot = ResultsPlotWorker()
+        self.resultsPlotSubWindow = MyQMdiSubWindow()
+        self.resultsPlotSubWindow.closed.connect(self._updateViewMenu)
+        self.resultsPlotSubWindow.setObjectName("resultsPlotSubWindow")
+        self.resultsPlotSubWindow.setWidget(self.resultsPlot.getWidget())
+        self.resultsPlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        self.resultsPlotSubWindow.resize(300, 300)
+        self.mdiArea.addSubWindow(self.resultsPlotSubWindow)
+
+        self.flowUsagePlot = FlowUsagePlotWorker()
+        self.flowUsagePlotSubWindow = MyQMdiSubWindow()
+        self.flowUsagePlotSubWindow.closed.connect(self._updateViewMenu)
+        self.flowUsagePlotSubWindow.setObjectName("flowUsagePlotSubWindow")
+        self.flowUsagePlotSubWindow.setWidget(self.flowUsagePlot.getWidget())
+        self.flowUsagePlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        self.flowUsagePlotSubWindow.resize(330, 300)
+        self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
 
     def _connectSignalsSlots(self):
         self.startButton.clicked.connect(self._runTask)
@@ -259,6 +276,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionViewStreaming.toggled.connect(self._viewStreamingSubWindow)
         self.actionViewResultsPlot.toggled.connect(self._viewResultsPlotSubWindow)
         self.actionViewCurrentTrialInfo.toggled.connect(self._viewCurrentTrialSubWindow)
+        self.actionViewFlowUsagePlot.toggled.connect(self._viewFlowUsagePlotSubWindow)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
@@ -270,12 +288,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveDurationSpinBox.valueChanged.connect(self._recordRightWaterValveDuration)
         self.itiMinSpinBox.valueChanged.connect(self._recordMinITI)
         self.itiMaxSpinBox.valueChanged.connect(self._recordMaxITI)
+        self.noResponseCutoffSpinBox.valueChanged.connect(self._recordNoResponseCutoff)
+        self.autoWaterCutoffSpinBox.valueChanged.connect(self._recordAutoWaterCutoff)
 
     def _updateViewMenu(self, objectName):
         if (objectName == self.streamingSubWindow.objectName()):
             self.actionViewStreaming.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
-        elif (objectName == self.resultsSubWindow.objectName()):
+        elif (objectName == self.resultsPlotSubWindow.objectName()):
             self.actionViewResultsPlot.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
+        elif (objectName == self.flowUsagePlotSubWindow.objectName()):
+            self.actionViewFlowUsagePlot.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
         elif (objectName == self.currentTrialSubWindow.objectName()):
             self.actionViewCurrentTrialInfo.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
     
@@ -296,10 +318,21 @@ class Window(QMainWindow, Ui_MainWindow):
             # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
             # despite the subWindow object not being deleted and not being removed from the mdiArea's subWindowList, and the subWindow's
             # internal widget object not being deleted either, all due to the setAttribute(Qt.WA_DeleteOnClose, False) declared above.
-            self.resultsSubWindow.show()
-            self.resultsSubWindow.widget().show()
+            self.resultsPlotSubWindow.show()
+            self.resultsPlotSubWindow.widget().show()
         else:
-            self.resultsSubWindow.hide()
+            self.resultsPlotSubWindow.hide()
+
+    def _viewFlowUsagePlotSubWindow(self, checked):
+        if checked:
+            # I also need to show the subWindow's internal widget because for some reason it does not show automatically
+            # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
+            # despite the subWindow object not being deleted and not being removed from the mdiArea's subWindowList, and the subWindow's
+            # internal widget object not being deleted either, all due to the setAttribute(Qt.WA_DeleteOnClose, False) declared above.
+            self.flowUsagePlotSubWindow.show()
+            self.flowUsagePlotSubWindow.widget().show()
+        else:
+            self.flowUsagePlotSubWindow.hide()
 
     def _viewCurrentTrialSubWindow(self, checked):
         if checked:
@@ -682,6 +715,26 @@ class Window(QMainWindow, Ui_MainWindow):
     def _recordNumTrials(self, value):
         self.numTrials = value
 
+    def _recordNoResponseCutoff(self, value):
+        if not (value == 0):
+            self.noResponseCutoff = value
+            self.autoWaterCutoffSpinBox.setMaximum(value - 1)
+        else:
+            # When value equals 0, the spinBox displays 'Never'
+            self.noResponseCutoff = self.numTrials + 1  # Set it equal to 1 more than the number of trials to guarantee that it will never happen.
+            self.autoWaterCutoffSpinBox.setMaximum(value)
+        if self.protocolWorker is not None:
+            self.protocolWorker.setNoResponseCutoff(self.noResponseCutoff)
+
+    def _recordAutoWaterCutoff(self, value):
+        if not (value == 0):
+            self.autoWaterCutoff = value
+        else:
+            # When value equals 0, the spinBox displays 'Never'
+            self.autoWaterCutoff = self.numTrials + 1  # Set it equal to 1 more than the number of trials to guarantee that it will never happen.
+        if self.protocolWorker is not None:
+            self.protocolWorker.setAutoWaterCutoff(self.autoWaterCutoff)
+
     def _recordMinITI(self, value):
         self.itiMin = value
         self.itiMaxSpinBox.setMinimum(value)  # Do not allow itiMaxSpinBox to hold a value less than itiMinSpinBox's current value.
@@ -751,7 +804,6 @@ class Window(QMainWindow, Ui_MainWindow):
         index = 0
 
         # This is to plot percent correct
-
         # for k, v in flowResultsDict.items():
         #     numCorrect = v['Correct']
         #     numTotal = v['Total']
@@ -764,7 +816,6 @@ class Window(QMainWindow, Ui_MainWindow):
         #     index += 1
 
         # This is to plot percent left licks
-
         for k, v in flowResultsDict.items():
             numLeft = v['left']
             # numTotal = v['Total']  # I do not want to use this because if the mouse does not response many times, it will increase the denominator and lower the percentage.
@@ -776,8 +827,22 @@ class Window(QMainWindow, Ui_MainWindow):
             xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
             yValues.append(percent)
             index += 1
+        
         self.resultsPlot.updatePlot(xValues, yValues)
 
+    def _updateFlowUsagePlot(self, flowResultsDict):
+        if not self.flowUsagePlot.isXAxisSetup():
+            self.flowUsagePlot.setupXaxis(flowResultsDict)
+
+        xValues = []
+        yValues = []
+        index = 0
+        for k, v in flowResultsDict.items():
+            xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
+            yValues.append(v['Total'])
+            index += 1
+        self.flowUsagePlot.updatePlot(xValues, yValues)
+    
     def _noResponseAbortDialog(self):
         QMessageBox.information(self, "Notice", "Session aborted due to too many consecutive no responses.")
 
@@ -834,7 +899,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.leftWaterValveDuration, self.rightWaterValveDuration, self.itiMin, self.itiMax, self.olfaCheckBox.isChecked(), self.numTrials)
+        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.leftWaterValveDuration, self.rightWaterValveDuration, self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials)
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)
@@ -848,6 +913,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
         self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateResultsPlot)
+        self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateFlowUsagePlot)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)
         self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
         self.protocolWorker.saveEndOfSessionDataSignal.connect(lambda x: self.saveDataWorker.receiveFinalResultsDict(x))  # 'x' is the dictionary parameter emitted from 'saveEndOfSessionDataSignal' and passed into 'receiveFinalResultsDict(x)'
