@@ -62,7 +62,7 @@ class SessionData(tables.IsDescription):
     bpodStartTime = tables.Float32Col(pos=15)
 
 
-class FinalData(tables.IsDescription):
+class ResultsData(tables.IsDescription):
     flowRate = tables.UInt8Col(pos=0)
     totalUsage = tables.UInt16Col(pos=1)
     totalRight = tables.UInt16Col(pos=2)
@@ -95,8 +95,10 @@ class SaveDataWorker(QObject):
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
 
         self.licksGroup = self.h5file.create_group(where='/', name='lickTimes', title='Lick Timestamps Per Trial')
-        self.table = self.h5file.create_table(where='/', name='trial_data', description=SessionData, title='Trial Data')
-        self.trial = self.table.row
+        self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=SessionData, title='Trial Data')
+        self.trialRow = self.trialsTable.row
+        self.resultsTable = self.h5file.create_table(where='/', name='total_results', description=ResultsData, title='Total Response Results')
+        self.resultsRow = self.resultsTable.row
         self.statesTable = None  # Make it None because have to wait for completion of first trial to get names of all the states. Afterwhich, make description dictionary and then table.
         self.statesTableDescDict = {}  # Description for the states table (using this instead of making a class definition and subclassing tables.IsDescription).
         self.licksTable = None
@@ -106,9 +108,10 @@ class SaveDataWorker(QObject):
         }
         self.keepRunning = True
         self.newData = False
+        self.resultsRowsAppended = False  # This will be used to append the results Totals to the resultsTable only once after the first trial and then iterate and update the rows for every successive trial onwards.
         self.trialNum = 1
         self.infoDict = {}
-        self.finalResultsDict = {}
+        self.totalResultsDict = {}
 
         self.adc = analogInModule
         if self.adc:
@@ -124,34 +127,45 @@ class SaveDataWorker(QObject):
             self.voltsGroup = self.h5file.create_group(where='/', name='voltages', title='Voltages Per Trial')
             self.voltTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum}', description=VoltageData, title=f'Trial {self.trialNum} Voltage Data')
             self.voltsRow = self.voltTable.row
-        
 
     def receiveInfoDict(self, infoDict):
         self.newData = True
         logging.info("incoming infoDict")
         self.infoDict = infoDict
 
-    def receiveFinalResultsDict(self, resultsDict):
-        logging.info('incoming final results dict')
-        self.finalResultsDict = resultsDict
+    def receiveTotalResultsDict(self, resultsDict):
+        logging.info('incoming total results dict')
+        self.totalResultsDict = resultsDict
 
-    def saveFinalResults(self):
-        logging.info('attempting to save final results data')
-        self.finalTable = self.h5file.create_table(where='/', name='final_results', description=FinalData, title='Final Results')
-        self.finalRow = self.finalTable.row
+    def saveTotalResults(self):
+        logging.info('attempting to save result totals data')
+        if self.resultsRowsAppended:
+            # If the rows were appended to the resultsTable for the first trial already, then do not use append again because it will continue to append new rows below the last.
+            # Instead, I want to keep the rows from the first trial and just update the values for the totals for each flowrate. To do that, I must iterate through the resultsTable.
+            for row in self.resultsTable.iterrows():
+                key = str(row['flowRate'])
+                row['totalUsage'] = self.totalResultsDict[key]['Total']
+                row['totalRight'] = self.totalResultsDict[key]['right']
+                row['totalLeft'] = self.totalResultsDict[key]['left']
+                row['totalCorrect'] = self.totalResultsDict[key]['Correct']
+                row['totalWrong'] = self.totalResultsDict[key]['Wrong']
+                row['totalNoResponse'] = self.totalResultsDict[key]['NoResponse']
+                row.update()
+        else:
+            # This means the rows have not yet been appended to the results table after the first trial.
+            for flowRate, total in self.totalResultsDict.items():
+                self.resultsRow['flowRate'] = flowRate
+                self.resultsRow['totalUsage'] = total['Total']
+                self.resultsRow['totalRight'] = total['right']
+                self.resultsRow['totalLeft'] = total['left']
+                self.resultsRow['totalCorrect'] = total['Correct']
+                self.resultsRow['totalWrong'] = total['Wrong']
+                self.resultsRow['totalNoResponse'] = total['NoResponse']
+                self.resultsRow.append()
+            self.resultsRowsAppended = True
 
-        for flowRate, total in self.finalResultsDict.items():
-            self.finalRow['flowRate'] = flowRate
-            self.finalRow['totalUsage'] = total['Total']
-            self.finalRow['totalRight'] = total['right']
-            self.finalRow['totalLeft'] = total['left']
-            self.finalRow['totalCorrect'] = total['Correct']
-            self.finalRow['totalWrong'] = total['Wrong']
-            self.finalRow['totalNoResponse'] = total['NoResponse']
-            self.finalRow.append()
-
-        self.finalTable.flush()
-        logging.info('final results data has been written to disk')
+        self.resultsTable.flush()
+        logging.info('results data has been written to disk')
 
     def saveStatesTimestamps(self):
         # Define the description for the states table using a dictionary of the states timestamps. Then create the states table (only once).
@@ -189,27 +203,27 @@ class SaveDataWorker(QObject):
                 self.licksTable = self.h5file.create_table(where='/lickTimes', name=f'trial_{self.trialNum}', description=self.licksTableDescDict, title=f'Trial {self.trialNum} Lick Timestamps')
                 self.licksRow = self.licksTable.row
 
-                self.trial['trialNum'] = self.infoDict['currentTrialNum']
-                self.trial['correctResponse'] = self.infoDict['correctResponse']
-                self.trial['responseResult'] = self.infoDict['responseResult']
-                self.trial['odorName'] = self.infoDict['currentOdorName']
-                self.trial['odorConc'] = str(self.infoDict['currentOdorConc'])  # convert to string in case it is a float.
-                self.trial['odorFlow'] = self.infoDict['currentFlow']
-                self.trial['itiDuration'] = self.infoDict['currentITI']
-                self.trial['trialStartTime'] = self.infoDict['Trial start timestamp']
-                self.trial['trialEndTime'] = self.infoDict['Trial end timestamp']
-                self.trial['totalTrialTime'] = self.trial['trialEndTime'] - self.trial['trialStartTime']
-                self.trial['bpodStartTime'] = self.infoDict['Bpod start timestamp']
+                self.trialRow['trialNum'] = self.infoDict['currentTrialNum']
+                self.trialRow['correctResponse'] = self.infoDict['correctResponse']
+                self.trialRow['responseResult'] = self.infoDict['responseResult']
+                self.trialRow['odorName'] = self.infoDict['currentOdorName']
+                self.trialRow['odorConc'] = str(self.infoDict['currentOdorConc'])  # convert to string in case it is a float.
+                self.trialRow['odorFlow'] = self.infoDict['currentFlow']
+                self.trialRow['itiDuration'] = self.infoDict['currentITI']
+                self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
+                self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
+                self.trialRow['totalTrialTime'] = self.trialRow['trialEndTime'] - self.trialRow['trialStartTime']
+                self.trialRow['bpodStartTime'] = self.infoDict['Bpod start timestamp']
 
                 if 'Port1In' in self.infoDict['Events timestamps']:
                     leftLicksList = self.infoDict['Events timestamps']['Port1In']
                     leftLicksCount = len(leftLicksList)
-                    self.trial['leftLicksCount'] = leftLicksCount
+                    self.trialRow['leftLicksCount'] = leftLicksCount
 
                     if 'Port3In' in self.infoDict['Events timestamps']:
                         rightLicksList = self.infoDict['Events timestamps']['Port3In']
                         rightLicksCount = len(rightLicksList)
-                        self.trial['rightLicksCount'] = rightLicksCount
+                        self.trialRow['rightLicksCount'] = rightLicksCount
 
                         # Save both left and right lick times to each row if both exist, and avoid index out of range errors.
                         if (rightLicksCount >= leftLicksCount):
@@ -228,7 +242,7 @@ class SaveDataWorker(QObject):
                                 self.licksRow.append()
                     else:   
                         # Only left licks exist. 
-                        self.trial['leftLicksCount'] = len(self.infoDict['Events timestamps']['Port1In'])
+                        self.trialRow['leftLicksCount'] = len(self.infoDict['Events timestamps']['Port1In'])
                         for t in self.infoDict['Events timestamps']['Port1In']:
                             self.licksRow['leftLickTimes'] = t
                             self.licksRow.append()
@@ -236,15 +250,16 @@ class SaveDataWorker(QObject):
 
                 # Only right licks exist.
                 elif 'Port3In' in self.infoDict['Events timestamps']:
-                    self.trial['rightLicksCount'] = len(self.infoDict['Events timestamps']['Port3In'])
+                    self.trialRow['rightLicksCount'] = len(self.infoDict['Events timestamps']['Port3In'])
                     for t in self.infoDict['Events timestamps']['Port3In']:
                         self.licksRow['rightLickTimes'] = t
                         self.licksRow.append()
                     self.licksTable.flush()
                 
-                self.trial.append()
-                self.table.flush()
+                self.trialRow.append()
+                self.trialsTable.flush()
                 self.saveStatesTimestamps()
+                self.saveTotalResults()
                 self.trialNum += 1  # increment trial number.
 
                 if self.adc:
@@ -315,9 +330,9 @@ class SaveDataWorker(QObject):
         if self.adc:
             self.voltTable.flush()
 
-        self.table.flush()
+        self.trialsTable.flush()
+        self.resultsTable.flush()
         logging.info("session data has been written to disk")
-        self.saveFinalResults()
         self.h5file.close()
         logging.info("h5 file closed")
         self.finished.emit()

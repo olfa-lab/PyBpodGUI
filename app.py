@@ -109,6 +109,10 @@ Things to do:
 
     * __X__ implement progress bar for state machine during trial run
 
+    * __X__ before aborting the experiment due to too many consecutive No Response results, create an optional feature that opens the water valves for a few milliseconds to attempt to re-motivate the mouse
+
+    * __X__ make the No Response cutoff user-adjustable and allow it to be disabled.
+
     * _____ implement pause button
 
     * _____ use jonathan olfactometer code
@@ -132,10 +136,6 @@ Things to do:
     * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
 
     * _____ show the number of times each flow rate and odor was used throughout the experiment, either with a plot or with QLineEdit fields.
-
-    * _____ before aborting the experiment due to too many consecutive No Response results, create an optional feature that opens the water valves for a few milliseconds to attempt to re-motivate the mouse
-
-    * _____ make the No Response cutoff user-adjustable and allow it to be disabled.
 
     * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias
 
@@ -193,13 +193,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
         self.bpodPortLineEdit.setText(self.bpodSerialPort)
         self.saveDataWorker = None
+        self.protocolWorker = None
         self.mouseNumber = None
         self.rigLetter = None
         self.numTrials = self.nTrialsSpinBox.value()
         self.noResponseCutoff = self.noResponseCutoffSpinBox.value()
-        self.noResponseCutoffSpinBox.setMaximum(self.numTrials)
+        self._recordNoResponseCutoff(self.noResponseCutoff)
         self.autoWaterCutoff = self.autoWaterCutoffSpinBox.value()
-        self.autoWaterCutoffSpinBox.setMaximum(self.noResponseCutoff - 1)
+        self._recordAutoWaterCutoff(self.autoWaterCutoff)
         self.experimentName = None
         self.itiMin = self.itiMinSpinBox.value()
         self.itiMax = self.itiMaxSpinBox.value()
@@ -213,7 +214,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
         self.analogInputSettings = AnalogInputSettingsDialog()
-        self.protocolWorker = None
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects devices.
         self.finalValveButton.setEnabled(False)
@@ -523,7 +523,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
         self._experimentCompleteDialog()
         self.currentTrialProgressBar.setValue(0)
-        self.currentTrialProgressBarLabel.setText('')
 
     def _checkIfRunning(self):
         # When this function is called for the first time upon clicking the stop button
@@ -768,7 +767,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _updateCurrentState(self, stateName):
         self.currentStateLineEdit.setText(stateName)
-        self.currentTrialProgressBarLabel.setText(stateName)
         
     def _updateCurrentTrialProgressBar(self, value):
         self.currentTrialProgressBar.setValue(value + 1)
@@ -912,11 +910,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
+        self.protocolWorker.flowResultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))  # 'x' is the dictionary parameter emitted from 'saveEndOfSessionDataSignal' and passed into 'receiveFinalResultsDict(x)'
         self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateResultsPlot)
         self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateFlowUsagePlot)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)
         self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
-        self.protocolWorker.saveEndOfSessionDataSignal.connect(lambda x: self.saveDataWorker.receiveFinalResultsDict(x))  # 'x' is the dictionary parameter emitted from 'saveEndOfSessionDataSignal' and passed into 'receiveFinalResultsDict(x)'
         # self.protocolWorker.startSDCardLoggingSignal.connect(self._startSDCardLogging)
         # self.protocolWorker.stopSDCardLoggingSignal.connect(self._stopSDCardLogging)
         self.protocolWorker.noResponseAbortSignal.connect(self._noResponseAbortDialog)

@@ -22,7 +22,7 @@ class ProtocolWorker(QObject):
     flowResultsCounterDictSignal = pyqtSignal(dict) # sends the results for each flow rate with it to update the GUI's results plot.
     saveTrialDataDictSignal = pyqtSignal(dict)  # 'dict' is interpreted as 'QVariantMap' by PyQt5 and thus can only have strings as keys.
     # saveTrialDataDictSignal = pyqtSignal(object)  # Use 'object' instead if you want to use non-strings as keys.
-    saveEndOfSessionDataSignal = pyqtSignal(dict)
+    saveTotalResultsSignal = pyqtSignal(dict)
     noResponseAbortSignal = pyqtSignal()
     olfaNotConnectedSignal = pyqtSignal()
     olfaExceptionSignal = pyqtSignal(str)  # sends the olfa exception error string with it to the main thread to notify the user.
@@ -549,18 +549,12 @@ class ProtocolWorker(QObject):
                 self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.leftPort, value=1)
                 self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.rightPort, value=1)
                 QTimer.singleShot(1000, lambda: self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.leftPort, value=0))
-                QTimer.singleShot(1000, lambda: self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.righttPort, value=0))
-
-                # self.autoWaterCutoff = self.noResponseCutOff + 1  # Set autoWaterCutoff to be 1 more than noResponseCutoff so that this if statement does not execute more than once, and aborts the experiment if mouse still does not lick.
+                QTimer.singleShot(1000, lambda: self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.rightPort, value=0))
             
             # Start the next trial in 1000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
             QTimer.singleShot(1000, self.startTrial)
 
         else:
-            self.saveEndOfSessionDataSignal.emit(self.flowResultsCounterDict)
-            logging.info('saveEndOfSessionDataSignal emitting')
-            QThread.sleep(1)
-
             if (self.consecutiveNoResponses >= self.noResponseCutOff):
                 self.noResponseAbortSignal.emit()
 
