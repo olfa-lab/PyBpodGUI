@@ -75,6 +75,9 @@ class ProtocolWorker(QObject):
     def setRightWaterDuration(self, duration):
         self.rightWaterDuration = duration / 1000  # Convert to seconds.
 
+    def setNumTrials(self, value):
+        self.nTrials = value
+    
     def setMinITI(self, value):
         self.itiMin = value
 
