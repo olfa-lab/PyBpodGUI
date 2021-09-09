@@ -219,3 +219,30 @@ class StreamingWorker(QObject):
             self.isRun = True
             return True
         return False
+
+    def resetPlot(self):
+        self.tdata = [0]
+        self.ydata = [0]
+        self.lickRightData = [np.nan]
+        self.lickLeftData = [np.nan]
+        self.ax.set_xlim(0, self.maxt)
+
+        self.timeText.set_text('')
+        self.fpsText.set_text('')
+        self.elapsed.set_text('')
+        self.nTotalDataPointsText.set_text('')
+        self.nDataPointsPlottedText.set_text('')
+
+        self.nTotalDataPoints = 0
+        self.nDataPointsPlotted = 0
+        self.plotTimer = 0
+        self.previousTimer = 0
+        self.counter = 0
+        self.lickRight = np.nan
+        self.lickLeft = np.nan
+        self.spanStart = 0
+        self.spanEnd = 0
+        self.activateResponseWindow = False
+        self.t_start = time.perf_counter()
+
+        self.ax.figure.canvas.draw()

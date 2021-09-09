@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1369</width>
+    <height>901</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QMdiArea" name="mdiArea">
+      <property name="sizeAdjustPolicy">
+       <enum>QAbstractScrollArea::AdjustIgnored</enum>
+      </property>
+      <property name="activationOrder">
+       <enum>QMdiArea::CreationOrder</enum>
+      </property>
+      <widget class="QWidget" name="currentTrialSubwindowWidget">
+       <property name="windowTitle">
+        <string>Current Trial Info</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="currentStateLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="odorConcentrationLabel">
+          <property name="text">
+           <string>Odor Concentration</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="odorNameLabel">
+          <property name="text">
+           <string>Odor Name</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="5">
+         <widget class="QLineEdit" name="totalNoResponsesLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLineEdit" name="odorNameLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QLineEdit" name="correctResponseLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QLineEdit" name="currentFlowLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QLabel" name="totalCorrectLabel">
+          <property name="text">
+           <string>Total Correct:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="itiLabel">
+          <property name="text">
+           <string>Current ITI</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="responseResultLabel">
+          <property name="text">
+           <string>Response Result</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QLabel" name="totalPercentCorrectLabel">
+          <property name="text">
+           <string>Total Percent Correct</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QLabel" name="totalWrongLabel">
+          <property name="text">
+           <string>Total Wrong:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <widget class="QLineEdit" name="totalWrongLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="itiLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="responseResultLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="correctResponseLabel">
+          <property name="text">
+           <string>Correct Response</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="currentFlowLabel">
+          <property name="text">
+           <string>Current Flow</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="5">
+         <widget class="QLineEdit" name="totalPercentCorrectLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QLabel" name="totalNoResponsesLabel">
+          <property name="text">
+           <string>Total No Responses</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="trialNumLabel">
+          <property name="text">
+           <string>Trial Number</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="5">
+         <widget class="QLineEdit" name="totalCorrectLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QLineEdit" name="odorConcentrationLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="trialNumLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="currentStateLabel">
+          <property name="text">
+           <string>Current State Name</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="6">
+         <widget class="QProgressBar" name="currentTrialProgressBar">
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="textVisible">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1369</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+   </widget>
+   <widget class="QMenu" name="menuOlfactometer">
+    <property name="title">
+     <string>Olfactometer</string>
+    </property>
+    <addaction name="actionSelectOlfaConfigFile"/>
+    <addaction name="actionConfigureOlfaSettings"/>
+    <addaction name="actionLaunchOlfaGUI"/>
+   </widget>
+   <widget class="QMenu" name="menuAnalogIn">
+    <property name="title">
+     <string>AnalogIn</string>
+    </property>
+    <addaction name="actionConfigureAnalogInSettings"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionViewStreaming"/>
+    <addaction name="actionViewResultsPlot"/>
+    <addaction name="actionViewCurrentTrialInfo"/>
+    <addaction name="actionViewFlowUsagePlot"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuOlfactometer"/>
+   <addaction name="menuAnalogIn"/>
+   <addaction name="menuView"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="experimentSetupDockWidget">
+   <property name="windowTitle">
+    <string>Experiment Setup</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="experimentSetupDockWidgetContents">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="bpodPortLineEdit"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="mouseNumberLabel">
+       <property name="text">
+        <string>Mouse Number:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="noResponseCutoffLabel">
+       <property name="text">
+        <string>Abort when no response for</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="analogInputModulePortLabel">
+       <property name="text">
+        <string>Analog In Port</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="analogInputModuleCheckBox">
+       <property name="text">
+        <string>Enable Analog Input</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QCheckBox" name="olfaCheckBox">
+       <property name="text">
+        <string>Enable Olfactometer</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="olfaFileLineEdit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="1">
+      <widget class="QSpinBox" name="itiMinSpinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="rigLetterLabel">
+       <property name="text">
+        <string>Rig Letter</string>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="0" colspan="2">
+      <widget class="QPushButton" name="startButton">
+       <property name="text">
+        <string>Start</string>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="0" colspan="2">
+      <widget class="QPushButton" name="pauseButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Pause</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0" colspan="2">
+      <widget class="QPushButton" name="connectDevicesButton">
+       <property name="text">
+        <string>Connect Devices</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0">
+      <widget class="QLabel" name="itiMinLabel">
+       <property name="text">
+        <string>Minimum ITI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="protocolFileLabel">
+       <property name="text">
+        <string>Protocol File:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QLineEdit" name="mouseNumberLineEdit"/>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="rigLetterLineEdit"/>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="nTrialsLabel">
+       <property name="text">
+        <string>Num of trials:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="bpodPortLabel">
+       <property name="text">
+        <string>Bpod Port</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="olfaFileLabel">
+       <property name="text">
+        <string>Olfa Config File:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="analogInputModulePortLineEdit"/>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="itiMaxLabel">
+       <property name="text">
+        <string>Maximum ITI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="QSpinBox" name="itiMaxSpinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLineEdit" name="protocolFileLineEdit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="0" colspan="2">
+      <widget class="QPushButton" name="stopButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Stop</string>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QSpinBox" name="nTrialsSpinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>100</number>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QSpinBox" name="noResponseCutoffSpinBox">
+       <property name="specialValueText">
+        <string>Never</string>
+       </property>
+       <property name="suffix">
+        <string> trials</string>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="autoWaterCutoffLabel">
+       <property name="text">
+        <string>Auto water when no response for</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QSpinBox" name="autoWaterCutoffSpinBox">
+       <property name="specialValueText">
+        <string>Never</string>
+       </property>
+       <property name="suffix">
+        <string> trials</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="bpodControlDockWidget">
+   <property name="windowTitle">
+    <string>Bpod Control</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="bpodControlDockWidgetContents">
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="2" column="0">
+      <widget class="QPushButton" name="calibLeftWaterButton">
+       <property name="text">
+        <string>Flush Left Water</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPushButton" name="calibRightWaterButton">
+       <property name="text">
+        <string>Flush Right Water</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="rightWaterValveDurationSpinBox">
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>250</number>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSpinBox" name="leftWaterValveDurationSpinBox">
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>250</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QPushButton" name="leftWaterValveButton">
+       <property name="text">
+        <string>Left Water Valve</string>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QPushButton" name="rightWaterValveButton">
+       <property name="text">
+        <string>Right Water Valve</string>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="rightWaterValveDurationLabel">
+       <property name="text">
+        <string>Right Water Valve Duration:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <widget class="QPushButton" name="finalValveButton">
+       <property name="text">
+        <string>Final Valve</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="leftWaterValveDurationLabel">
+       <property name="text">
+        <string>Left Water Valve Duration:</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionSelectOlfaConfigFile">
+   <property name="text">
+    <string>Select config file</string>
+   </property>
+  </action>
+  <action name="actionLaunchOlfaGUI">
+   <property name="text">
+    <string>Launch GUI</string>
+   </property>
+  </action>
+  <action name="actionConfigureOlfaSettings">
+   <property name="text">
+    <string>Configure settings</string>
+   </property>
+  </action>
+  <action name="actionConfigureAnalogInSettings">
+   <property name="text">
+    <string>Configure settings</string>
+   </property>
+  </action>
+  <action name="actionViewStreaming">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Streaming</string>
+   </property>
+  </action>
+  <action name="actionViewResultsPlot">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Results Plot</string>
+   </property>
+  </action>
+  <action name="actionViewCurrentTrialInfo">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Current Trial Info</string>
+   </property>
+  </action>
+  <action name="actionViewFlowUsagePlot">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Flow Usage Plot</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

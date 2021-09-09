@@ -5,6 +5,7 @@ import time
 from serial.serialutil import SerialException
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
+from pybpodapi.exceptions.bpod_error import BpodErrorException
 
 import olfactometry
 from olfactometry.utils import OlfaException
@@ -16,21 +17,23 @@ class ProtocolWorker(QObject):
     trialStartSignal = pyqtSignal(str)  # sends correct response with it for use by inputEventThread.
     newTrialInfoSignal = pyqtSignal(dict)  # sends current trial info with it to update GUI.
     newStateSignal = pyqtSignal(str)  # sends current state with it to update GUI.
+    stateNumSignal = pyqtSignal(int)  
     responseResultSignal = pyqtSignal(str)  # sends the response result of the current trial with it to update the GUI.
     totalsDictSignal = pyqtSignal(dict)  # sends the session totals with it to update the GUI.
     flowResultsCounterDictSignal = pyqtSignal(dict) # sends the results for each flow rate with it to update the GUI's results plot.
     saveTrialDataDictSignal = pyqtSignal(dict)  # 'dict' is interpreted as 'QVariantMap' by PyQt5 and thus can only have strings as keys.
     # saveTrialDataDictSignal = pyqtSignal(object)  # Use 'object' instead if you want to use non-strings as keys.
-    saveEndOfSessionDataSignal = pyqtSignal(dict)
+    saveTotalResultsSignal = pyqtSignal(dict)
     noResponseAbortSignal = pyqtSignal()
     olfaNotConnectedSignal = pyqtSignal()
     olfaExceptionSignal = pyqtSignal(str)  # sends the olfa exception error string with it to the main thread to notify the user.
     invalidFileSignal = pyqtSignal(str)  # sends the key string that caused the KeyError with it to the main thread to notify the user.
+    bpodExceptionSignal = pyqtSignal(str)  # sends the bpod exception error string with it to the main thread to notify the user.
     # startSDCardLoggingSignal = pyqtSignal()
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, olfaChecked=True, numTrials=1):
+    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
@@ -43,12 +46,15 @@ class ProtocolWorker(QObject):
         self.currentOdorConc = None
         self.currentFlow = None
         self.currentTrialNum = 0
-        self.totalRewards = 0
-        self.totalPunishes = 0
+        self.totalCorrect = 0
+        self.totalWrong = 0
         self.totalNoResponses = 0
         self.consecutiveNoResponses = 0
-        self.noResponseCutOff = 10
+        self.noResponseCutOff = noResponseCutoff
+        self.autoWaterCutoff = autoWaterCutoff
         self.currentITI = None
+        self.itiMin = itiMin
+        self.itiMax = itiMax
         self.nTrials = numTrials
         self.leftPort = 1
         self.rightPort = 3
@@ -70,6 +76,21 @@ class ProtocolWorker(QObject):
 
     def setRightWaterDuration(self, duration):
         self.rightWaterDuration = duration / 1000  # Convert to seconds.
+
+    def setNumTrials(self, value):
+        self.nTrials = value
+    
+    def setMinITI(self, value):
+        self.itiMin = value
+
+    def setMaxITI(self, value):
+        self.itiMax = value
+
+    def setNoResponseCutoff(self, value):
+        self.noResponseCutOff = value
+
+    def setAutoWaterCutoff(self, value):
+        self.autoWaterCutoff = value
     
     def getCorrectResponse(self):
         return self.correctResponse
@@ -86,7 +107,8 @@ class ProtocolWorker(QObject):
                 'currentITI': self.currentITI,
                 'currentOdorName': self.currentOdorName,
                 'currentOdorConc': self.currentOdorConc,
-                'currentFlow': self.currentFlow
+                'currentFlow': self.currentFlow,
+                'nStates': self.sma.total_states_added
             }
             return trialDict
         return {}
@@ -103,14 +125,14 @@ class ProtocolWorker(QObject):
 
     def calculateTotalPercentCorrect(self):
         logging.info('calculating total percent correct')
-        percent = round(((float(self.totalRewards) / float(self.currentTrialNum)) * 100), 2)  # I used 'self.currentTrialNum' instead of 'self.nTrials' to ensure the percentage only counts the number of completed trials incase the experiment is aborted early.
+        percent = round(((float(self.totalCorrect) / float(self.currentTrialNum)) * 100), 2)  # I used 'self.currentTrialNum' instead of 'self.nTrials' to ensure the percentage only counts the number of completed trials incase the experiment is aborted early.
         logging.info(f"percent correct is {percent}")
         return percent
 
     def getTotalsDict(self):
         totals = {
-            'totalRewards': self.totalRewards,
-            'totalPunishes': self.totalPunishes,
+            'totalCorrect': self.totalCorrect,
+            'totalWrong': self.totalWrong,
             'totalNoResponses': self.totalNoResponses,
             'totalPercentCorrect': self.calculateTotalPercentCorrect()
         }
@@ -159,6 +181,7 @@ class ProtocolWorker(QObject):
         # Update trial info for GUI
         self.currentStateName = self.sma.state_names[self.sma.current_state]
         self.newStateSignal.emit(self.currentStateName)
+        self.stateNumSignal.emit(self.sma.current_state)
         
         if self.currentStateName == 'Correct':
             self.currentResponseResult = 'Correct'
@@ -172,7 +195,7 @@ class ProtocolWorker(QObject):
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             
-            self.totalRewards += 1
+            self.totalCorrect += 1
             sessionTotals = self.getTotalsDict()
             self.totalsDictSignal.emit(sessionTotals)
 
@@ -191,7 +214,7 @@ class ProtocolWorker(QObject):
             self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             
-            self.totalPunishes += 1
+            self.totalWrong += 1
             sessionTotals = self.getTotalsDict()
             self.totalsDictSignal.emit(sessionTotals)
 
@@ -413,7 +436,12 @@ class ProtocolWorker(QObject):
             if self.olfas is not None:
                 self.stimulus = self.stimulusFunction()
 
-            self.currentITI = np.random.randint(5, 9)  # inter trial interval in seconds.
+            if (self.itiMin == self.itiMax):  # If they are equal, then self.currentITI will be the same every trial.
+                self.currentITI = self.itiMin
+            else:
+                # Since they are different, randomly choose a value for self.currentITI every trial. Add 1 to the randint's upperbound to include itiMax in the range of possible integers (since the upperbound is non-inclusive).
+                self.currentITI = np.random.randint(self.itiMin, self.itiMax + 1)
+            
             self.currentTrialNum += 1
 
             if self.correctResponse == 'left':
@@ -512,8 +540,14 @@ class ProtocolWorker(QObject):
             currentTrialInfo = self.getCurrentTrialInfoDict()
             self.newTrialInfoSignal.emit(currentTrialInfo)
 
-            self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
-            self.myBpod.run_state_machine(self.sma)  # Run state machine
+            try:
+                self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
+                self.myBpod.run_state_machine(self.sma)  # Run state machine
+            except (BpodErrorException, TypeError) as err:
+                self.bpodExceptionSignal.emit(str(err))
+                # self.stopRunning()
+                self.finished.emit()
+                return  # This is here to avoid executing the remaining code below.
 
             self.currentStateName = 'exit'
             endOfTrialDict = self.getEndOfTrialInfoDict()
@@ -521,15 +555,17 @@ class ProtocolWorker(QObject):
             logging.info("saveTrialDataDictSignal emitted")
             self.stimIndex = 0
             # self.stopSDCardLoggingSignal.emit()
+
+            if (self.consecutiveNoResponses == self.autoWaterCutoff):
+                self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.leftPort, value=1)
+                self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.rightPort, value=1)
+                QTimer.singleShot(1000, lambda: self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.leftPort, value=0))
+                QTimer.singleShot(1000, lambda: self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.rightPort, value=0))
             
             # Start the next trial in 1000 msecs to give some time for saveDataWorker to write all trial data before next trial's info dict gets sent.
             QTimer.singleShot(1000, self.startTrial)
 
         else:
-            self.saveEndOfSessionDataSignal.emit(self.flowResultsCounterDict)
-            logging.info('saveEndOfSessionDataSignal emitting')
-            QThread.sleep(1)
-
             if (self.consecutiveNoResponses >= self.noResponseCutOff):
                 self.noResponseAbortSignal.emit()
 
