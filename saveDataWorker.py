@@ -288,41 +288,42 @@ class SaveDataWorker(QObject):
                 # elapsed = currentTimer - self.t_start
                 # self.previousTimer = currentTimer
 
-                prefix = analogData[0][0]
-                syncByte = analogData[0][1]
-                samples = analogData[1]
-                voltages = [0] * len(samples)
+                if analogData is not None:
+                    prefix = analogData[0][0]
+                    syncByte = analogData[0][1]
+                    samples = analogData[1]
+                    voltages = [0] * len(samples)
 
-                if (prefix == 35):  # 35 is the decimal value for the ascii char '#'
-                    self.stateNum = syncByte  # update the state number with the syncByte as a uint8.
+                    if (prefix == 35):  # 35 is the decimal value for the ascii char '#'
+                        self.stateNum = syncByte  # update the state number with the syncByte as a uint8.
 
-                # convert decimal bit value to voltage.
-                for i in range(len(samples)):
-                    if samples[i] >= 4096:
-                        samples[i] -= 4096
-                        voltages[i] = (samples[i] * self.maxVoltage) / 4096
-                    elif samples[i] < 4096:
-                        voltages[i] = ((samples[i] * self.maxVoltage) / 4096) - self.maxVoltage
+                    # convert decimal bit value to voltage.
+                    for i in range(len(samples)):
+                        if samples[i] >= 4096:
+                            samples[i] -= 4096
+                            voltages[i] = (samples[i] * self.maxVoltage) / 4096
+                        elif samples[i] < 4096:
+                            voltages[i] = ((samples[i] * self.maxVoltage) / 4096) - self.maxVoltage
 
-                # Start saving to file when the trial starts, which is indicated when a syncByte is received and 'self.stateNum' is updated with the syncByte's value.
-                if not (self.stateNum == 0):
-                    self.voltsRow['stateNum'] = self.stateNum
-                    # self.voltsRow['computerTime'] = elapsed
-                    # self.voltsRow['computerPeriod'] = period
-                    self.voltsRow['bpodTime'] = self.bpodTime
-                    self.bpodTime += self.samplingPeriod
-                    self.voltsRow['voltage'] = voltages
-                    self.voltsRow.append()
+                    # Start saving to file when the trial starts, which is indicated when a syncByte is received and 'self.stateNum' is updated with the syncByte's value.
+                    if not (self.stateNum == 0):
+                        self.voltsRow['stateNum'] = self.stateNum
+                        # self.voltsRow['computerTime'] = elapsed
+                        # self.voltsRow['computerPeriod'] = period
+                        self.voltsRow['bpodTime'] = self.bpodTime
+                        self.bpodTime += self.samplingPeriod
+                        self.voltsRow['voltage'] = voltages
+                        self.voltsRow.append()
 
-                # fill buffer and send it when full using the signal.
-                if self.counter < self.analogDataBufferSize:    
-                    self.analogDataBuffer[self.counter] = voltages[0]  # Need to use element, not list
-                    self.counter += 1
-                else:
-                    self.analogDataSignal.emit(self.analogDataBuffer)
-                    self.counter = 0
-                    self.analogDataBuffer[self.counter] = voltages[0]
-                    self.counter += 1
+                    # fill buffer and send it when full using the signal.
+                    if self.counter < self.analogDataBufferSize:    
+                        self.analogDataBuffer[self.counter] = voltages[0]  # Need to use element, not list
+                        self.counter += 1
+                    else:
+                        self.analogDataSignal.emit(self.analogDataBuffer)
+                        self.counter = 0
+                        self.analogDataBuffer[self.counter] = voltages[0]
+                        self.counter += 1
 
             else:
                 QThread.sleep(1)  # Need this or else entire application will become severely unresponsive.

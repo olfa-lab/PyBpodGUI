@@ -113,7 +113,7 @@ Things to do:
 
     * __X__ make the No Response cutoff user-adjustable and allow it to be disabled.
 
-    * _____ implement pause button
+    * __X__ implement pause button
 
     * _____ use jonathan olfactometer code
 
@@ -132,6 +132,9 @@ Things to do:
     * _____ change the worker threads to use timers instead of infinite while loops
 
     * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
+            (seems to happen when user quickly presses start button after the experiment stops and error message says "QThread: Destroyed while thread is still running"
+            so perhaps I need to ensure some time elapses before the user can start the experiment again so the threads have enough time to finish running and delete themselves,
+            or I could check if any of the threads exist and are running at the time the user clicks the start button and if there is one then I could stop it and delete it)
 
     * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
 
@@ -140,6 +143,19 @@ Things to do:
     * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias
 
     * _____ get rid of variables that hold the value/text in fields like lineEdits, spinBoxes, and comboBoxes because it is redundant. 
+
+    * _____ make an option for the user to select their desired mode of generating the stimuli (once at the start of each trial,
+            or generate a list of length nTrials at the start of the experiment and iterate with each trial (and show that list in its own window),
+            or randomly sort a list of length equal to the number of vials to avoid consecutive repetitions and iterate with each trial and when finished iterating, randomly sort it again or just append to a single larger list equal to size of nTrials)
+
+    * _____ make an option to reconnect devices (close serial port and then open again) so that user can enable device that previously was not enabled when the 'Connect Devices' button was clicked without having to restart the application.
+
+    * _____ pause the analog module (stop usb streaming temporarily if enabled) when user clicks the pause button and modify saveDataWorker to handle case when analogData is None.
+
+    * _____ make a slider that changes the probability of the shaping reward.
+
+    * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.
+
 
 Questions to research:
 
@@ -214,6 +230,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
         self.analogInputSettings = AnalogInputSettingsDialog()
+        self.isPaused = False
 
         self.startButton.setEnabled(False)  # do not enable start button until user connects devices.
         self.finalValveButton.setEnabled(False)
@@ -254,12 +271,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotSubWindow.setObjectName("flowUsagePlotSubWindow")
         self.flowUsagePlotSubWindow.setWidget(self.flowUsagePlot.getWidget())
         self.flowUsagePlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        self.flowUsagePlotSubWindow.resize(330, 300)
+        self.flowUsagePlotSubWindow.resize(300, 300)
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
 
     def _connectSignalsSlots(self):
         self.startButton.clicked.connect(self._runTask)
         self.stopButton.clicked.connect(self._endTask)
+        self.pauseButton.clicked.connect(self._pauseExperiment)
         self.finalValveButton.clicked.connect(self._toggleFinalValve)
         self.leftWaterValveButton.clicked.connect(self._toggleLeftWaterValve)
         self.rightWaterValveButton.clicked.connect(self._toggleRightWaterValve)
@@ -437,7 +455,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if self.analogInputModuleCheckBox.isChecked():
                 self.adc = BpodAnalogIn(serial_port=self.adcSerialPort)
         except SerialException:
-            QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct!")
+            QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct and try again!")
             return
         except AnalogInException as err:
             QMessageBox.warning(self, "Warning", f"Analog Input Module Error.\n{err}")
@@ -450,7 +468,7 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.myBpod.close()
                 del self.myBpod
                 self.myBpod = None
-            QMessageBox.warning(self, "Warning", "Cannot connect to bpod! Check that serial port is correct!")
+            QMessageBox.warning(self, "Warning", "Cannot connect to bpod! Check that serial port is correct and try again!")
             return
 
         self.startButton.setEnabled(True)  # This means successful connection attempt for enabled devices.
@@ -477,6 +495,45 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
 
+        # The following three try-except blocks prevent the application from crashing when trying to start the experiment again after already running it once.
+        # The AttributeError always happens upon clicking the start button for the first time because the self.inputEventThread variable was never created yet
+        # so the Window object has not attribute 'inputEventThread', and same goes for the other thread variables. After running an experiment once and trying
+        # to start the experiment a successive time causes a RuntimeError where the 'wrapped C/C++ object of type QThread has been deleted'. So in that case I
+        # delete the thread's variable and continue the remaining code. Actually, I do not even need to delete the thread's variable. The action of catching the
+        # RuntimeError seems to prevent crashing alone.
+        # try:
+        #     if self.inputEventThread.isRunning():
+        #         logging.info('inputEventThread is still running')
+        #         self.inputEventThread.quit()
+        #         self.inputEventThread.deleteLater()
+        # except AttributeError as err:
+        #     logging.info(f"AttributeError: {err}")
+        # except RuntimeError as err:
+        #     logging.info(f"RuntimeError: inputEventThread {err}")
+        #     # del self.inputEventThread
+
+        # try:    
+        #     if self.saveDataThread.isRunning():
+        #         logging.info('saveDataThread is still running')
+        #         self.saveDataThread.quit()
+        #         self.saveDataThread.deleteLater()
+        # except AttributeError as err:
+        #     logging.info(f"AttributeError: {err}")
+        # except RuntimeError as err:
+        #     logging.info(f"RuntimeError: saveDataThread {err}")
+        #     # del self.saveDataThread
+            
+        # try:  
+        #     if self.protocolThread.isRunning():
+        #         logging.info('protocolThread is still running')
+        #         self.protocolThread.quit()
+        #         self.protocolThread.deleteLater()
+        # except AttributeError as err:
+        #     logging.info(f"AttributeError: {err}")
+        # except RuntimeError as err:
+        #     logging.info(f"RuntimeError: protocolThread {err}")
+        #     # del self.protocolThread
+
         # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
         # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
         if self.olfas:
@@ -494,12 +551,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self._runProtocolThread()
 
         if not self.streaming.startAnimation():
+            self.streaming.resetPlot()
             self.streaming.resumeAnimation()
 
         self.startButton.setEnabled(False)
         self.calibLeftWaterButton.setEnabled(False)
         self.calibRightWaterButton.setEnabled(False)
         self.stopButton.setEnabled(True)
+        self.pauseButton.setEnabled(True)
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
@@ -510,13 +569,16 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.adc:
             self.stopAnalogModule()
             # self._getSDCardLog()
-        
+
         self.stopRunningSignal.emit()
         logging.info("stopRunningSignal emitted")
         
         # self._checkIfRunning()  # causes unhandled python exception when called twice. Check definition for details.
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
+        self.pauseButton.setEnabled(False)
+        self.pauseButton.setText('Pause')
+        self.isPaused = False
         self.calibLeftWaterButton.setEnabled(True)
         self.calibRightWaterButton.setEnabled(True)
         if self.olfaCheckBox.isChecked():
@@ -567,6 +629,23 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             logging.info("saveDataThread no longer running")
 
+    def _pauseExperiment(self):
+        if self.isPaused:
+            self.myBpod.resume()
+            self.streaming.resumeAnimation()
+            if self.adc is not None:
+                self.startAnalogModule()
+            self.isPaused = False
+            self.pauseButton.setText('Pause')
+            
+        else:
+            self.myBpod.pause()
+            self.streaming.pauseAnimation()
+            if self.adc is not None:
+                self.stopAnalogModule()
+            self.isPaused = True
+            self.pauseButton.setText('Resume')
+    
     def closeDevices(self):
         if self.adc is not None:
             self.adc.close()
@@ -713,6 +792,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _recordNumTrials(self, value):
         self.numTrials = value
+        if self.protocolWorker is not None:
+            self.protocolWorker.setNumTrials(self.numTrials)
 
     def _recordNoResponseCutoff(self, value):
         if not (value == 0):
@@ -866,7 +947,6 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runInputEventThread(self):
         logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.inputEventThread = QThread()
-        logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
         self.inputEventWorker = InputEventWorker(self.myBpod)
         self.inputEventWorker.moveToThread(self.inputEventThread)
         self.inputEventThread.started.connect(self.inputEventWorker.run)
@@ -875,8 +955,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.inputEventThread.finished.connect(self.inputEventThread.deleteLater)
         self.inputEventWorker.inputEventSignal.connect(self.streaming.setInputEvent)
         self.stopRunningSignal.connect(self.inputEventWorker.stopRunning)
-        logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
-        logging.info("attempting to start inputEventThread")
         self.inputEventThread.start()
         logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
 
@@ -910,7 +988,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
-        self.protocolWorker.flowResultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))  # 'x' is the dictionary parameter emitted from 'saveEndOfSessionDataSignal' and passed into 'receiveFinalResultsDict(x)'
+        self.protocolWorker.flowResultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))
         self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateResultsPlot)
         self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateFlowUsagePlot)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)
