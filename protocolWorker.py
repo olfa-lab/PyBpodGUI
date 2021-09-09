@@ -5,6 +5,7 @@ import time
 from serial.serialutil import SerialException
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
+from pybpodapi.exceptions.bpod_error import BpodErrorException
 
 import olfactometry
 from olfactometry.utils import OlfaException
@@ -27,6 +28,7 @@ class ProtocolWorker(QObject):
     olfaNotConnectedSignal = pyqtSignal()
     olfaExceptionSignal = pyqtSignal(str)  # sends the olfa exception error string with it to the main thread to notify the user.
     invalidFileSignal = pyqtSignal(str)  # sends the key string that caused the KeyError with it to the main thread to notify the user.
+    bpodExceptionSignal = pyqtSignal(str)  # sends the bpod exception error string with it to the main thread to notify the user.
     # startSDCardLoggingSignal = pyqtSignal()
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
@@ -538,8 +540,14 @@ class ProtocolWorker(QObject):
             currentTrialInfo = self.getCurrentTrialInfoDict()
             self.newTrialInfoSignal.emit(currentTrialInfo)
 
-            self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
-            self.myBpod.run_state_machine(self.sma)  # Run state machine
+            try:
+                self.myBpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
+                self.myBpod.run_state_machine(self.sma)  # Run state machine
+            except (BpodErrorException, TypeError) as err:
+                self.bpodExceptionSignal.emit(str(err))
+                # self.stopRunning()
+                self.finished.emit()
+                return  # This is here to avoid executing the remaining code below.
 
             self.currentStateName = 'exit'
             endOfTrialDict = self.getEndOfTrialInfoDict()

@@ -150,7 +150,7 @@ Things to do:
 
     * _____ make an option to reconnect devices (close serial port and then open again) so that user can enable device that previously was not enabled when the 'Connect Devices' button was clicked without having to restart the application.
 
-    * _____ pause the analog module (stop usb streaming temporarily if enabled) when user clicks the pause button and modify saveDataWorker to handle case when analogData is None.
+    * _____ fix the issue where the timestamps of the analog data samples stops being synchronized with the bpod's time whenever a trial is paused.
 
     * _____ make a slider that changes the probability of the shaping reward.
 
@@ -454,6 +454,7 @@ class Window(QMainWindow, Ui_MainWindow):
         try:
             if self.analogInputModuleCheckBox.isChecked():
                 self.adc = BpodAnalogIn(serial_port=self.adcSerialPort)
+                self.configureAnalogModule()
         except SerialException:
             QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct and try again!")
             return
@@ -543,7 +544,6 @@ class Window(QMainWindow, Ui_MainWindow):
 
         # Check if adc was created which would mean the user enabled the checkbox and the analog input module was connected.
         if self.adc:
-            self.configureAnalogModule()
             self.startAnalogModule()
         
         self._runSaveDataThread()
@@ -944,6 +944,9 @@ class Window(QMainWindow, Ui_MainWindow):
     def _olfaExceptionDialog(self, error):
         QMessageBox.warning(self, "Warning", f"Experiment aborted because the olfactometer raised the following exception:\n{error}")
 
+    def _bpodExceptionDialog(self, error):
+        QMessageBox.warning(self, "Warning", f"Experiment aborted because the bpod raised the following exception:\n{error}")
+
     def _runInputEventThread(self):
         logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.inputEventThread = QThread()
@@ -999,6 +1002,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.olfaNotConnectedSignal.connect(self._cannotConnectOlfaDialog)
         self.protocolWorker.olfaExceptionSignal.connect(self._olfaExceptionDialog)
         self.protocolWorker.invalidFileSignal.connect(self._invalidFileDialog)
+        self.protocolWorker.bpodExceptionSignal.connect(self._bpodExceptionDialog)
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")
