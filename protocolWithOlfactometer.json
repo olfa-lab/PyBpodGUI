@@ -91,16 +91,5 @@
                 "Serial1": "SyncByte"
             }
         }
-    ],
-    "intensityPercentages": [
-        10,
-        25,
-        33,
-        50,
-        67,
-        75,
-        90,
-        100
-    ],
-    "experimentType": "oneOdorIntensity"
+    ]
 }

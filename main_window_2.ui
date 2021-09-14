@@ -18,12 +18,12 @@
     <item>
      <widget class="QMdiArea" name="mdiArea">
       <property name="sizeAdjustPolicy">
-       <enum>QAbstractScrollArea::AdjustIgnored</enum>
+       <enum>QAbstractScrollArea::AdjustToContents</enum>
       </property>
       <property name="activationOrder">
        <enum>QMdiArea::CreationOrder</enum>
       </property>
-      <widget class="QWidget" name="currentTrialSubwindowWidget">
+      <widget class="QWidget" name="currentTrialSubWindowWidget">
        <property name="windowTitle">
         <string>Current Trial Info</string>
        </property>
@@ -208,6 +208,91 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="bpodControlSubWindowWidget">
+       <property name="windowTitle">
+        <string>Bpod Control</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="3" column="0">
+         <widget class="QPushButton" name="leftWaterValveButton">
+          <property name="text">
+           <string>Left Water Valve</string>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QSpinBox" name="leftWaterValveDurationSpinBox">
+          <property name="maximum">
+           <number>1000</number>
+          </property>
+          <property name="value">
+           <number>250</number>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="rightWaterValveDurationLabel">
+          <property name="text">
+           <string>Right Water Valve Duration:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="calibRightWaterButton">
+          <property name="text">
+           <string>Flush Right Water</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="calibLeftWaterButton">
+          <property name="text">
+           <string>Flush Left Water</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QPushButton" name="rightWaterValveButton">
+          <property name="text">
+           <string>Right Water Valve</string>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QSpinBox" name="rightWaterValveDurationSpinBox">
+          <property name="maximum">
+           <number>1000</number>
+          </property>
+          <property name="value">
+           <number>250</number>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="leftWaterValveDurationLabel">
+          <property name="text">
+           <string>Left Water Valve Duration:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
+         <widget class="QPushButton" name="finalValveButton">
+          <property name="text">
+           <string>Final Valve</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -250,6 +335,7 @@
     <addaction name="actionViewResultsPlot"/>
     <addaction name="actionViewCurrentTrialInfo"/>
     <addaction name="actionViewFlowUsagePlot"/>
+    <addaction name="actionViewBpodControl"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOlfactometer"/>
@@ -269,20 +355,20 @@
      <item row="0" column="1">
       <widget class="QLineEdit" name="bpodPortLineEdit"/>
      </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="mouseNumberLabel">
-       <property name="text">
-        <string>Mouse Number:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="0">
+     <item row="10" column="0">
       <widget class="QLabel" name="noResponseCutoffLabel">
        <property name="text">
         <string>Abort when no response for</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="mouseNumberLabel">
+       <property name="text">
+        <string>Mouse Number:</string>
        </property>
       </widget>
      </item>
@@ -293,12 +379,32 @@
        </property>
       </widget>
      </item>
+     <item row="11" column="1">
+      <widget class="QSpinBox" name="autoWaterCutoffSpinBox">
+       <property name="specialValueText">
+        <string>Never</string>
+       </property>
+       <property name="suffix">
+        <string> trials</string>
+       </property>
+      </widget>
+     </item>
      <item row="2" column="1">
       <widget class="QCheckBox" name="analogInputModuleCheckBox">
        <property name="text">
         <string>Enable Analog Input</string>
        </property>
        <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="autoWaterCutoffLabel">
+       <property name="text">
+        <string>Auto water when no response for</string>
+       </property>
+       <property name="wordWrap">
         <bool>true</bool>
        </property>
       </widget>
@@ -320,7 +426,7 @@
        </property>
       </widget>
      </item>
-     <item row="12" column="1">
+     <item row="13" column="1">
       <widget class="QSpinBox" name="itiMinSpinBox">
        <property name="minimum">
         <number>1</number>
@@ -334,14 +440,14 @@
        </property>
       </widget>
      </item>
-     <item row="14" column="0" colspan="2">
+     <item row="15" column="0" colspan="2">
       <widget class="QPushButton" name="startButton">
        <property name="text">
         <string>Start</string>
        </property>
       </widget>
      </item>
-     <item row="16" column="0" colspan="2">
+     <item row="17" column="0" colspan="2">
       <widget class="QPushButton" name="pauseButton">
        <property name="enabled">
         <bool>false</bool>
@@ -351,14 +457,14 @@
        </property>
       </widget>
      </item>
-     <item row="13" column="0" colspan="2">
+     <item row="14" column="0" colspan="2">
       <widget class="QPushButton" name="connectDevicesButton">
        <property name="text">
         <string>Connect Devices</string>
        </property>
       </widget>
      </item>
-     <item row="12" column="0">
+     <item row="13" column="0">
       <widget class="QLabel" name="itiMinLabel">
        <property name="text">
         <string>Minimum ITI</string>
@@ -378,7 +484,7 @@
      <item row="7" column="1">
       <widget class="QLineEdit" name="rigLetterLineEdit"/>
      </item>
-     <item row="8" column="0">
+     <item row="9" column="0">
       <widget class="QLabel" name="nTrialsLabel">
        <property name="text">
         <string>Num of trials:</string>
@@ -402,14 +508,14 @@
      <item row="1" column="1">
       <widget class="QLineEdit" name="analogInputModulePortLineEdit"/>
      </item>
-     <item row="11" column="0">
+     <item row="12" column="0">
       <widget class="QLabel" name="itiMaxLabel">
        <property name="text">
         <string>Maximum ITI</string>
        </property>
       </widget>
      </item>
-     <item row="11" column="1">
+     <item row="12" column="1">
       <widget class="QSpinBox" name="itiMaxSpinBox">
        <property name="minimum">
         <number>1</number>
@@ -423,7 +529,7 @@
        </property>
       </widget>
      </item>
-     <item row="15" column="0" colspan="2">
+     <item row="16" column="0" colspan="2">
       <widget class="QPushButton" name="stopButton">
        <property name="enabled">
         <bool>false</bool>
@@ -436,7 +542,7 @@
        </property>
       </widget>
      </item>
-     <item row="8" column="1">
+     <item row="9" column="1">
       <widget class="QSpinBox" name="nTrialsSpinBox">
        <property name="minimum">
         <number>1</number>
@@ -449,7 +555,7 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="1">
+     <item row="10" column="1">
       <widget class="QSpinBox" name="noResponseCutoffSpinBox">
        <property name="specialValueText">
         <string>Never</string>
@@ -462,114 +568,28 @@
        </property>
       </widget>
      </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="autoWaterCutoffLabel">
+     <item row="8" column="0">
+      <widget class="QLabel" name="experimentTypeLabel">
        <property name="text">
-        <string>Auto water when no response for</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
+        <string>Experiment Type</string>
        </property>
       </widget>
      </item>
-     <item row="10" column="1">
-      <widget class="QSpinBox" name="autoWaterCutoffSpinBox">
-       <property name="specialValueText">
-        <string>Never</string>
+     <item row="8" column="1">
+      <widget class="QComboBox" name="experimentTypeComboBox">
+       <property name="currentIndex">
+        <number>-1</number>
        </property>
-       <property name="suffix">
-        <string> trials</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="bpodControlDockWidget">
-   <property name="windowTitle">
-    <string>Bpod Control</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="bpodControlDockWidgetContents">
-    <layout class="QGridLayout" name="gridLayout_3">
-     <item row="2" column="0">
-      <widget class="QPushButton" name="calibLeftWaterButton">
-       <property name="text">
-        <string>Flush Left Water</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QPushButton" name="calibRightWaterButton">
-       <property name="text">
-        <string>Flush Right Water</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QSpinBox" name="rightWaterValveDurationSpinBox">
-       <property name="maximum">
-        <number>1000</number>
-       </property>
-       <property name="value">
-        <number>250</number>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QSpinBox" name="leftWaterValveDurationSpinBox">
-       <property name="maximum">
-        <number>1000</number>
-       </property>
-       <property name="value">
-        <number>250</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QPushButton" name="leftWaterValveButton">
-       <property name="text">
-        <string>Left Water Valve</string>
-       </property>
-       <property name="checkable">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QPushButton" name="rightWaterValveButton">
-       <property name="text">
-        <string>Right Water Valve</string>
-       </property>
-       <property name="checkable">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="rightWaterValveDurationLabel">
-       <property name="text">
-        <string>Right Water Valve Duration:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0" colspan="2">
-      <widget class="QPushButton" name="finalValveButton">
-       <property name="text">
-        <string>Final Valve</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="leftWaterValveDurationLabel">
-       <property name="text">
-        <string>Left Water Valve Duration:</string>
-       </property>
+       <item>
+        <property name="text">
+         <string>oneOdorIntensity</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>twoOdorMatch</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>
@@ -647,6 +667,17 @@
    </property>
    <property name="text">
     <string>Flow Usage Plot</string>
+   </property>
+  </action>
+  <action name="actionViewBpodControl">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Bpod Control</string>
    </property>
   </action>
  </widget>

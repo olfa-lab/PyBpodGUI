@@ -44,133 +44,6 @@ import pyqtgraph as pg
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
-'''
-Things to do:
-
-    * __X__ use signals/slots instead of passing references to class objects.
-
-    * __X__ close/stop streaming figure when stop button clicked
-
-    * __X__ make gui stop other threads when experiment finished.
-
-    * __X__ implement data recording with pytables
-
-    * __X__ implement water valve buttons to only open for set duration
-
-    * __X__ solve analog module giving error that Serial1_1 is invalid name
-
-    * __X__ make results graph show percent of left licks instead of percent correct
-
-    * __X__ have a counter that counts number of no responses and after certain number, it aborts experiment.
-
-    * __X__ close serial devices and threads when application exits
-
-    * __X__ get rid of the samplingThread and let the saveDataThread do the sampling and saving to .h5 and let it collect 100 or so samples in an array and emit it to the streamingWorker whenever it gets filled instead of one sample at a time.
-
-    * __X__ save sniff signal (voltage over time) for each trial in .h5 file
-
-    * __X__ save timestamps of lick events for each trial in .h5 file
-
-    * __X__ synchronize analog data with state machine timing.
-
-    * __X__ disable buttons that should not be clicked during certain operations
-
-    * __X__ make a separate button to connect to devices first, before starting the experiment.
-
-    * __X__ implement calibrate water valve buttons
-
-    * __X__ implement progress bar dialog window for calibrating water
-
-    * __X__ fix h5 file naming so that datetime format is YYYY-MM-DD_HHMMSS
-
-    * __X__ configure tab order for the LineEdit fields
-
-    * __X__ implement ability to configure protocol
-
-    * __X__ implement ability to configure odors and/or olfa json file
-
-    * __X__ make protocolWorker read from olfa config file before starting experiment to store odors/concentrations for stimulusRandomizer
-
-    * __X__ in olfaEditorDialog, make sure that both odor name and concentration were given for a vial before saving the file
-    
-    * __X__ implement ability to configure flow rates
-
-    * __X__ go back to the ITI state at the end of every trial so that the user can see more lick events instead of only one
-
-    * __X__ implement ability to configure analog module
-
-    * __X__ use SerialException instead of BpodErrorException for when connecting to the analog input module
-
-    * __X__ allow user to run experiments without analog input (modify saveDataWorker to not save analog data, and do not plot a signal)
-
-    * __X__ allow user to run experiments that do not use olfactometer
-
-    * __X__ make the ITI user-adjustable.
-
-    * __X__ implement progress bar for state machine during trial run
-
-    * __X__ before aborting the experiment due to too many consecutive No Response results, create an optional feature that opens the water valves for a few milliseconds to attempt to re-motivate the mouse
-
-    * __X__ make the No Response cutoff user-adjustable and allow it to be disabled.
-
-    * __X__ implement pause button
-
-    * _____ use jonathan olfactometer code
-
-    * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
-
-    * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
-
-    * _____ implement validators for the line edits to restrict input values
-
-    * _____ make the streaming plotter run faster/smoother (maybe try pyqtgraph or blitting)
-
-    * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
-
-    * _____ create a metadata for the .h5 file
-
-    * _____ change the worker threads to use timers instead of infinite while loops
-
-    * _____ fix issue of application crashing or does not do anything when start button is clicked again after experiment completion
-            (seems to happen when user quickly presses start button after the experiment stops and error message says "QThread: Destroyed while thread is still running"
-            so perhaps I need to ensure some time elapses before the user can start the experiment again so the threads have enough time to finish running and delete themselves,
-            or I could check if any of the threads exist and are running at the time the user clicks the start button and if there is one then I could stop it and delete it)
-
-    * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
-
-    * _____ show the number of times each flow rate and odor was used throughout the experiment, either with a plot or with QLineEdit fields.
-
-    * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias
-
-    * _____ get rid of variables that hold the value/text in fields like lineEdits, spinBoxes, and comboBoxes because it is redundant. 
-
-    * _____ make an option for the user to select their desired mode of generating the stimuli (once at the start of each trial,
-            or generate a list of length nTrials at the start of the experiment and iterate with each trial (and show that list in its own window),
-            or randomly sort a list of length equal to the number of vials to avoid consecutive repetitions and iterate with each trial and when finished iterating, randomly sort it again or just append to a single larger list equal to size of nTrials)
-
-    * _____ make an option to reconnect devices (close serial port and then open again) so that user can enable device that previously was not enabled when the 'Connect Devices' button was clicked without having to restart the application.
-
-    * _____ fix the issue where the timestamps of the analog data samples stops being synchronized with the bpod's time whenever a trial is paused.
-
-    * _____ make a slider that changes the probability of the shaping reward.
-
-    * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.
-
-
-Questions to research:
-
-    * _____ How to connect signal from one thread to a slot in another thread that is running in an infinite loop without using lambda function?
-
-    * _____ How to block execution within a thread for a certain amount of time?
-
-    * _____ Why does infinite loop in separate thread (without some sort of sleep interval) cause main thread to freeze or lag?
-
-    * _____ Why does infinite loop inside a separate thread block slots from being handled?
-
-    * _____ When a signal is connected to multiple slots, does pyqt execute all of those slots simultaneously or sequentially?
-'''
-
-
 class MyQMdiSubWindow(QMdiSubWindow):
     '''
     I re-implemented the QMdiSubWindow class by sub-classing it into my own version that contains a 'closed' signal
@@ -212,12 +85,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker = None
         self.mouseNumber = None
         self.rigLetter = None
+        self.experimentType = None
         self.numTrials = self.nTrialsSpinBox.value()
         self.noResponseCutoff = self.noResponseCutoffSpinBox.value()
         self._recordNoResponseCutoff(self.noResponseCutoff)
         self.autoWaterCutoff = self.autoWaterCutoffSpinBox.value()
         self._recordAutoWaterCutoff(self.autoWaterCutoff)
-        self.experimentName = None
         self.itiMin = self.itiMinSpinBox.value()
         self.itiMax = self.itiMaxSpinBox.value()
         self.itiMinSpinBox.setMaximum(self.itiMax)  # I do not want the itiMinSpinBox to be higher than the itiMaxSpinBox's current value.
@@ -242,12 +115,20 @@ class Window(QMainWindow, Ui_MainWindow):
         self.currentTrialSubWindow = MyQMdiSubWindow()
         self.currentTrialSubWindow.closed.connect(self._updateViewMenu)
         self.currentTrialSubWindow.setObjectName("currentTrialSubWindow")
-        self.currentTrialSubWindow.setWidget(self.currentTrialSubwindowWidget)
+        self.currentTrialSubWindow.setWidget(self.currentTrialSubWindowWidget)
         self.currentTrialSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         self.currentTrialSubWindow.resize(720, 230)
         self.mdiArea.addSubWindow(self.currentTrialSubWindow)
 
-        self.streaming = StreamingWorker(maxt=20, dt=0.001)
+        self.bpodControlSubWindow = MyQMdiSubWindow()
+        self.bpodControlSubWindow.closed.connect(self._updateViewMenu)
+        self.bpodControlSubWindow.setObjectName("bpodControlSubWindow")
+        self.bpodControlSubWindow.setWidget(self.bpodControlSubWindowWidget)
+        self.bpodControlSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        self.bpodControlSubWindow.resize(300, 230)
+        self.mdiArea.addSubWindow(self.bpodControlSubWindow)
+
+        self.streaming = StreamingWorker(maxt=10, dt=0.001)
         self.streamingSubWindow = MyQMdiSubWindow()
         self.streamingSubWindow.closed.connect(self._updateViewMenu)
         self.streamingSubWindow.setObjectName("streamingSubWindow")
@@ -295,6 +176,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionViewResultsPlot.toggled.connect(self._viewResultsPlotSubWindow)
         self.actionViewCurrentTrialInfo.toggled.connect(self._viewCurrentTrialSubWindow)
         self.actionViewFlowUsagePlot.toggled.connect(self._viewFlowUsagePlotSubWindow)
+        self.actionViewBpodControl.toggled.connect(self._viewBpodControlSubWindow)
 
         self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
         self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
@@ -309,6 +191,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.noResponseCutoffSpinBox.valueChanged.connect(self._recordNoResponseCutoff)
         self.autoWaterCutoffSpinBox.valueChanged.connect(self._recordAutoWaterCutoff)
 
+        self.experimentTypeComboBox.currentTextChanged.connect(self._recordExperimentType)
+
     def _updateViewMenu(self, objectName):
         if (objectName == self.streamingSubWindow.objectName()):
             self.actionViewStreaming.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
@@ -318,6 +202,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionViewFlowUsagePlot.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
         elif (objectName == self.currentTrialSubWindow.objectName()):
             self.actionViewCurrentTrialInfo.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
+        elif (objectName == self.bpodControlSubWindow.objectName()):
+            self.actionViewBpodControl.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
     
     def _viewStreamingSubWindow(self, checked):
         if checked:
@@ -363,6 +249,17 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.currentTrialSubWindow.hide()
 
+    def _viewBpodControlSubWindow(self, checked):
+        if checked:
+            # I also need to show the subWindow's internal widget because for some reason it does not show automatically
+            # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
+            # despite the subWindow object not being deleted and not being removed from the mdiArea's subWindowList, and the subWindow's
+            # internal widget object not being deleted either, all due to the setAttribute(Qt.WA_DeleteOnClose, False) declared above.
+            self.bpodControlSubWindow.show()
+            self.bpodControlSubWindow.widget().show()
+        else:
+            self.bpodControlSubWindow.hide()
+    
     def _launchAnalogInputSettings(self):
         self.analogInputSettings.show()
 
@@ -488,6 +385,9 @@ class Window(QMainWindow, Ui_MainWindow):
             return
         elif self.rigLetter is None:
             QMessageBox.warning(self, "Warning", "Please enter rig letter!")
+            return
+        elif self.experimentType is None:
+            QMessageBox.warning(self, "Warning", "Please choose an experiment type!")
             return
         elif self.numTrials is None:
             QMessageBox.warning(self, "Warning", "Please enter number of trials for this experiment!")
@@ -790,6 +690,9 @@ class Window(QMainWindow, Ui_MainWindow):
     def _recordRigLetter(self):
         self.rigLetter = self.rigLetterLineEdit.text()
 
+    def _recordExperimentType(self, text):
+        self.experimentType = text
+
     def _recordNumTrials(self, value):
         self.numTrials = value
         if self.protocolWorker is not None:
@@ -978,7 +881,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.leftWaterValveDuration, self.rightWaterValveDuration, self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials)
+        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.experimentType, self.leftWaterValveDuration, self.rightWaterValveDuration, self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials)
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)

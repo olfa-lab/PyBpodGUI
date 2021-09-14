@@ -70,16 +70,5 @@
                 "Olfactometer": "set_dummy_vials"
             }
         }
-    ],
-    "intensityPercentages": [
-        10,
-        13,
-        18,
-        24,
-        32,
-        41,
-        56,
-        100
-    ],
-    "experimentType": "oneOdorIntensity"
+    ]
 }

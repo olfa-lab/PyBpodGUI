@@ -33,7 +33,7 @@ class ProtocolWorker(QObject):
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, leftWaterValveDuration, rightWaterValveDuration, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1):
+    def __init__(self, bpodObject, protocolFileName, olfaConfigFileName, experimentType, leftWaterValveDuration, rightWaterValveDuration, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
@@ -41,9 +41,11 @@ class ProtocolWorker(QObject):
         self.olfas = None
         self.protocolFileName = protocolFileName
         self.olfaConfigFileName = olfaConfigFileName
+        self.experimentType = experimentType
         self.correctResponse = ''
         self.currentOdorName = None
         self.currentOdorConc = None
+        self.currentVialNum = None
         self.currentFlow = None
         self.currentTrialNum = 0
         self.totalCorrect = 0
@@ -64,9 +66,11 @@ class ProtocolWorker(QObject):
         self.currentStateName = ''
         self.currentResponseResult = ''
         self.previousResponseResult = ''
+        self.vials = []
         self.odors = []
         self.concs = []
         self.flows = []
+        self.vialFlows = []
         self.flowResultsCounterDict = {}
         self.stimIndex = 0
 
@@ -248,28 +252,26 @@ class ProtocolWorker(QObject):
             if not (vialInfo['odor'] == 'dummy'):
                 self.odors.append(vialInfo['odor'])
                 self.concs.append(vialInfo['conc'])
-
-        with open(self.protocolFileName, 'r') as protocolFile:
-            protocolDict = json.load(protocolFile)
+                self.vials.append(vialNum)
+                if (len(vialInfo['flowrates']) == 0):
+                    raise KeyError("No flowrates given in olfa config file.")
+                else:
+                    self.vialFlows.append(vialInfo['flowrates'])
+                    self.flowResultsCounterDict[vialNum] = {}
+                    for flow in vialInfo['flowrates']:
+                        self.flowResultsCounterDict[vialNum][str(flow)] = {
+                            'right': 0,  # initizialize counters to zero.
+                            'left': 0,
+                            'Correct': 0,
+                            'Wrong': 0,
+                            'NoResponse': 0,
+                            'Total': 0
+                        }
         
-        if (protocolDict['experimentType'] == 'oneOdorIntensity'):
+        if (self.experimentType == 'oneOdorIntensity'):
             self.stimulusFunction = self.oneOdorIntensityRandomizer
 
-            if (len(protocolDict['intensityPercentages']) > 0):
-                self.flows = protocolDict['intensityPercentages']
-                for flow in self.flows:
-                    self.flowResultsCounterDict[str(flow)] = {
-                        'right': 0,  # initizialize counters to zero.
-                        'left': 0,
-                        'Correct': 0,
-                        'Wrong': 0,
-                        'NoResponse': 0,
-                        'Total': 0
-                    }
-            else:
-                raise KeyError('No intensity percentages given.')
-
-        elif (protocolDict['experimentType'] == 'twoOdorMatch'):
+        elif (self.experimentType == 'twoOdorMatch'):
             self.stimulusFunction = self.twoOdorMatchRandomizer
             self.flows.append(100)  # Assume only one flow rate, which is max.
             self.currentFlow = 100   
@@ -284,18 +286,19 @@ class ProtocolWorker(QObject):
                 }      
 
     def oneOdorIntensityRandomizer(self):
-        flow_threshold = np.sqrt(self.flows[0] * self.flows[-1])
+        vialIndex = np.random.randint(len(self.vials))  # random int for index of vial
+        self.currentVialNum = self.vials[vialIndex]
+        self.currentOdorName = self.odors[vialIndex]
+        self.currentOdorConc = self.concs[vialIndex]
+        vialFlows = self.vialFlows[vialIndex]
         
-        self.currentFlow = np.random.choice(self.flows)
+        flow_threshold = np.sqrt(vialFlows[0] * vialFlows[-1])
+        self.currentFlow = np.random.choice(vialFlows)
         #If flow is lower than flow_threshold == ~30 , 'left' is correct. Otherwise, 'right' is correct
         if self.currentFlow < flow_threshold:
             self.correctResponse = 'left'
         else:
-            self.correctResponse = 'right'
-
-        vialIndex = np.random.randint(len(self.odors))  # random int for index of vial
-        self.currentOdorName = self.odors[vialIndex]
-        self.currentOdorConc = self.concs[vialIndex]
+            self.correctResponse = 'right'        
 
         ostim = {
             'olfas': {
