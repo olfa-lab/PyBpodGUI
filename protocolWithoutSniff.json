@@ -30,7 +30,9 @@
                 "Port3In": "rightAction",
                 "Tup": "NoResponse"
             },
-            "outputActions": {}
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials"
+            }
         },
         {
             "stateName": "Correct",
@@ -66,9 +68,7 @@
             "stateChangeConditions": {
                 "Tup": "exit"
             },
-            "outputActions": {
-                "Olfactometer": "set_dummy_vials"
-            }
+            "outputActions": {}
         }
     ]
 }
