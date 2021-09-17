@@ -35,148 +35,32 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
-         <widget class="QLabel" name="odorConcentrationLabel">
-          <property name="text">
-           <string>Odor Concentration</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="odorNameLabel">
-          <property name="text">
-           <string>Odor Name</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="5">
-         <widget class="QLineEdit" name="totalNoResponsesLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLineEdit" name="odorNameLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QLineEdit" name="correctResponseLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="3">
-         <widget class="QLineEdit" name="currentFlowLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QLabel" name="totalCorrectLabel">
-          <property name="text">
-           <string>Total Correct:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="itiLabel">
-          <property name="text">
-           <string>Current ITI</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="responseResultLabel">
-          <property name="text">
-           <string>Response Result</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="4">
+        <item row="3" column="6">
          <widget class="QLabel" name="totalPercentCorrectLabel">
           <property name="text">
            <string>Total Percent Correct</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="4">
-         <widget class="QLabel" name="totalWrongLabel">
+        <item row="0" column="6">
+         <widget class="QLabel" name="totalCorrectLabel">
           <property name="text">
-           <string>Total Wrong:</string>
+           <string>Total Correct:</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="5">
-         <widget class="QLineEdit" name="totalWrongLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
+        <item row="4" column="0" colspan="8">
+         <widget class="QProgressBar" name="currentTrialProgressBar">
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="textVisible">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="itiLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLineEdit" name="responseResultLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QLabel" name="correctResponseLabel">
-          <property name="text">
-           <string>Correct Response</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QLabel" name="currentFlowLabel">
-          <property name="text">
-           <string>Current Flow</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="5">
+        <item row="3" column="7">
          <widget class="QLineEdit" name="totalPercentCorrectLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="4">
-         <widget class="QLabel" name="totalNoResponsesLabel">
-          <property name="text">
-           <string>Total No Responses</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="trialNumLabel">
-          <property name="text">
-           <string>Trial Number</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="5">
-         <widget class="QLineEdit" name="totalCorrectLineEdit">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLineEdit" name="odorConcentrationLineEdit">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -189,22 +73,148 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="currentStateLabel">
+        <item row="0" column="4">
+         <widget class="QLabel" name="correctResponseLabel">
           <property name="text">
-           <string>Current State Name</string>
+           <string>Correct Response</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="0" colspan="6">
-         <widget class="QProgressBar" name="currentTrialProgressBar">
-          <property name="value">
-           <number>0</number>
-          </property>
-          <property name="textVisible">
-           <bool>false</bool>
+        <item row="0" column="7">
+         <widget class="QLineEdit" name="totalCorrectLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="currentStateLabel">
+          <property name="text">
+           <string>Current State</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="7">
+         <widget class="QLineEdit" name="totalNoResponsesLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="7">
+         <widget class="QLineEdit" name="totalWrongLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="itiLabel">
+          <property name="text">
+           <string>Current ITI</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="6">
+         <widget class="QLabel" name="totalNoResponsesLabel">
+          <property name="text">
+           <string>Total No Responses</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="itiLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="trialNumLabel">
+          <property name="text">
+           <string>Trial Number</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="6">
+         <widget class="QLabel" name="totalWrongLabel">
+          <property name="text">
+           <string>Total Wrong:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="5">
+         <widget class="QLineEdit" name="correctResponseLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QLabel" name="responseResultLabel">
+          <property name="text">
+           <string>Response Result</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="5">
+         <widget class="QLineEdit" name="responseResultLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="currentFlowLabel">
+          <property name="text">
+           <string>Current Flow</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QLineEdit" name="currentFlowLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="odorConcentrationLabel">
+          <property name="text">
+           <string>Odor Conc</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QLineEdit" name="odorConcentrationLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="odorNameLabel">
+          <property name="text">
+           <string>Odor Name</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QLineEdit" name="odorNameLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="currentVialNumLabel">
+          <property name="text">
+           <string>Current Vial</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLineEdit" name="currentVialNumLineEdit"/>
         </item>
        </layout>
       </widget>
@@ -580,6 +590,11 @@
        <property name="currentIndex">
         <number>-1</number>
        </property>
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
        <item>
         <property name="text">
          <string>oneOdorIntensity</string>
