@@ -112,6 +112,8 @@ Things to do:
 
     * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.
 
+    * _____ make sure the olfactometer sets dummy vial and all outputs of the bpod turn off when experiment finishes or an error occurs. 
+
 
 Questions to research:
 
