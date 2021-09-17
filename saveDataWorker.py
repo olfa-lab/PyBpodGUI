@@ -50,16 +50,17 @@ class SessionData(tables.IsDescription):
     trialNum = tables.UInt16Col(pos=0)
     correctResponse = tables.StringCol(5, pos=1)
     responseResult = tables.StringCol(16, pos=2)
-    odorName = tables.StringCol(32, pos=3)  # Size of strings added to the column does not need to exactly match the size given during initialization.
-    odorConc = tables.StringCol(16, pos=4)  # I use StringCol instead of Float32Col because of experiments that use two odors will send out two concs as a single string.
-    odorFlow = tables.UInt8Col(pos=5)
-    leftLicksCount = tables.UInt8Col(pos=6)
-    rightLicksCount = tables.UInt8Col(pos=7)
-    itiDuration = tables.UInt8Col(pos=11)
-    trialStartTime = tables.Float32Col(pos=12)
-    trialEndTime = tables.Float32Col(pos=13)
-    totalTrialTime = tables.Float32Col(pos=14)
-    bpodStartTime = tables.Float32Col(pos=15)
+    vialNum = tables.StringCol(2, pos=3)
+    odorName = tables.StringCol(32, pos=4)  # Size of strings added to the column does not need to exactly match the size given during initialization.
+    odorConc = tables.StringCol(16, pos=5)  # I use StringCol instead of Float32Col because of experiments that use two odors will send out two concs as a single string.
+    odorFlow = tables.UInt8Col(pos=6)
+    leftLicksCount = tables.UInt8Col(pos=7)
+    rightLicksCount = tables.UInt8Col(pos=8)
+    itiDuration = tables.UInt8Col(pos=9)
+    trialStartTime = tables.Float32Col(pos=10)
+    trialEndTime = tables.Float32Col(pos=11)
+    totalTrialTime = tables.Float32Col(pos=12)
+    bpodStartTime = tables.Float32Col(pos=13)
 
 
 class ResultsData(tables.IsDescription):
@@ -97,8 +98,7 @@ class SaveDataWorker(QObject):
         self.licksGroup = self.h5file.create_group(where='/', name='lickTimes', title='Lick Timestamps Per Trial')
         self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=SessionData, title='Trial Data')
         self.trialRow = self.trialsTable.row
-        self.resultsTable = self.h5file.create_table(where='/', name='total_results', description=ResultsData, title='Total Response Results')
-        self.resultsRow = self.resultsTable.row
+        self.resultsGroup = self.h5file.create_group(where='/', name='total_results', title='Total Response Results')
         self.statesTable = None  # Make it None because have to wait for completion of first trial to get names of all the states. Afterwhich, make description dictionary and then table.
         self.statesTableDescDict = {}  # Description for the states table (using this instead of making a class definition and subclassing tables.IsDescription).
         self.licksTable = None
@@ -141,30 +141,37 @@ class SaveDataWorker(QObject):
         logging.info('attempting to save result totals data')
         if self.resultsRowsAppended:
             # If the rows were appended to the resultsTable for the first trial already, then do not use append again because it will continue to append new rows below the last.
-            # Instead, I want to keep the rows from the first trial and just update the values for the totals for each flowrate. To do that, I must iterate through the resultsTable.
-            for row in self.resultsTable.iterrows():
-                key = str(row['flowRate'])
-                row['totalUsage'] = self.totalResultsDict[key]['Total']
-                row['totalRight'] = self.totalResultsDict[key]['right']
-                row['totalLeft'] = self.totalResultsDict[key]['left']
-                row['totalCorrect'] = self.totalResultsDict[key]['Correct']
-                row['totalWrong'] = self.totalResultsDict[key]['Wrong']
-                row['totalNoResponse'] = self.totalResultsDict[key]['NoResponse']
-                row.update()
+            # Instead, I want to keep the rows from the first trial and just update the values for the totals for each flowrate. To do that, I must iterate through each resultsTable
+            # inside the resultsGroup.
+            for table in self.h5file.walk_nodes(self.resultsGroup, "Table"):
+                vial = table._v_name.strip('vial_')  # I need the string form of the vial number only, to use as the key.
+                for row in table.iterrows():
+                    key = str(row['flowRate'])
+                    row['totalUsage'] = self.totalResultsDict[vial][key]['Total']
+                    row['totalRight'] = self.totalResultsDict[vial][key]['right']
+                    row['totalLeft'] = self.totalResultsDict[vial][key]['left']
+                    row['totalCorrect'] = self.totalResultsDict[vial][key]['Correct']
+                    row['totalWrong'] = self.totalResultsDict[vial][key]['Wrong']
+                    row['totalNoResponse'] = self.totalResultsDict[vial][key]['NoResponse']
+                    row.update()
+                # self.table.flush()
         else:
             # This means the rows have not yet been appended to the results table after the first trial.
-            for flowRate, total in self.totalResultsDict.items():
-                self.resultsRow['flowRate'] = flowRate
-                self.resultsRow['totalUsage'] = total['Total']
-                self.resultsRow['totalRight'] = total['right']
-                self.resultsRow['totalLeft'] = total['left']
-                self.resultsRow['totalCorrect'] = total['Correct']
-                self.resultsRow['totalWrong'] = total['Wrong']
-                self.resultsRow['totalNoResponse'] = total['NoResponse']
-                self.resultsRow.append()
+            for vialNum, flowrateDict in self.totalResultsDict.items():
+                self.resultsTable = self.h5file.create_table(where='/total_results', name=f'vial_{vialNum}', description=ResultsData, title=f'Vial {vialNum} Total Response Results')
+                self.resultsRow = self.resultsTable.row
+                for flowrate, total in flowrateDict.items():
+                    self.resultsRow['flowRate'] = flowrate
+                    self.resultsRow['totalUsage'] = total['Total']
+                    self.resultsRow['totalRight'] = total['right']
+                    self.resultsRow['totalLeft'] = total['left']
+                    self.resultsRow['totalCorrect'] = total['Correct']
+                    self.resultsRow['totalWrong'] = total['Wrong']
+                    self.resultsRow['totalNoResponse'] = total['NoResponse']
+                    self.resultsRow.append()
+                self.resultsTable.flush()
             self.resultsRowsAppended = True
-
-        self.resultsTable.flush()
+        
         logging.info('results data has been written to disk')
 
     def saveStatesTimestamps(self):
@@ -206,6 +213,7 @@ class SaveDataWorker(QObject):
                 self.trialRow['trialNum'] = self.infoDict['currentTrialNum']
                 self.trialRow['correctResponse'] = self.infoDict['correctResponse']
                 self.trialRow['responseResult'] = self.infoDict['responseResult']
+                self.trialRow['vialNum'] = self.infoDict['currentVialNum']
                 self.trialRow['odorName'] = self.infoDict['currentOdorName']
                 self.trialRow['odorConc'] = str(self.infoDict['currentOdorConc'])  # convert to string in case it is a float.
                 self.trialRow['odorFlow'] = self.infoDict['currentFlow']
