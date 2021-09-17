@@ -70,7 +70,7 @@ class ProtocolWorker(QObject):
         self.odors = []
         self.concs = []
         self.flows = []
-        self.vialFlows = []
+        self.vialResultsCounterDict = {}
         self.flowResultsCounterDict = {}
         self.stimIndex = 0
 
@@ -109,6 +109,7 @@ class ProtocolWorker(QObject):
                 'nTrials': self.nTrials,
                 'correctResponse': self.correctResponse,
                 'currentITI': self.currentITI,
+                'currentVialNum': self.currentVialNum,
                 'currentOdorName': self.currentOdorName,
                 'currentOdorConc': self.currentOdorConc,
                 'currentFlow': self.currentFlow,
@@ -194,9 +195,9 @@ class ProtocolWorker(QObject):
             self.previousResponseResult = self.currentResponseResult
             self.consecutiveNoResponses = 0  # Reset counter to 0 because there was a response.
 
-            self.flowResultsCounterDict[str(self.currentFlow)][self.correctResponse] += 1
-            self.flowResultsCounterDict[str(self.currentFlow)]['Correct'] += 1
-            self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
+            self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)][self.correctResponse] += 1
+            self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['Correct'] += 1
+            self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             
             self.totalCorrect += 1
@@ -211,11 +212,11 @@ class ProtocolWorker(QObject):
             self.consecutiveNoResponses = 0  # Reset counter to 0 because there was a response.
 
             if self.correctResponse == 'left':
-                self.flowResultsCounterDict[str(self.currentFlow)]['right'] += 1  # increment the opposite direction because the response was wrong.
+                self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['right'] += 1  # increment the opposite direction because the response was wrong.
             elif self.correctResponse == 'right':
-                self.flowResultsCounterDict[str(self.currentFlow)]['left'] += 1  # increment the opposite direction because the response was wrong.
-            self.flowResultsCounterDict[str(self.currentFlow)]['Wrong'] += 1
-            self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
+                self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['left'] += 1  # increment the opposite direction because the response was wrong.
+            self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['Wrong'] += 1
+            self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             
             self.totalWrong += 1
@@ -232,8 +233,8 @@ class ProtocolWorker(QObject):
                 self.previousResponseResult = self.currentResponseResult
                 self.consecutiveNoResponses = 1  # Reset counter to 1 because it should start counting now.
 
-            self.flowResultsCounterDict[str(self.currentFlow)]['NoResponse'] += 1
-            self.flowResultsCounterDict[str(self.currentFlow)]['Total'] += 1
+            self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['NoResponse'] += 1
+            self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['Total'] += 1
             self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
             
             self.totalNoResponses += 1
@@ -244,30 +245,53 @@ class ProtocolWorker(QObject):
             self.currentResponseResult = 'No Sniff'
             self.responseResultSignal.emit(self.currentResponseResult)
 
+    def checkForDuplicates(self, odors, concs, vials):
+        currentOdor = ''
+        currentConc = 0
+        duplicateVials = {}
+        for i in range(len(odors)):
+            currentOdor = odors[i].split('_')[0]  # If two odors in the olfa config file are the same and have the same concentration, then I put underscore and the vial number at the end of the odor name's string (e.g. 'limonene_5') to bypass the olfactometer code raising an error when two or more vials match.
+            currentConc = concs[i]
+            for j in range(len(odors)):
+                # if not (i == j):  # skip the same index.
+                if (currentOdor == odors[j].split('_')[0]) and (currentConc == concs[j]):
+                    # if the odor names are the same and the concentrations are the same, then the two vials are duplicates.
+                    if currentOdor not in duplicateVials:
+                        duplicateVials[currentOdor] = {str(currentConc): [vials[j]]}
+                    elif currentConc not in duplicateVials[currentOdor]:  # This means currentOdor must already be in duplicateVials, but there is another conc of that odor in the olfa config file for which another vial was found to match.
+                        duplicateVials[currentOdor][str(currentConc)] = [vials[j]]  # When first creating the key, put the indices for i and j in the list because they are the first match found.
+                    else:
+                        duplicateVials[currentOdor][str(currentConc)].append(vials[j])  # Then append index j whenever another match is found.
+        
+        return duplicateVials
+    
     def getOdorsFromConfigFile(self):
         with open(self.olfaConfigFileName, 'r') as configFile:
             self.olfaConfigDict = json.load(configFile)
         
+        if (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
+            raise KeyError("No flowrates given in olfa config file.")
+        
+        self.flows = self.olfaConfigDict['Olfactometers'][0]['flowrates']
+
         for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
             if not (vialInfo['odor'] == 'dummy'):
                 self.odors.append(vialInfo['odor'])
                 self.concs.append(vialInfo['conc'])
                 self.vials.append(vialNum)
-                if (len(vialInfo['flowrates']) == 0):
-                    raise KeyError("No flowrates given in olfa config file.")
-                else:
-                    self.vialFlows.append(vialInfo['flowrates'])
-                    self.flowResultsCounterDict[vialNum] = {}
-                    for flow in vialInfo['flowrates']:
-                        self.flowResultsCounterDict[vialNum][str(flow)] = {
-                            'right': 0,  # initizialize counters to zero.
-                            'left': 0,
-                            'Correct': 0,
-                            'Wrong': 0,
-                            'NoResponse': 0,
-                            'Total': 0
-                        }
-        
+                self.flowResultsCounterDict[vialNum] = {}
+                for flow in self.flows:
+                    self.flowResultsCounterDict[vialNum][str(flow)] = {
+                        'right': 0,  # initizialize counters to zero.
+                        'left': 0,
+                        'Correct': 0,
+                        'Wrong': 0,
+                        'NoResponse': 0,
+                        'Total': 0
+                    }            
+
+        logging.info(self.checkForDuplicates(self.odors, self.concs, self.vials))
+
         if (self.experimentType == 'oneOdorIntensity'):
             self.stimulusFunction = self.oneOdorIntensityRandomizer
 
@@ -290,10 +314,9 @@ class ProtocolWorker(QObject):
         self.currentVialNum = self.vials[vialIndex]
         self.currentOdorName = self.odors[vialIndex]
         self.currentOdorConc = self.concs[vialIndex]
-        vialFlows = self.vialFlows[vialIndex]
         
-        flow_threshold = np.sqrt(vialFlows[0] * vialFlows[-1])
-        self.currentFlow = np.random.choice(vialFlows)
+        flow_threshold = np.sqrt(self.flows[0] * self.flows[-1])
+        self.currentFlow = np.random.choice(self.flows)
         #If flow is lower than flow_threshold == ~30 , 'left' is correct. Otherwise, 'right' is correct
         if self.currentFlow < flow_threshold:
             self.correctResponse = 'left'
