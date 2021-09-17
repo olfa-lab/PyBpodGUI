@@ -772,59 +772,12 @@ class Window(QMainWindow, Ui_MainWindow):
             self.trialNumLineEdit.setText(str(trialInfo['currentTrialNum']))
             self.correctResponseLineEdit.setText(trialInfo['correctResponse'])
             self.itiLineEdit.setText(str(trialInfo['currentITI']))
+            self.currentVialNumLineEdit.setText(trialInfo['currentVialNum'])
             self.odorNameLineEdit.setText(trialInfo['currentOdorName'])
             self.odorConcentrationLineEdit.setText(str(trialInfo['currentOdorConc']))
             self.currentFlowLineEdit.setText(str(trialInfo['currentFlow']))
             self.currentTrialProgressBar.setRange(0, trialInfo['nStates'])
 
-    def _updateResultsPlot(self, flowResultsDict):
-        if not self.resultsPlot.isXAxisSetup():
-            self.resultsPlot.setupXaxis(flowResultsDict)
-
-        xValues = []
-        yValues = []
-        index = 0
-
-        # This is to plot percent correct
-        # for k, v in flowResultsDict.items():
-        #     numCorrect = v['Correct']
-        #     numTotal = v['Total']
-        #     if not (numTotal == 0):
-        #         percent = round((float(numCorrect) / float(numTotal) * 100), 2)
-        #     else:
-        #         percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
-        #     xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
-        #     yValues.append(percent)
-        #     index += 1
-
-        # This is to plot percent left licks
-        for k, v in flowResultsDict.items():
-            numLeft = v['left']
-            # numTotal = v['Total']  # I do not want to use this because if the mouse does not response many times, it will increase the denominator and lower the percentage.
-            numResponses = v['Correct'] + v['Wrong']  # I only want the denominator to be the total number of actual responses.
-            if not (numResponses == 0):
-                percent = round((float(numLeft) / float(numResponses) * 100), 2)
-            else:
-                percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
-            xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
-            yValues.append(percent)
-            index += 1
-        
-        self.resultsPlot.updatePlot(xValues, yValues)
-
-    def _updateFlowUsagePlot(self, flowResultsDict):
-        if not self.flowUsagePlot.isXAxisSetup():
-            self.flowUsagePlot.setupXaxis(flowResultsDict)
-
-        xValues = []
-        yValues = []
-        index = 0
-        for k, v in flowResultsDict.items():
-            xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
-            yValues.append(v['Total'])
-            index += 1
-        self.flowUsagePlot.updatePlot(xValues, yValues)
-    
     def _noResponseAbortDialog(self):
         QMessageBox.information(self, "Notice", "Session aborted due to too many consecutive no responses.")
 
@@ -895,8 +848,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
         self.protocolWorker.flowResultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))
-        self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateResultsPlot)
-        self.protocolWorker.flowResultsCounterDictSignal.connect(self._updateFlowUsagePlot)
+        self.protocolWorker.flowResultsCounterDictSignal.connect(self.resultsPlot.updatePlot)
+        self.protocolWorker.flowResultsCounterDictSignal.connect(self.flowUsagePlot.updatePlot)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)
         self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
         # self.protocolWorker.startSDCardLoggingSignal.connect(self._startSDCardLogging)

@@ -25,6 +25,7 @@ class StreamingWorker(QObject):
 
         self.dt = dt
         self.maxt = maxt
+        self.plotInterval = 5  # milliseconds
         self.tdata = [0]
         self.ydata = [0]
         self.lickRightData = [np.nan]
@@ -35,7 +36,9 @@ class StreamingWorker(QObject):
         self.ax.add_line(self.line)
         self.ax.add_line(self.lickRightLine)
         self.ax.add_line(self.lickLeftLine)
-        self.ax.set_ylim(0.0, 1.0)
+        self.ymax = 1.0
+        self.ymin = 0.0
+        self.ax.set_ylim(self.ymin - 0.1, self.ymax + 0.1)
         self.ax.set_xlim(0, self.maxt)
         self.span = self.ax.axvspan(0, 0, color='blue', alpha=0.2)
         self.spanStart = 0
@@ -128,7 +131,7 @@ class StreamingWorker(QObject):
 
     def animate(self):
         # pass a generator in "emitter" to produce data for the update func
-        self.anim = animation.FuncAnimation(self.fig, self.update, self.emitter, interval=7, blit=True)
+        self.anim = animation.FuncAnimation(self.fig, self.update, self.emitter, interval=self.plotInterval, blit=True)
 
     def getFigure(self):
         return self.dynamic_canvas
@@ -180,7 +183,7 @@ class StreamingWorker(QObject):
             correct = params[2]
             if (direction == 'R'):
                 if (enable == 1):
-                    self.lickRight = 2.5  # Y-axis max range is 6.0 so make right licks on top half of plot.
+                    self.lickRight = self.ymax  # Y-axis max range is 6.0 so make right licks on top half of plot.
                     if (correct == 1):
                         self.spanColor = 'g'
                     elif (correct == 0):
@@ -189,7 +192,7 @@ class StreamingWorker(QObject):
                     self.lickRight = np.nan
             elif (direction == 'L'):
                 if (enable == 1):
-                    self.lickLeft = -2.5  # Y-axis min range is -6.0 so make left licks on bottom half of plot.
+                    self.lickLeft = self.ymin  # Y-axis min range is -6.0 so make left licks on bottom half of plot.
                     if (correct == 1):
                         self.spanColor = 'g'
                     elif (correct == 0):
