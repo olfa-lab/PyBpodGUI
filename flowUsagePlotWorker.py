@@ -39,6 +39,7 @@ class FlowUsagePlotWorker(QObject):
         colorIndex = 0
         self.graphWidget.clear()
 
+        # This is for plotting a line for each vial.
         # for vialNum, flowrateDict in resultsDict.items():
         #     xValues = []
         #     yValues = []
@@ -56,6 +57,7 @@ class FlowUsagePlotWorker(QObject):
         #     self.graphWidget.plot(xValues, yValues, name=f'Vial {vialNum}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
         #     colorIndex += 1
 
+        # This combines all vials into one line.
         allTotals = []
         for vialNum, flowrateDict in resultsDict.items():
             totals = []

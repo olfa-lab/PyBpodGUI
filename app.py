@@ -850,6 +850,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.flowResultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))
         self.protocolWorker.flowResultsCounterDictSignal.connect(self.resultsPlot.updatePlot)
         self.protocolWorker.flowResultsCounterDictSignal.connect(self.flowUsagePlot.updatePlot)
+        self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)
         self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
         # self.protocolWorker.startSDCardLoggingSignal.connect(self._startSDCardLogging)

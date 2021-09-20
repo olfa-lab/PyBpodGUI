@@ -29,6 +29,7 @@ class ProtocolWorker(QObject):
     olfaExceptionSignal = pyqtSignal(str)  # sends the olfa exception error string with it to the main thread to notify the user.
     invalidFileSignal = pyqtSignal(str)  # sends the key string that caused the KeyError with it to the main thread to notify the user.
     bpodExceptionSignal = pyqtSignal(str)  # sends the bpod exception error string with it to the main thread to notify the user.
+    duplicateVialsSignal = pyqtSignal(dict)  # sends a dict that groups duplicate vials to the resultsPLotWorker.
     # startSDCardLoggingSignal = pyqtSignal()
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
@@ -245,7 +246,7 @@ class ProtocolWorker(QObject):
             self.currentResponseResult = 'No Sniff'
             self.responseResultSignal.emit(self.currentResponseResult)
 
-    def checkForDuplicates(self, odors, concs, vials):
+    def groupDuplicateVials(self, odors, concs, vials):
         currentOdor = ''
         currentConc = 0
         duplicateVials = {}
@@ -253,47 +254,45 @@ class ProtocolWorker(QObject):
             currentOdor = odors[i].split('_')[0]  # If two odors in the olfa config file are the same and have the same concentration, then I put underscore and the vial number at the end of the odor name's string (e.g. 'limonene_5') to bypass the olfactometer code raising an error when two or more vials match.
             currentConc = concs[i]
             for j in range(len(odors)):
-                # if not (i == j):  # skip the same index.
-                if (currentOdor == odors[j].split('_')[0]) and (currentConc == concs[j]):
-                    # if the odor names are the same and the concentrations are the same, then the two vials are duplicates.
+                if (currentOdor == odors[j].split('_')[0]) and (currentConc == concs[j]):  # if the odor names are the same and the concentrations are the same, then the two vials are duplicates.
                     if currentOdor not in duplicateVials:
                         duplicateVials[currentOdor] = {str(currentConc): [vials[j]]}
-                    elif currentConc not in duplicateVials[currentOdor]:  # This means currentOdor must already be in duplicateVials, but there is another conc of that odor in the olfa config file for which another vial was found to match.
+                    elif str(currentConc) not in duplicateVials[currentOdor]:  # This means currentOdor must already be in duplicateVials, but there is another conc of that odor in the olfa config file for which another vial was found to match.
                         duplicateVials[currentOdor][str(currentConc)] = [vials[j]]  # When first creating the key, put the indices for i and j in the list because they are the first match found.
-                    else:
-                        duplicateVials[currentOdor][str(currentConc)].append(vials[j])  # Then append index j whenever another match is found.
+                    elif vials[j] not in duplicateVials[currentOdor][str(currentConc)]:  # Check if vial was already added to avoid appending again when looping over an odor name that was already used.
+                        duplicateVials[currentOdor][str(currentConc)].append(vials[j])  # Then append vials[j] whenever another match is found.
         
-        return duplicateVials
+        self.duplicateVialsSignal.emit(duplicateVials)
     
     def getOdorsFromConfigFile(self):
         with open(self.olfaConfigFileName, 'r') as configFile:
             self.olfaConfigDict = json.load(configFile)
-        
-        if (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
-            raise KeyError("No flowrates given in olfa config file.")
-        
-        self.flows = self.olfaConfigDict['Olfactometers'][0]['flowrates']
-
-        for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
-            if not (vialInfo['odor'] == 'dummy'):
-                self.odors.append(vialInfo['odor'])
-                self.concs.append(vialInfo['conc'])
-                self.vials.append(vialNum)
-                self.flowResultsCounterDict[vialNum] = {}
-                for flow in self.flows:
-                    self.flowResultsCounterDict[vialNum][str(flow)] = {
-                        'right': 0,  # initizialize counters to zero.
-                        'left': 0,
-                        'Correct': 0,
-                        'Wrong': 0,
-                        'NoResponse': 0,
-                        'Total': 0
-                    }            
-
-        logging.info(self.checkForDuplicates(self.odors, self.concs, self.vials))
 
         if (self.experimentType == 'oneOdorIntensity'):
             self.stimulusFunction = self.oneOdorIntensityRandomizer
+
+            if (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
+                raise KeyError("No flowrates given in olfa config file.")
+            
+            self.flows = self.olfaConfigDict['Olfactometers'][0]['flowrates']
+
+            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
+                if not (vialInfo['odor'] == 'dummy'):
+                    self.odors.append(vialInfo['odor'])
+                    self.concs.append(vialInfo['conc'])
+                    self.vials.append(vialNum)
+                    self.flowResultsCounterDict[vialNum] = {}
+                    for flow in self.flows:
+                        self.flowResultsCounterDict[vialNum][str(flow)] = {
+                            'right': 0,  # initizialize counters to zero.
+                            'left': 0,
+                            'Correct': 0,
+                            'Wrong': 0,
+                            'NoResponse': 0,
+                            'Total': 0
+                        }            
+
+            self.groupDuplicateVials(self.odors, self.concs, self.vials)
 
         elif (self.experimentType == 'twoOdorMatch'):
             self.stimulusFunction = self.twoOdorMatchRandomizer

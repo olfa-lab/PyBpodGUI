@@ -31,23 +31,15 @@
                 },
                 "6": {
                     "conc": 0.1,
-                    "odor": "pinene_6"
+                    "odor": "limonene_6"
                 },
                 "7": {
                     "conc": 0.1,
-                    "odor": "limonene_7"
+                    "odor": "pinene_7"
                 },
                 "8": {
                     "conc": 0.1,
                     "odor": "pinene_8"
-                },
-                "9": {
-                    "conc": 0.1,
-                    "odor": "limonene_9"
-                },
-                "10": {
-                    "conc": 0.1,
-                    "odor": "pinene_10"
                 }
             },
             "flowrates": [10, 13, 18, 24, 32, 41, 56, 100],
