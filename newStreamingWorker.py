@@ -112,10 +112,10 @@ class StreamingWorker(QObject):
         if self.activateResponseWindow:
             self.spanEnd = self.tdata[-1]  # Make the responseWindow grow with sniff signal.
             # set_xy() takes an (N, 2) list of the verticies of the polygon. Since axvspan is a rectangle, there are 5 verticies in order to create a complete closed circuit.
-            self.span.set_xy([[self.spanStart, -6.0], [self.spanStart, 6.0], [self.spanEnd, 6.0], [self.spanEnd, -6.0], [self.spanStart, -6.0]])
+            self.span.set_xy([[self.spanStart, self.ymin], [self.spanStart, self.ymax], [self.spanEnd, self.ymax], [self.spanEnd, self.ymin], [self.spanStart, self.ymin]])
         else:
             # This else statement keeps the responseWindow showing until the canvas gets redrawn because I need to do something with self.span in order to be able to return it.
-            self.span.set_xy([[self.spanStart, -6.0], [self.spanStart, 6.0], [self.spanEnd, 6.0], [self.spanEnd, -6.0], [self.spanStart, -6.0]])
+            self.span.set_xy([[self.spanStart, self.ymin], [self.spanStart, self.ymax], [self.spanEnd, self.ymax], [self.spanEnd, self.ymin], [self.spanStart, self.ymin]])
 
         return self.line, self.lickRightLine, self.lickLeftLine, self.span,
 
