@@ -820,7 +820,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runSaveDataThread(self):
         logging.info(f"from _runSaveDataThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.saveDataThread = QThread()
-        self.saveDataWorker = SaveDataWorker(self.mouseNumber, self.rigLetter, self.adc)
+        self.saveDataWorker = SaveDataWorker(self.mouseNumber, self.rigLetter, self.experimentType, self.adc)
         self.saveDataWorker.moveToThread(self.saveDataThread)
         self.saveDataThread.started.connect(self.saveDataWorker.run)
         self.saveDataWorker.finished.connect(self.saveDataThread.quit)
