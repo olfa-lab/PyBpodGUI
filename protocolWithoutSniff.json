@@ -2,7 +2,7 @@
     "states": [
         {
             "stateName": "WaitForOdor",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "Tup": "PresentOdor"
             },
