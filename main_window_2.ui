@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="centralWidgetHLayout">
     <item>
      <widget class="QMdiArea" name="mdiArea">
       <property name="sizeAdjustPolicy">
@@ -27,7 +27,7 @@
        <property name="windowTitle">
         <string>Current Trial Info</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout">
+       <layout class="QGridLayout" name="currentTrialSubWindowWidgetGridLayout">
         <item row="2" column="1">
          <widget class="QLineEdit" name="currentStateLineEdit">
           <property name="readOnly">
@@ -222,7 +222,7 @@
        <property name="windowTitle">
         <string>Bpod Control</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout_4">
+       <layout class="QGridLayout" name="bpodControlSubWindowWidgetGridLayout">
         <item row="3" column="0">
          <widget class="QPushButton" name="leftWaterValveButton">
           <property name="text">
@@ -303,6 +303,48 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="resultsPlotSubWindowWidget">
+       <property name="windowTitle">
+        <string>Results Plot</string>
+       </property>
+       <layout class="QGridLayout" name="resultsPlotSubWindowWidgetGridLayout">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="resultsPlotCombineLikeVialsButton">
+          <property name="text">
+           <string>Combine Like Vials</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="resultsPlotSeparateVialsButton">
+          <property name="text">
+           <string>Separate Vials</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="flowUsagePlotSubWindowWidget">
+       <property name="windowTitle">
+        <string>Flow Usage Plot</string>
+       </property>
+       <layout class="QGridLayout" name="flowUsagePlotSubWindowWidgetGridLayout">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="flowUsagePlotCombineLikeVialsButton">
+          <property name="text">
+           <string>Combine Like Vials</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="flowUsagePlotSeparateVialsButton">
+          <property name="text">
+           <string>Separate Vials</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -361,7 +403,7 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="experimentSetupDockWidgetContents">
-    <layout class="QGridLayout" name="gridLayout_2">
+    <layout class="QGridLayout" name="experimentSetupDockWidgetContentsGridLayout">
      <item row="0" column="1">
       <widget class="QLineEdit" name="bpodPortLineEdit"/>
      </item>

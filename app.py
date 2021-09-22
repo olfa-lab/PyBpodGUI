@@ -10,7 +10,7 @@ from datetime import datetime
 from serial.serialutil import SerialException
 
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow)
+    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow, QWidget, QGridLayout, QPushButton)
 from PyQt5.QtCore import QObject, QThread, QTime, QTimer, pyqtSignal, pyqtSlot, Qt
 from PyQt5.QtGui import QCloseEvent
 
@@ -138,19 +138,21 @@ class Window(QMainWindow, Ui_MainWindow):
         self.mdiArea.addSubWindow(self.streamingSubWindow)
 
         self.resultsPlot = ResultsPlotWorker()
+        self.resultsPlotSubWindowWidgetGridLayout.addWidget(self.resultsPlot.getWidget(), 1, 0, 1, 2)
         self.resultsPlotSubWindow = MyQMdiSubWindow()
         self.resultsPlotSubWindow.closed.connect(self._updateViewMenu)
         self.resultsPlotSubWindow.setObjectName("resultsPlotSubWindow")
-        self.resultsPlotSubWindow.setWidget(self.resultsPlot.getWidget())
+        self.resultsPlotSubWindow.setWidget(self.resultsPlotSubWindowWidget)
         self.resultsPlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         self.resultsPlotSubWindow.resize(300, 300)
         self.mdiArea.addSubWindow(self.resultsPlotSubWindow)
 
         self.flowUsagePlot = FlowUsagePlotWorker()
+        self.flowUsagePlotSubWindowWidgetGridLayout.addWidget(self.flowUsagePlot.getWidget(), 1, 0, 1, 2)
         self.flowUsagePlotSubWindow = MyQMdiSubWindow()
         self.flowUsagePlotSubWindow.closed.connect(self._updateViewMenu)
         self.flowUsagePlotSubWindow.setObjectName("flowUsagePlotSubWindow")
-        self.flowUsagePlotSubWindow.setWidget(self.flowUsagePlot.getWidget())
+        self.flowUsagePlotSubWindow.setWidget(self.flowUsagePlotSubWindowWidget)
         self.flowUsagePlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         self.flowUsagePlotSubWindow.resize(300, 300)
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
@@ -165,6 +167,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.calibLeftWaterButton.clicked.connect(self._calibrateLeftWaterValve)
         self.calibRightWaterButton.clicked.connect(self._calibrateRightWaterValve)
         self.connectDevicesButton.clicked.connect(self._connectDevices)
+        self.resultsPlotCombineLikeVialsButton.clicked.connect(lambda: self.resultsPlot.setCombineLikeVials(True))
+        self.resultsPlotSeparateVialsButton.clicked.connect(lambda: self.resultsPlot.setCombineLikeVials(False))
+        self.flowUsagePlotCombineLikeVialsButton.clicked.connect(lambda: self.flowUsagePlot.setCombineLikeVials(True))
+        self.flowUsagePlotSeparateVialsButton.clicked.connect(lambda: self.flowUsagePlot.setCombineLikeVials(False))
         
         self.actionNew.triggered.connect(self._launchProtocolEditor)
         self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
@@ -851,6 +857,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.flowResultsCounterDictSignal.connect(self.resultsPlot.updatePlot)
         self.protocolWorker.flowResultsCounterDictSignal.connect(self.flowUsagePlot.updatePlot)
         self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
+        self.protocolWorker.duplicateVialsSignal.connect(self.flowUsagePlot.receiveDuplicatesDict)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)
         self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
         # self.protocolWorker.startSDCardLoggingSignal.connect(self._startSDCardLogging)

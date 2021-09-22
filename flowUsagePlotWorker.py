@@ -18,16 +18,28 @@ class FlowUsagePlotWorker(QObject):
         self.graphWidget.setTitle('Flow Rate Distribution', color='b', size='10pt')
         self.graphWidget.setLabel('left', 'Number of Trials Used', **styles)
         self.graphWidget.setLabel('bottom', 'Flow Rate', **styles)
-        # self.graphWidget.addLegend()
+        self.graphWidget.addLegend()
         self.xAxis = self.graphWidget.getAxis('bottom')
         self.ymax = 2
         self.graphWidget.setYRange(0, self.ymax, padding=0)
         self.xAxisReady = False
+        self.groupedVials = {}
+        self.resultsDict = {}
+        self.combineLikeVials = False
 
     def getWidget(self):
         return self.graphWidget
 
+    def receiveDuplicatesDict(self, duplicateVials):
+        self.groupedVials = duplicateVials
+
+    def setCombineLikeVials(self, value):
+        self.combineLikeVials = value
+        if self.resultsDict:  # self.resultsDict will only hold the dict after the first trial.
+            self.updatePlot(self.resultsDict)
+    
     def updatePlot(self, resultsDict):
+        self.resultsDict = resultsDict
         if not self.xAxisReady:
             flowrates = list(resultsDict.values())  # Get a list of each vial's sub dictionary whose keys are flowrates, instead of doing resultsDict['vial_5'] since vial number '5' might not always exist.
             ticks = list(flowrates[0].keys())  #  flowrates is a list of dictionaries that contain the flowrates, but the values are all the same because they are the same set of flowrates. So just take the first element in that list and then make a list of the flowrates.
@@ -39,46 +51,72 @@ class FlowUsagePlotWorker(QObject):
         colorIndex = 0
         self.graphWidget.clear()
 
-        # This is for plotting a line for each vial.
+        if self.combineLikeVials:
+            # This combines vials with duplicate odor/conc and plots a line for each distinct odor/conc.
+            for odor, concDict in self.groupedVials.items():
+                for conc, vialsList in concDict.items():
+                    numTotal = []  # list to sum up the total usage from duplicate vials for each flowrate.
+                    for vial in vialsList:
+                        index = 0
+                        for flow, totals in resultsDict[vial].items():
+                            if (len(numTotal) < len(resultsDict[vial])):  # Append each flowrate's total usage to the list until the length of the list equals the number of flowrates.
+                                numTotal.append(totals['Total'])
+                                index += 1
+                            else:  # Once numTotal has the same length as the number of flowrates, stop appending and instead use the index to add to each element's sum. 
+                                numTotal[index] += totals['Total']
+                                index += 1
+                    
+                    if (max(numTotal) > self.ymax):
+                        self.ymax += 2
+                        self.graphWidget.setYRange(0, self.ymax, padding=0)
+                    
+                    # Plot a line for each distinct odor/conc
+                    xValues = list(range(len(numTotal)))  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
+                    self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+                    self.graphWidget.plot(xValues, numTotal, name=f'{odor} {conc}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+                    colorIndex += 1
+
+        else:
+            # This is for plotting a line for each vial.
+            for vialNum, flowrateDict in resultsDict.items():
+                xValues = []
+                yValues = []
+                index = 0
+                for k, v in flowrateDict.items():
+                    xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
+                    yValues.append(v['Total'])
+                    index += 1
+                
+                if (max(yValues) > self.ymax):
+                    self.ymax += 2
+                    self.graphWidget.setYRange(0, self.ymax, padding=0)
+
+                self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+                self.graphWidget.plot(xValues, yValues, name=f'Vial {vialNum}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+                colorIndex += 1
+
+        # # This combines all vials into one line.
+        # allTotals = []
         # for vialNum, flowrateDict in resultsDict.items():
-        #     xValues = []
-        #     yValues = []
-        #     index = 0
+        #     totals = []
         #     for k, v in flowrateDict.items():
-        #         xValues.append(index)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
-        #         yValues.append(v['Total'])
+        #         totals.append(v['Total'])
+        #     allTotals.append(totals)  # list of lists
+        
+        # sumTotals = [0] * len(allTotals[0])
+        # for i in allTotals:  # i is a list inside allTotals.
+        #     index = 0
+        #     for j in i:  # j is an element inside list i.
+        #         sumTotals[index] += j
         #         index += 1
-            
-        #     if (max(yValues) > self.ymax):
-        #         self.ymax += 2
-        #         self.graphWidget.setYRange(0, self.ymax, padding=0)
-
-        #     self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
-        #     self.graphWidget.plot(xValues, yValues, name=f'Vial {vialNum}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
-        #     colorIndex += 1
-
-        # This combines all vials into one line.
-        allTotals = []
-        for vialNum, flowrateDict in resultsDict.items():
-            totals = []
-            for k, v in flowrateDict.items():
-                totals.append(v['Total'])
-            allTotals.append(totals)  # list of lists
         
-        sumTotals = [0] * len(allTotals[0])
-        for i in allTotals:  # i is a list inside allTotals.
-            index = 0
-            for j in i:  # j is an element inside list i.
-                sumTotals[index] += j
-                index += 1
-        
-        if (max(sumTotals) > self.ymax):
-            self.ymax += 2
-            self.graphWidget.setYRange(0, self.ymax, padding=0)
+        # if (max(sumTotals) > self.ymax):
+        #     self.ymax += 2
+        #     self.graphWidget.setYRange(0, self.ymax, padding=0)
 
-        xValues = list(range(len(sumTotals)))
-        self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
-        self.graphWidget.plot(xValues, sumTotals, name=f'Vial {vialNum}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
-        colorIndex += 1
+        # xValues = list(range(len(sumTotals)))
+        # self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+        # self.graphWidget.plot(xValues, sumTotals, name=f'Vial {vialNum}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+        # colorIndex += 1
         
         logging.info('flow usage plot updated')            
