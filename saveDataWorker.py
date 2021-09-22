@@ -165,7 +165,7 @@ class SaveDataWorker(QObject):
                         row['totalWrong'] = self.totalResultsDict[vial][key]['Wrong']
                         row['totalNoResponse'] = self.totalResultsDict[vial][key]['NoResponse']
                         row.update()
-                    self.table.flush()
+                    table.flush()
             else:
                 # This means the rows have not yet been appended to the results table after the first trial.
                 self.resultsGroup = self.h5file.create_group(where='/', name='total_results', title='Total Response Results')
