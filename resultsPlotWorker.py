@@ -24,7 +24,7 @@ class ResultsPlotWorker(QObject):
         self.xAxisReady = False
         self.groupedVials = {}
         self.resultsDict = {}
-        self.combineLikeVials = False
+        self.plottingMode = 0
 
     def getWidget(self):
         return self.graphWidget
@@ -32,8 +32,8 @@ class ResultsPlotWorker(QObject):
     def receiveDuplicatesDict(self, duplicateVials):
         self.groupedVials = duplicateVials
 
-    def setCombineLikeVials(self, value):
-        self.combineLikeVials = value
+    def setPlottingMode(self, value):
+        self.plottingMode = value
         if self.resultsDict:  # self.resultsDict will only hold the dict after the first trial.
             self.updatePlot(self.resultsDict)
 
@@ -50,7 +50,37 @@ class ResultsPlotWorker(QObject):
         colorIndex = 0
         self.graphWidget.clear()
 
-        if self.combineLikeVials:
+        if (self.plottingMode == 0):
+            # This combines all vials into one line.
+            numLeft = []  # list to sum up the left response results from duplicate vials for each flowrate. Will have length equal to the number of flowrates.
+            numResponses = []  # list to sum up the total response results (correct + wrong) from duplicate vials for each flowrate. Will have the same length as numLeft.
+            for vial, flowrateDict in resultsDict.items():
+                index = 0
+                for flow, totals in flowrateDict.items():
+                    if (len(numLeft) < len(flowrateDict)):  # Append each flowrate's total left responses and total responses to their lists until the length of the numLeft list equals the number of flowrates. The numLeft and numResponses lists have the same lengths.
+                        numLeft.append(totals['left'])
+                        numResponses.append(totals['Correct'] + totals['Wrong'])  # I only want the denominator to be the total number of actual responses, not including the NoResponses.
+                        index += 1
+                    else:  # Once numLeft and numResponses have the same length as the number of flowrates, stop appending and instead use the index to add to each element's sum. 
+                        numLeft[index] += totals['left']
+                        numResponses[index] += totals['Correct'] + totals['Wrong']
+                        index += 1
+            
+            xValues = []
+            yValues = []
+            for i in range(len(numLeft)):  # Calculate percentages for each flowrate.
+                if not (numResponses[i] == 0):
+                    percent = round((float(numLeft[i]) / float(numResponses[i]) * 100), 2)
+                else:
+                    percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
+                xValues.append(i)  # I use index instead of 'int(k)' because I setup custom tick labels for each flow rate in the ResultsPlot class and inside it, there is a dict with integers as keys and strings as values for the flow rate.
+                yValues.append(percent)
+
+            self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+            self.graphWidget.plot(xValues, yValues, name='All vials', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+            colorIndex += 1
+        
+        elif (self.plottingMode == 1):
             # This combines vials with duplicate odor/conc and plots a line for each distinct odor/conc.
             for odor, concDict in self.groupedVials.items():
                 for conc, vialsList in concDict.items():
@@ -83,7 +113,7 @@ class ResultsPlotWorker(QObject):
                     self.graphWidget.plot(xValues, yValues, name=f'{odor} {conc}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
                     colorIndex += 1
         
-        else:
+        elif (self.plottingMode == 2):
             # This plots a line for each vial's results.
             for vialNum, flowrateDict in resultsDict.items():
                 xValues = []

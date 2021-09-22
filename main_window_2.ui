@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1369</width>
+    <width>1537</width>
     <height>901</height>
    </rect>
   </property>
@@ -308,17 +308,24 @@
         <string>Results Plot</string>
        </property>
        <layout class="QGridLayout" name="resultsPlotSubWindowWidgetGridLayout">
-        <item row="0" column="0">
+        <item row="0" column="2">
+         <widget class="QPushButton" name="resultsPlotSeparateVialsButton">
+          <property name="text">
+           <string>Separate Vials</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
          <widget class="QPushButton" name="resultsPlotCombineLikeVialsButton">
           <property name="text">
            <string>Combine Like Vials</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QPushButton" name="resultsPlotSeparateVialsButton">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="resultsPlotCombineAllVialsButton">
           <property name="text">
-           <string>Separate Vials</string>
+           <string>Combine All Vials</string>
           </property>
          </widget>
         </item>
@@ -329,17 +336,24 @@
         <string>Flow Usage Plot</string>
        </property>
        <layout class="QGridLayout" name="flowUsagePlotSubWindowWidgetGridLayout">
-        <item row="0" column="0">
+        <item row="0" column="1">
          <widget class="QPushButton" name="flowUsagePlotCombineLikeVialsButton">
           <property name="text">
            <string>Combine Like Vials</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item row="0" column="2">
          <widget class="QPushButton" name="flowUsagePlotSeparateVialsButton">
           <property name="text">
            <string>Separate Vials</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="flowUsagePlotCombineAllVialsButton">
+          <property name="text">
+           <string>Combine All Vials</string>
           </property>
          </widget>
         </item>
@@ -354,7 +368,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1369</width>
+     <width>1537</width>
      <height>21</height>
     </rect>
    </property>
