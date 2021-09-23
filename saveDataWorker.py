@@ -89,7 +89,14 @@ class VoltageData(tables.IsDescription):
     # computerTime = tables.Float32Col(pos=1)
     # computerPeriod = tables.Float32Col(pos=2)
     bpodTime = tables.Float32Col(pos=1)
-    voltage = tables.Float32Col(shape=(1, ), pos=2)
+    voltageCh1 = tables.Float32Col(pos=2)
+    voltageCh2 = tables.Float32Col(pos=3)
+    voltageCh3 = tables.Float32Col(pos=4)
+    voltageCh4 = tables.Float32Col(pos=5)
+    voltageCh5 = tables.Float32Col(pos=6)
+    voltageCh6 = tables.Float32Col(pos=7)
+    voltageCh7 = tables.Float32Col(pos=8)
+    voltageCh8 = tables.Float32Col(pos=9)
 
 
 class SaveDataWorker(QObject):
@@ -369,7 +376,8 @@ class SaveDataWorker(QObject):
                         # self.voltsRow['computerPeriod'] = period
                         self.voltsRow['bpodTime'] = self.bpodTime
                         self.bpodTime += self.samplingPeriod
-                        self.voltsRow['voltage'] = voltages
+                        for i in range(len(voltages)):
+                            self.voltsRow[f'voltageCh{i + 1}'] = voltages[i]
                         self.voltsRow.append()
 
                     # fill buffer and send it when full using the signal.

@@ -118,6 +118,8 @@ Things to do:
 
     * _____ make the streaming plot show the all the inputs and make another plot to show all the outputs.
 
+    * _____ make the streaming plot able to plot more than one channel from the analog input.
+
 
 Questions to research:
 
