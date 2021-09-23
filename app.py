@@ -128,13 +128,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bpodControlSubWindow.resize(300, 230)
         self.mdiArea.addSubWindow(self.bpodControlSubWindow)
 
-        self.streaming = StreamingWorker(maxt=10, dt=0.001)
+        self.streaming = StreamingWorker(self.maxtSpinBox.value(), self.dtDoubleSpinBox.value(), self.yMinDoubleSpinBox.value(), self.yMaxDoubleSpinBox.value(), self.plotIntervalSpinBox.value())
+        self.streamingWidget = self.streaming.getFigure()
+        self.streamingWidget.setMinimumSize(500, 250)
+        self.streamingPlotSubWindowWidgetGridLayout.addWidget(self.streamingWidget, 0, 2, 5, 1)
         self.streamingSubWindow = MyQMdiSubWindow()
         self.streamingSubWindow.closed.connect(self._updateViewMenu)
         self.streamingSubWindow.setObjectName("streamingSubWindow")
-        self.streamingSubWindow.setWidget(self.streaming.getFigure())
+        self.streamingSubWindow.setWidget(self.streamingPlotSubWindowWidget)
         self.streamingSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        self.streamingSubWindow.resize(1000, 300)
+        # self.streamingSubWindow.resize(1000, 300)
         self.mdiArea.addSubWindow(self.streamingSubWindow)
 
         self.resultsPlot = ResultsPlotWorker()
@@ -198,6 +201,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.itiMaxSpinBox.valueChanged.connect(self._recordMaxITI)
         self.noResponseCutoffSpinBox.valueChanged.connect(self._recordNoResponseCutoff)
         self.autoWaterCutoffSpinBox.valueChanged.connect(self._recordAutoWaterCutoff)
+        self.yMaxDoubleSpinBox.valueChanged.connect(lambda ymax: self.streaming.setYaxis(self.yMinDoubleSpinBox.value(), ymax))
+        self.yMinDoubleSpinBox.valueChanged.connect(lambda ymin: self.streaming.setYaxis(ymin, self.yMaxDoubleSpinBox.value()))
+        self.maxtSpinBox.valueChanged.connect(lambda maxt: self.streaming.setXaxis(maxt))
+        self.dtDoubleSpinBox.valueChanged.connect(lambda dt: self.streaming.set_dt(dt))
+        self.plotIntervalSpinBox.valueChanged.connect(lambda x: self.streaming.setPlotInterval(x))
 
         self.experimentTypeComboBox.currentTextChanged.connect(self._recordExperimentType)
 
@@ -756,7 +764,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _recordAnalogInputModuleSerialPort(self):
         self.adcSerialPort = self.analogInputModulePortLineEdit.text()
-
+    
     def _updateCurrentState(self, stateName):
         self.currentStateLineEdit.setText(stateName)
         

@@ -9,6 +9,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
+from pyqtgraph import plot
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -16,16 +17,18 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 class StreamingWorker(QObject):  
-    def __init__(self, maxt=2, dt=0.02):
+    def __init__(self, maxt=2, dt=0.02, ymin=-1.0, ymax=1.0, plotInterval=5):
         super().__init__()
-        self.dynamic_canvas = FigureCanvas(Figure(figsize=(5, 3)))
+        self.dynamic_canvas = FigureCanvas(Figure(figsize=(10, 3)))
 
         self.fig = self.dynamic_canvas.figure
         self.ax = self.dynamic_canvas.figure.subplots()
 
         self.dt = dt
         self.maxt = maxt
-        self.plotInterval = 5  # milliseconds
+        self.ymax = ymax
+        self.ymin = ymin
+        self.plotInterval = plotInterval  # milliseconds
         self.tdata = [0]
         self.ydata = [0]
         self.lickRightData = [np.nan]
@@ -36,8 +39,6 @@ class StreamingWorker(QObject):
         self.ax.add_line(self.line)
         self.ax.add_line(self.lickRightLine)
         self.ax.add_line(self.lickLeftLine)
-        self.ymax = 1.0
-        self.ymin = 0.0
         self.ax.set_ylim(self.ymin - 0.1, self.ymax + 0.1)
         self.ax.set_xlim(0, self.maxt)
         self.span = self.ax.axvspan(0, 0, color='blue', alpha=0.2)
@@ -54,8 +55,8 @@ class StreamingWorker(QObject):
         self.elapsed = self.ax.text(0.70, 0.80, '', transform=self.ax.transAxes)
         self.nTotalDataPointsText = self.ax.text(0.70, 0.70, '', transform=self.ax.transAxes)
         self.nDataPointsPlottedText = self.ax.text(0.70, 0.60, '', transform=self.ax.transAxes)
-        self.lickRightText = self.ax.text(-0.15, 0.90, 'Right Lick', transform=self.ax.transAxes)
-        self.lickLeftText = self.ax.text(-0.15, 0.05, 'Left Lick', transform=self.ax.transAxes)
+        self.lickRightText = self.ax.text(1.01, 0.90, 'Right', transform=self.ax.transAxes)
+        self.lickLeftText = self.ax.text(1.01, 0.05, 'Left', transform=self.ax.transAxes)
         self.plotTimer = 0
         self.previousTimer = 0
         self.counter = 0
@@ -66,6 +67,26 @@ class StreamingWorker(QObject):
         self.isRun = False
         self.isSetup = True
 
+    def setYaxis(self, ymin, ymax):
+        self.ymax = ymax
+        self.ymin = ymin
+        self.ax.set_ylim(self.ymin - 0.1, self.ymax + 0.1)
+        self.ax.figure.canvas.draw()
+
+    def setXaxis(self, maxt):
+        self.maxt = maxt
+        self.ax.set_xlim(self.tdata[-1], self.tdata[-1] + self.maxt)
+        self.ax.figure.canvas.draw()
+
+    def set_dt(self, dt):
+        self.dt = dt
+
+    def setPlotInterval(self, value):
+        self.plotInterval = value
+        self.anim._stop()  # Since there is no setter function for interval in the FuncAnimation class definition, I need to remove the animation from the timer's callback list and destroy it, which is what _stop() does. Otherwise the animation keeps going even if the self.anim object is deleted.
+        del self.anim  # Then I delete the object.
+        self.animate()  # Then I call animate() again to re-create the FuncAnimation with the new interval.
+    
     def update(self, y):
         currentTimer = time.perf_counter()
         self.plotTimer = round(((currentTimer - self.previousTimer) * 1000), 3)     # the first reading will be erroneous

@@ -69,7 +69,7 @@ Things to do:
 
     * __X__ implement pause button
 
-    * _____ use jonathan olfactometer code
+    * _____ use the newer olfactometer code
 
     * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
 
@@ -113,6 +113,10 @@ Things to do:
     * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.
 
     * _____ make sure the olfactometer sets dummy vial and all outputs of the bpod turn off when experiment finishes or an error occurs. 
+
+    * _____ instead of randomly choosing the odor for two odor intensity experiment, make an option to always alternate between the two odors.
+
+    * _____ make the streaming plot show the all the inputs and make another plot to show all the outputs.
 
 
 Questions to research:
