@@ -278,6 +278,17 @@ class ProtocolWorker(QObject):
             self.currentResponseResult = 'No Sniff'
             self.responseResultSignal.emit(self.currentResponseResult)
 
+            if (self.experimentType == 'oneOdorIntensity'):
+                self.flowResultsCounterDict[self.currentVialNum][str(self.currentFlow)]['Total'] += 1  # Only increment the total since this is technically not a valid trial if there was no sniff.
+                self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
+            
+            elif (self.experimentType == 'twoOdorMatch'):
+                splitString = self.currentVialNum.split(', ')
+                firstVial = splitString[0]
+                secondVial = splitString[1]
+                self.flowResultsCounterDict[firstVial][secondVial]['Total'] += 1  # Only increment the total since this is technically not a valid trial if there was no sniff.
+                self.flowResultsCounterDictSignal.emit(self.flowResultsCounterDict)
+
     def groupDuplicateVials(self, odors, concs, vials):
         currentOdor = ''
         currentConc = 0

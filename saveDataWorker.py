@@ -168,21 +168,22 @@ class SaveDataWorker(QObject):
                     table.flush()
             else:
                 # This means the rows have not yet been appended to the results table after the first trial.
-                self.resultsGroup = self.h5file.create_group(where='/', name='total_results', title='Total Response Results')
-                for vialNum, flowrateDict in self.totalResultsDict.items():
-                    self.resultsTable = self.h5file.create_table(where='/total_results', name=f'vial_{vialNum}', description=OneOdorResultsData, title=f'Vial {vialNum} Total Response Results')
-                    self.resultsRow = self.resultsTable.row
-                    for flowrate, total in flowrateDict.items():
-                        self.resultsRow['flowRate'] = flowrate  # flowrate is a string here, but when saved into the table, it gets converted to UInt8Col.
-                        self.resultsRow['totalUsage'] = total['Total']
-                        self.resultsRow['totalRight'] = total['right']
-                        self.resultsRow['totalLeft'] = total['left']
-                        self.resultsRow['totalCorrect'] = total['Correct']
-                        self.resultsRow['totalWrong'] = total['Wrong']
-                        self.resultsRow['totalNoResponse'] = total['NoResponse']
-                        self.resultsRow.append()
-                    self.resultsTable.flush()
-                self.resultsRowsAppended = True
+                if self.totalResultsDict:  # Check that its not empty first.
+                    self.resultsGroup = self.h5file.create_group(where='/', name='total_results', title='Total Response Results')
+                    for vialNum, flowrateDict in self.totalResultsDict.items():
+                        self.resultsTable = self.h5file.create_table(where='/total_results', name=f'vial_{vialNum}', description=OneOdorResultsData, title=f'Vial {vialNum} Total Response Results')
+                        self.resultsRow = self.resultsTable.row
+                        for flowrate, total in flowrateDict.items():
+                            self.resultsRow['flowRate'] = flowrate  # flowrate is a string here, but when saved into the table, it gets converted to UInt8Col.
+                            self.resultsRow['totalUsage'] = total['Total']
+                            self.resultsRow['totalRight'] = total['right']
+                            self.resultsRow['totalLeft'] = total['left']
+                            self.resultsRow['totalCorrect'] = total['Correct']
+                            self.resultsRow['totalWrong'] = total['Wrong']
+                            self.resultsRow['totalNoResponse'] = total['NoResponse']
+                            self.resultsRow.append()
+                        self.resultsTable.flush()
+                    self.resultsRowsAppended = True
 
         elif self.experimentType == 'twoOdorMatch':
             if self.resultsRowsAppended:
@@ -203,21 +204,22 @@ class SaveDataWorker(QObject):
                 self.resultsTable.flush()
             else:
                 # This means the rows have not yet been appended to the results table after the first trial, so create the table now.
-                self.resultsTable = self.h5file.create_table(where='/', name=f'totalResults', description=TwoOdorResultsData, title=f'Total Response Results')
-                self.resultsRow = self.resultsTable.row
-                for firstVial in self.totalResultsDict.keys():
-                    for secondVial in self.totalResultsDict[firstVial].keys():
-                        self.resultsRow['firstVial'] = firstVial  # firstVial is a string here, but will be converted to an UInt8Col in the resultsTable.
-                        self.resultsRow['secondVial'] = secondVial  # secondVial is also a string here and will also be converted to UInt8Col.
-                        self.resultsRow['totalUsage'] = self.totalResultsDict[firstVial][secondVial]['Total']
-                        self.resultsRow['totalRight'] = self.totalResultsDict[firstVial][secondVial]['right']
-                        self.resultsRow['totalLeft'] = self.totalResultsDict[firstVial][secondVial]['left']
-                        self.resultsRow['totalCorrect'] = self.totalResultsDict[firstVial][secondVial]['Correct']
-                        self.resultsRow['totalWrong'] = self.totalResultsDict[firstVial][secondVial]['Wrong']
-                        self.resultsRow['totalNoResponse'] = self.totalResultsDict[firstVial][secondVial]['NoResponse']
-                        self.resultsRow.append()
-                    self.resultsTable.flush()
-                self.resultsRowsAppended = True
+                if self.totalResultsDict:  # Check that its not empty first.
+                    self.resultsTable = self.h5file.create_table(where='/', name=f'totalResults', description=TwoOdorResultsData, title=f'Total Response Results')
+                    self.resultsRow = self.resultsTable.row
+                    for firstVial in self.totalResultsDict.keys():
+                        for secondVial in self.totalResultsDict[firstVial].keys():
+                            self.resultsRow['firstVial'] = firstVial  # firstVial is a string here, but will be converted to an UInt8Col in the resultsTable.
+                            self.resultsRow['secondVial'] = secondVial  # secondVial is also a string here and will also be converted to UInt8Col.
+                            self.resultsRow['totalUsage'] = self.totalResultsDict[firstVial][secondVial]['Total']
+                            self.resultsRow['totalRight'] = self.totalResultsDict[firstVial][secondVial]['right']
+                            self.resultsRow['totalLeft'] = self.totalResultsDict[firstVial][secondVial]['left']
+                            self.resultsRow['totalCorrect'] = self.totalResultsDict[firstVial][secondVial]['Correct']
+                            self.resultsRow['totalWrong'] = self.totalResultsDict[firstVial][secondVial]['Wrong']
+                            self.resultsRow['totalNoResponse'] = self.totalResultsDict[firstVial][secondVial]['NoResponse']
+                            self.resultsRow.append()
+                        self.resultsTable.flush()
+                    self.resultsRowsAppended = True
         
         logging.info('results data has been written to disk')
 
