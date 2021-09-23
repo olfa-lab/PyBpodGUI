@@ -2,7 +2,7 @@
     "states": [
         {
             "stateName": "WaitForOdor",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "Tup": "WaitForSniff"
             },
@@ -13,9 +13,9 @@
         },
         {
             "stateName": "WaitForSniff",
-            "stateTimer": 10,
+            "stateTimer": 5,
             "stateChangeConditions": {
-                "AnalogIn1_1": "WaitForResponse",
+                "AnalogIn1_1": "PresentOdor",
                 "Tup": "NoSniff"
             },
             "outputActions": {
@@ -23,17 +23,28 @@
             }
         },
         {
+            "stateName": "PresentOdor",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ],
+                "Serial1": "SyncByte"
+            }
+        },
+        {
             "stateName": "WaitForResponse",
-            "stateTimer": 10,
+            "stateTimer": 5,
             "stateChangeConditions": {
                 "Port1In": "leftAction",
                 "Port3In": "rightAction",
                 "Tup": "NoResponse"
             },
             "outputActions": {
-                "Valve": [
-                    "finalValve"
-                ],
+                "Olfactometer": "set_dummy_vials",
                 "Serial1": "SyncByte"
             }
         },
@@ -87,7 +98,6 @@
                 "Tup": "exit"
             },
             "outputActions": {
-                "Olfactometer": "set_dummy_vials",
                 "Serial1": "SyncByte"
             }
         }
