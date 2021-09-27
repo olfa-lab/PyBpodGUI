@@ -782,17 +782,73 @@ class Window(QMainWindow, Ui_MainWindow):
         self.totalPercentCorrectLineEdit.setText(str(totalsDict['totalPercentCorrect']))
 
     def _updateCurrentTrialInfo(self, trialInfoDict):
-        trialInfo = trialInfoDict
         # Check if not empty.
-        if trialInfo:
-            self.trialNumLineEdit.setText(str(trialInfo['currentTrialNum']))
-            self.correctResponseLineEdit.setText(trialInfo['correctResponse'])
-            self.itiLineEdit.setText(str(trialInfo['currentITI']))
-            self.currentVialNumLineEdit.setText(trialInfo['currentVialNum'])
-            self.odorNameLineEdit.setText(trialInfo['currentOdorName'])
-            self.odorConcentrationLineEdit.setText(str(trialInfo['currentOdorConc']))
-            self.currentFlowLineEdit.setText(str(trialInfo['currentFlow']))
-            self.currentTrialProgressBar.setRange(0, trialInfo['nStates'])
+        if trialInfoDict:
+            self.trialNumLineEdit.setText(str(trialInfoDict['currentTrialNum']))
+            self.correctResponseLineEdit.setText(trialInfoDict['correctResponse'])
+            self.itiLineEdit.setText(str(trialInfoDict['currentITI']))
+            self.currentTrialProgressBar.setRange(0, trialInfoDict['nStates'])
+
+            if ('stimList' in trialInfoDict) and (len(trialInfoDict['stimList']) > 0):
+                odorA_vialString = ''
+                odorA_nameString = ''
+                odorA_concString = ''
+                odorA_flowString = ''
+                # In case there are multiple olfactometers used (for creating mixtures), create a string for the parameters of each olfa and separates them by a comma. This is just for viewing purposes on the screen. Each olfa will have its own column in the h5 file.
+                for olfaValues in trialInfoDict['stimList'][0]['olfas'].values():
+                    if odorA_vialString:  # If string is not empty, that means the first item was concantenated to it already, so put a comma before concatenating the next item. No need to check every string because they all get items concatenated every loop.
+                        odorA_vialString += ', '  + olfaValues['vialNum']
+                        odorA_nameString += ', '  + olfaValues['odor']
+                        odorA_concString += ', '  + str(olfaValues['vialconc'])
+                        odorA_flowString += ', '  + str(olfaValues['mfc_1_flow'])
+                    
+                    else:  # Concatenate without a comma because this will be the first concatenation. And this will avoid putting a comma when only one odor is used.
+                        odorA_vialString += olfaValues['vialNum']
+                        odorA_nameString += olfaValues['odor']
+                        odorA_concString += str(olfaValues['vialconc'])
+                        odorA_flowString += str(olfaValues['mfc_1_flow'])
+
+                self.odorA_vialLineEdit.setText(odorA_vialString)
+                self.odorA_nameLineEdit.setText(odorA_nameString)
+                self.odorA_concLineEdit.setText(odorA_concString)
+                self.odorA_flowLineEdit.setText(odorA_flowString)
+                
+                try:
+                    odorB_vialString = ''
+                    odorB_nameString = ''
+                    odorB_concString = ''
+                    odorB_flowString = ''
+                    # In case there are multiple olfactometers used (for creating mixtures), create a string for the parameters of each olfa and separates them by a comma. This is just for viewing purposes on the screen. Each olfa will have its own column in the h5 file.
+                    for olfaValues in trialInfoDict['stimList'][1]['olfas'].values():
+                        if odorB_vialString:  # If string is not empty, that means the first item was concantenated to it already, so put a comma before concatenating the next item. No need to check every string because they all get items concatenated every loop.
+                            odorB_vialString += ', '  + olfaValues['vialNum']
+                            odorB_nameString += ', '  + olfaValues['odor']
+                            odorB_concString += ', '  + str(olfaValues['vialconc'])
+                            odorB_flowString += ', '  + str(olfaValues['mfc_1_flow'])
+
+                        else:  # Concatenate without a comma because this will be the first concatenation. And this will avoid putting a comma when only one odor is used.
+                            odorB_vialString += olfaValues['vialNum']
+                            odorB_nameString += olfaValues['odor']
+                            odorB_concString += str(olfaValues['vialconc'])
+                            odorB_flowString += str(olfaValues['mfc_1_flow'])
+
+                    self.odorB_vialLineEdit.setText(odorB_vialString)
+                    self.odorB_nameLineEdit.setText(odorB_nameString)
+                    self.odorB_concLineEdit.setText(odorB_concString)
+                    self.odorB_flowLineEdit.setText(odorB_flowString)
+
+                except IndexError:  # That means only one odor presentation is being used for the experiment.
+                    self.odorB_vialLineEdit.setText('N/A')
+                    self.odorB_nameLineEdit.setText('N/A')
+                    self.odorB_concLineEdit.setText('N/A')
+                    self.odorB_flowLineEdit.setText('N/A')
+            
+            else:  # This means olfactometer was not used for the experiment.
+                self.odorA_vialLineEdit.setText('N/A')
+                self.odorA_nameLineEdit.setText('N/A')
+                self.odorA_concLineEdit.setText('N/A')
+                self.odorA_flowLineEdit.setText('N/A')
+            
 
     def _noResponseAbortDialog(self):
         QMessageBox.information(self, "Notice", "Session aborted due to too many consecutive no responses.")
@@ -863,9 +919,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
-        self.protocolWorker.flowResultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))
-        self.protocolWorker.flowResultsCounterDictSignal.connect(self.resultsPlot.updatePlot)
-        self.protocolWorker.flowResultsCounterDictSignal.connect(self.flowUsagePlot.updatePlot)
+        self.protocolWorker.resultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))
+        self.protocolWorker.resultsCounterDictSignal.connect(self.resultsPlot.updatePlot)
+        self.protocolWorker.resultsCounterDictSignal.connect(self.flowUsagePlot.updatePlot)
         self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
         self.protocolWorker.duplicateVialsSignal.connect(self.flowUsagePlot.receiveDuplicatesDict)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)

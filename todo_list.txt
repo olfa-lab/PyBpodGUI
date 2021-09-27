@@ -69,6 +69,12 @@ Things to do:
 
     * __X__ implement pause button
 
+    * __X__ make the streaming plotter run faster/smoother (maybe try pyqtgraph or blitting)
+
+    * __X__ make the axis and scaling (and maybe speed) of the streaming plot adjustable
+
+    * __X__ show the number of times each flow rate was used throughout the experiment, either with a plot or with QLineEdit fields.
+
     * _____ use the newer olfactometer code
 
     * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
@@ -76,10 +82,6 @@ Things to do:
     * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
     * _____ implement validators for the line edits to restrict input values
-
-    * _____ make the streaming plotter run faster/smoother (maybe try pyqtgraph or blitting)
-
-    * _____ make the axis and scaling (and maybe speed) of the streaming plot adjustable
 
     * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
 
@@ -93,8 +95,6 @@ Things to do:
             or I could check if any of the threads exist and are running at the time the user clicks the start button and if there is one then I could stop it and delete it)
 
     * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
-
-    * _____ show the number of times each flow rate and odor was used throughout the experiment, either with a plot or with QLineEdit fields.
 
     * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias
 
@@ -119,6 +119,8 @@ Things to do:
     * _____ make the streaming plot show the all the inputs and make another plot to show all the outputs.
 
     * _____ make the streaming plot able to plot more than one channel from the analog input.
+
+    * _____ make the protocolWorker check how many olfas are in the config file and use that number to randomize the parameters for each of the olfas and put them all in the stim dict.
 
 
 Questions to research:
