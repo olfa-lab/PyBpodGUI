@@ -14,7 +14,6 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 class ProtocolWorker(QObject):
-    trialStartSignal = pyqtSignal(str)  # sends correct response with it for use by inputEventThread.
     newTrialInfoSignal = pyqtSignal(dict)  # sends current trial info with it to update GUI.
     newStateSignal = pyqtSignal(str)  # sends current state with it to update GUI.
     stateNumSignal = pyqtSignal(int)  
@@ -611,7 +610,6 @@ class ProtocolWorker(QObject):
                 stateNum += 1  # increment state number for record keeping.
                 listOfTuples = []  # reset to empty list.
 
-            self.trialStartSignal.emit(self.correctResponse)
             self.currentResponseResult = '--'  # reset until bpod gets response result.
             self.responseResultSignal.emit(self.currentResponseResult)
             currentTrialInfo = self.getCurrentTrialInfoDict()

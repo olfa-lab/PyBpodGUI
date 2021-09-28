@@ -96,17 +96,15 @@ class SaveDataWorker(QObject):
         if not os.path.isdir('results'):
             os.mkdir('results')
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
-        self.licksGroup = self.h5file.create_group(where='/', name='lickTimes', title='Lick Timestamps Per Trial')
+        self.eventsGroup = self.h5file.create_group(where='/', name='event_times', title='Event Timestamps Per Trial')
         
         self.trialsTable = None  # Make it None for now because have to wait for completion of first trial to get the infoDict with data on the trial. Once that comes, make a description dictionary using the infoDict and then use that description dict to create the trialsTable.
         self.trialsTableDescDict = {}  # Description for the trialsTable (using this instead of making a class definition and subclassing tables.IsDescription).
         self.statesTable = None  # Make it None because have to wait for completion of first trial to get names of all the states. Afterwhich, make description dictionary and then table.
         self.statesTableDescDict = {}  # Description for the states table (using this instead of making a class definition and subclassing tables.IsDescription).
-        self.licksTable = None  # Same thing here, and also because I do not want to create the licksTable if no lick events even occurred.
-        self.licksTableDescDict = {  # Description for the licks table instead of making a class definition and subclassing tables.IsDescription.
-            'leftLickTimes': tables.Float32Col(dflt=np.nan, pos=0),
-            'rightLickTimes': tables.Float32Col(dflt=np.nan, pos=1)
-        }
+        self.eventsTable = None  # Same thing here, and also because I do not want to create the eventsTable if no input events even occurred.
+        self.eventsTableDescDict = {}  # Description for the events table instead of making a class definition and subclassing tables.IsDescription.
+        
         self.keepRunning = True
         self.newData = False
         self.resultsRowsAppended = False  # This will be used to append the results Totals to the resultsTable only once after the first trial and then iterate and update the rows for every successive trial onwards.
@@ -240,6 +238,87 @@ class SaveDataWorker(QObject):
         self.statesRow.append()
         self.statesTable.flush()
    
+    def saveEventsTimestamps(self):
+        # Create the eventsTableDescDict (and then the eventsTable) every trial because it is not always the same every trial. Some events happen one trial but not in another.
+        pos = 0
+        eventCounters = []
+        for event, eventList in self.infoDict['Events timestamps'].items():
+            self.eventsTableDescDict[event] = tables.Float32Col(dflt=np.nan, pos=pos)
+            eventCounters.append(len(eventList))  # Store the lengths of each eventList because will need to find the longest list below by finding the max.
+            pos += 1  
+        self.eventsTable = self.h5file.create_table(where='/event_times', name=f'trial_{self.trialNum}', description=self.eventsTableDescDict, title=f'Trial {self.trialNum} Event Timestamps')
+        self.eventsRow = self.eventsTable.row
+        
+        # Use the length of the longest list to make an index to take one element from each eventList and add it to the row. If an IndexError happens because an eventList is shorter
+        # than the longest eventList, then add np.nan to that row.
+        for i in range(max(eventCounters)):
+            for event, eventsList in self.infoDict['Events timestamps'].items():
+                try:
+                    self.eventsRow[event] = eventsList[i]
+                except IndexError:
+                    self.eventsRow[event] = np.nan
+            self.eventsRow.append()
+        self.eventsTable.flush()
+    
+    def saveTrialData(self):
+        # If its None, that means the first trial's data just came, so make the description dict and then create the trialsTable using that description dict. This only happens once.
+        if self.trialsTable is None:
+            pos = 0
+            self.trialsTableDescDict['trialNum'] = tables.UInt16Col(pos=pos)
+            pos += 1
+            self.trialsTableDescDict['correctResponse'] = tables.StringCol(8, pos=pos)
+            pos += 1
+            self.trialsTableDescDict['responseResult'] = tables.StringCol(16, pos=pos)
+            pos += 1
+            self.trialsTableDescDict['itiDuration'] = tables.UInt8Col(pos=pos)
+            pos += 1
+            self.trialsTableDescDict['bpodStartTime'] = tables.Float32Col(pos=pos)
+            pos += 1
+            self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
+            pos += 1
+            self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos)
+            pos += 1
+            self.trialsTableDescDict['totalTrialTime'] = tables.Float32Col(pos=pos)
+            pos += 1
+
+            # Loop through the olfactometers used to save each one's parameters for each stimulus in their own column.
+            stimIndex = 0
+            for stimDict in self.infoDict['stimList']:
+                for olfaName in stimDict['olfas'].keys():
+                    self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_vial'] = tables.UInt8Col(pos=pos)
+                    pos += 1
+                    self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_name'] = tables.StringCol(32, pos=pos)  # Size of strings added to the column does not need to exactly match the size given during initialization.
+                    pos += 1
+                    self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_conc'] = tables.Float32Col(pos=pos)
+                    pos += 1
+                    self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
+                    pos += 1
+                stimIndex += 1
+            
+            self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
+            self.trialRow = self.trialsTable.row
+
+        # Fill in the column values for the row now that the trialsTable has been created.
+        self.trialRow['trialNum'] = self.infoDict['currentTrialNum']
+        self.trialRow['correctResponse'] = self.infoDict['correctResponse']
+        self.trialRow['responseResult'] = self.infoDict['responseResult']
+        self.trialRow['itiDuration'] = self.infoDict['currentITI']
+        self.trialRow['bpodStartTime'] = self.infoDict['Bpod start timestamp']
+        self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
+        self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
+        self.trialRow['totalTrialTime'] = self.trialRow['trialEndTime'] - self.trialRow['trialStartTime']
+        stimIndex = 0
+        for stimDict in self.infoDict['stimList']:  # Loop again to save the data to the columns.
+            for olfaName, olfaValues in stimDict['olfas'].items():
+                self.trialRow[f'odor{stimIndex}_{olfaName}_vial'] = int(olfaValues['vialNum'])
+                self.trialRow[f'odor{stimIndex}_{olfaName}_name'] = olfaValues['odor']
+                self.trialRow[f'odor{stimIndex}_{olfaName}_conc'] = olfaValues['vialconc']
+                self.trialRow[f'odor{stimIndex}_{olfaName}_flow'] = olfaValues['mfc_1_flow']
+            stimIndex += 1
+        
+        self.trialRow.append()
+        self.trialsTable.flush()
+    
     def run(self):
         # self.t_start = time.perf_counter()
         while self.keepRunning:
@@ -247,109 +326,8 @@ class SaveDataWorker(QObject):
                 self.newData = False  # reset
                 logging.info("attempting to save data")
 
-                # If its None, that means the first trial's data just came, so make the description dict and then create the trialsTable using that description dict. This only happens once.
-                if self.trialsTable is None:
-                    pos = 0
-                    self.trialsTableDescDict['trialNum'] = tables.UInt16Col(pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['correctResponse'] = tables.StringCol(8, pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['responseResult'] = tables.StringCol(16, pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['leftLicksCount'] = tables.UInt8Col(pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['rightLicksCount'] = tables.UInt8Col(pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['itiDuration'] = tables.UInt8Col(pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['bpodStartTime'] = tables.Float32Col(pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos)
-                    pos += 1
-                    self.trialsTableDescDict['totalTrialTime'] = tables.Float32Col(pos=pos)
-                    pos += 1
-                    stimIndex = 0
-                    for stimDict in self.infoDict['stimList']:  # Loop through the olfactometers used to save each one's parameters for each stimulus in their own column.
-                        for olfaName in stimDict['olfas'].keys():
-                            self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_vial'] = tables.UInt8Col(pos=pos)
-                            pos += 1
-                            self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_name'] = tables.StringCol(32, pos=pos)  # Size of strings added to the column does not need to exactly match the size given during initialization.
-                            pos += 1
-                            self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_conc'] = tables.Float32Col(pos=pos)
-                            pos += 1
-                            self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
-                            pos += 1
-                        stimIndex += 1
-                    
-                    self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
-                    self.trialRow = self.trialsTable.row
-
-                # Fill in the column values for the row now that the trialsTable has been created.
-                self.trialRow['trialNum'] = self.infoDict['currentTrialNum']
-                self.trialRow['correctResponse'] = self.infoDict['correctResponse']
-                self.trialRow['responseResult'] = self.infoDict['responseResult']
-                self.trialRow['itiDuration'] = self.infoDict['currentITI']
-                self.trialRow['bpodStartTime'] = self.infoDict['Bpod start timestamp']
-                self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
-                self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
-                self.trialRow['totalTrialTime'] = self.trialRow['trialEndTime'] - self.trialRow['trialStartTime']
-                stimIndex = 0
-                for stimDict in self.infoDict['stimList']:  # Loop again to save the data to the columns.
-                    for olfaName, olfaValues in stimDict['olfas'].items():
-                        self.trialRow[f'odor{stimIndex}_{olfaName}_vial'] = int(olfaValues['vialNum'])
-                        self.trialRow[f'odor{stimIndex}_{olfaName}_name'] = olfaValues['odor']
-                        self.trialRow[f'odor{stimIndex}_{olfaName}_conc'] = olfaValues['vialconc']
-                        self.trialRow[f'odor{stimIndex}_{olfaName}_flow'] = olfaValues['mfc_1_flow']
-                    stimIndex += 1
-
-                self.licksTable = self.h5file.create_table(where='/lickTimes', name=f'trial_{self.trialNum}', description=self.licksTableDescDict, title=f'Trial {self.trialNum} Lick Timestamps')
-                self.licksRow = self.licksTable.row
-                
-                if 'Port1In' in self.infoDict['Events timestamps']:
-                    leftLicksList = self.infoDict['Events timestamps']['Port1In']
-                    leftLicksCount = len(leftLicksList)
-                    self.trialRow['leftLicksCount'] = leftLicksCount
-
-                    if 'Port3In' in self.infoDict['Events timestamps']:
-                        rightLicksList = self.infoDict['Events timestamps']['Port3In']
-                        rightLicksCount = len(rightLicksList)
-                        self.trialRow['rightLicksCount'] = rightLicksCount
-
-                        # Save both left and right lick times to each row if both exist, and avoid index out of range errors.
-                        if (rightLicksCount >= leftLicksCount):
-                            for i in range(rightLicksCount):
-                                self.licksRow['rightLickTimes'] = rightLicksList[i]
-                                if (i < leftLicksCount):
-                                    self.licksRow['leftLickTimes'] = leftLicksList[i]
-                                
-                                self.licksRow.append()
-                        else:
-                            for i in range(leftLicksCount):
-                                self.licksRow['leftLickTimes'] = leftLicksList[i]
-                                if (i < rightLicksCount):
-                                    self.licksRow['rightLickTimes'] = rightLicksList[i]
-                                
-                                self.licksRow.append()
-                    else:   
-                        # Only left licks exist. 
-                        self.trialRow['leftLicksCount'] = len(self.infoDict['Events timestamps']['Port1In'])
-                        for t in self.infoDict['Events timestamps']['Port1In']:
-                            self.licksRow['leftLickTimes'] = t
-                            self.licksRow.append()
-                    self.licksTable.flush()
-
-                # Only right licks exist.
-                elif 'Port3In' in self.infoDict['Events timestamps']:
-                    self.trialRow['rightLicksCount'] = len(self.infoDict['Events timestamps']['Port3In'])
-                    for t in self.infoDict['Events timestamps']['Port3In']:
-                        self.licksRow['rightLickTimes'] = t
-                        self.licksRow.append()
-                    self.licksTable.flush()
-                
-                self.trialRow.append()
-                self.trialsTable.flush()
+                self.saveTrialData()
+                self.saveEventsTimestamps()
                 self.saveStatesTimestamps()
                 self.saveTotalResults()
                 self.trialNum += 1  # increment trial number.
@@ -424,8 +402,6 @@ class SaveDataWorker(QObject):
         if self.adc:
             self.voltTable.flush()
 
-        self.trialsTable.flush()
-        self.resultsTable.flush()
         logging.info("session data has been written to disk")
         self.h5file.close()
         logging.info("h5 file closed")

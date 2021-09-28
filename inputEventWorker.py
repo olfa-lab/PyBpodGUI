@@ -14,17 +14,21 @@ class InputEventWorker(QObject):
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.myBpod = bpodObject
         self.keepRunning = True
-        self.correctResponse = None
         self.currentPort1In = 0
+        self.currentPort2In = 0
         self.currentPort3In = 0
+        self.currentPort4In = 0
         self.currentPort1Out = 0
+        self.currentPort2Out = 0
         self.currentPort3Out = 0
+        self.currentPort4Out = 0
+        self.inputPorts = [0, 0, 0, 0]
 
     # Since it is not possible for the inputEventThread to call this function when getting
     # a signal (because the thread is in an infinite loop), how about trying to modify the
     # value of 'self.newTrail' directly (instead of via a setter function like this)?
-    def newTrialSlot(self, correctResponse):
-        self.correctResponse = correctResponse
+    # def newTrialSlot(self, correctResponse):
+    #     pass
 
     def run(self):
         logging.info("InputEventThread is running")
@@ -37,59 +41,62 @@ class InputEventWorker(QObject):
             except AttributeError:
                 eventsDict = {}  # This means the trial has not started yet.
 
-            # Left lick sensor touched
+            if not eventsDict:  # If it is empty.
+                self.inputPorts = [0, 0, 0, 0]  # reset valuse to zero at the start of the next trial so that if a
+                                                # sensor was triggered but the trial ended before the sensor was
+                                                # released, the streaming plot will continue to show a continuous
+                                                # line for the input event.
+            
             if 'Port1In' in eventsDict:
                 newPort1In = eventsDict['Port1In'][-1]  # latest addition to the list of timestamps.
                 if (self.currentPort1In != newPort1In):  # Compare timestamps to check if its actually a new event.
-                    self.currentPort1In = newPort1In
-                    if (self.correctResponse == 'left'):
-                        self.inputEventSignal.emit(['L', 1, 1])  # left, enabled, correct
-                    elif (self.correctResponse == 'right'):
-                        self.inputEventSignal.emit(['L', 1, 0])  # left, enabled, wrong
-                    elif (self.correctResponse == ''):
-                        self.inputEventSignal.emit(['L', 1, 1])  # left, enabled, correct (used when the protocol does not make use of self.correctResponse)
+                    self.currentPort1In = newPort1In  # If so, record the newest event.
+                    self.inputPorts[0] = 1  # Set port 1's element to 1 to indicate the input sensor was triggered.
 
-            # Right lick sensor touched
+            if 'Port2In' in eventsDict:
+                newPort2In = eventsDict['Port2In'][-1]  # latest addition to the list of timestamps.
+                if (self.currentPort2In != newPort2In):  # Compare timestamps to check if its actually a new event.
+                    self.currentPort2In = newPort2In  # If so, record the newest event.
+                    self.inputPorts[1] = 1  # Set port 2's element to 1 to indicate the input sensor was triggered.
+
             if 'Port3In' in eventsDict:
                 newPort3In = eventsDict['Port3In'][-1]  # latest addition to the list of timestamps.
                 if (self.currentPort3In != newPort3In):  # Compare timestamps to check if its actually a new event.
-                    self.currentPort3In = newPort3In
-                    if (self.correctResponse == 'right'):
-                        self.inputEventSignal.emit(['R', 1, 1])  # right, enabled, correct
-                    elif (self.correctResponse == 'left'):
-                        self.inputEventSignal.emit(['R', 1, 0])  # right, enabled, wrong
-                    elif (self.correctResponse == ''):
-                        self.inputEventSignal.emit(['R', 1, 1])  # right, enabled, correct (used when the protocol does not make use of self.correctResponse)
+                    self.currentPort3In = newPort3In  # If so, record the newest event.
+                    self.inputPorts[2] = 1  # Set port 3's element to 1 to indicate the input sensor was triggered.
+            
+            if 'Port4In' in eventsDict:
+                newPort4In = eventsDict['Port4In'][-1]  # latest addition to the list of timestamps.
+                if (self.currentPort4In != newPort4In):  # Compare timestamps to check if its actually a new event.
+                    self.currentPort4In = newPort4In  # If so, record the newest event.
+                    self.inputPorts[3] = 1  # Set port 4's element to 1 to indicate the input sensor was triggered.
 
-            # Left lick sensor released
             if 'Port1Out' in eventsDict:
                 newPort1Out = eventsDict['Port1Out'][-1]  # latest addition to the list of timestamps.
                 if (self.currentPort1Out != newPort1Out):  # Compare timestamps to check if its actually a new event.
-                    self.currentPort1Out = newPort1Out
-                    if (self.correctResponse == 'left'):
-                        self.inputEventSignal.emit(['L', 0, 1])  # left, disabled, correct
-                    elif (self.correctResponse == 'right'):
-                        self.inputEventSignal.emit(['L', 0, 0])  # left, disabled, wrong
-                    elif (self.correctResponse == ''):
-                        self.inputEventSignal.emit(['L', 0, 1])  # left, disabled, correct (used when the protocol does not make use of self.correctResponse)
+                    self.currentPort1Out = newPort1Out  # If so, record the newest event.
+                    self.inputPorts[0] = 0  # Set port 1's element to 0 to indicate the input sensor was released.
+                    
+            if 'Port2Out' in eventsDict:
+                newPort2Out = eventsDict['Port2Out'][-1]  # latest addition to the list of timestamps.
+                if (self.currentPort2Out != newPort2Out):  # Compare timestamps to check if its actually a new event.
+                    self.currentPort2Out = newPort2Out  # If so, record the newest event.
+                    self.inputPorts[1] = 0  # Set port 2's element to 0 to indicate the input sensor was released.
             
-            # Right lick sensor released
             if 'Port3Out' in eventsDict:
                 newPort3Out = eventsDict['Port3Out'][-1]  # latest addition to the list of timestamps.
                 if (self.currentPort3Out != newPort3Out):  # Compare timestamps to check if its actually a new event.
-                    self.currentPort3Out = newPort3Out
-                    if (self.correctResponse == 'right'):
-                        self.inputEventSignal.emit(['R', 0, 1])  # right, disabled, correct
-                    elif (self.correctResponse == 'left'):
-                        self.inputEventSignal.emit(['R', 0, 0])  # right, disabled, wrong
-                    elif (self.correctResponse == ''):
-                        self.inputEventSignal.emit(['R', 0, 1])  # right, disabled, correct (used when the protocol does not make use of self.correctResponse)
-
-            if ('Port1In' not in eventsDict) and ('Port1Out' not in eventsDict) and ('Port3In' not in eventsDict) and ('Port3Out' not in eventsDict):
-                # Since eventsDict does not contain any of the above, disable the lick lines in case they were enabled from the previous trial and the next trial started before the lick sensor was released.
-                # In which case they would never get disabled and would be plotted as a continuous line until the lick sensor is touched and then released.
-                self.inputEventSignal.emit([])  # Empty list will be processed as the instruction to disable the left and right lick lines.
+                    self.currentPort3Out = newPort3Out  # If so, record the newest event.
+                    self.inputPorts[2] = 0  # Set port 3's element to 0 to indicate the input sensor was released.
+                    
+            if 'Port4Out' in eventsDict:
+                newPort4Out = eventsDict['Port4Out'][-1]  # latest addition to the list of timestamps.
+                if (self.currentPort4Out != newPort4Out):  # Compare timestamps to check if its actually a new event.
+                    self.currentPort4Out = newPort4Out  # If so, record the newest event.
+                    self.inputPorts[3] = 0  # Set port 4's element to 0 to indicate the input sensor was released.
         
+            self.inputEventSignal.emit(self.inputPorts)
+            
             QTimer.singleShot(10, self.checkForNewInputEvent)  # Call itself every 10 ms to check again.
         
         else:

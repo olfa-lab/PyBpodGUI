@@ -31,14 +31,23 @@ class StreamingWorker(QObject):
         self.plotInterval = plotInterval  # milliseconds
         self.tdata = [0]
         self.ydata = [0]
-        self.lickRightData = [np.nan]
-        self.lickLeftData = [np.nan]
+        self.port_1_Data = [np.nan]
+        self.port_2_Data = [np.nan]
+        self.port_3_Data = [np.nan]
+        self.port_4_Data = [np.nan]
+
         self.line = Line2D(self.tdata, self.ydata, animated=True)
-        self.lickRightLine = Line2D(self.tdata, self.lickRightData, color='b', marker='>', animated=True)
-        self.lickLeftLine = Line2D(self.tdata, self.lickLeftData, color='b', marker='<', animated=True)
+        self.port_1_Line = Line2D(self.tdata, self.port_1_Data, color='b', marker='.', animated=True)
+        self.port_2_Line = Line2D(self.tdata, self.port_2_Data, color='b', marker='.', animated=True)
+        self.port_3_Line = Line2D(self.tdata, self.port_3_Data, color='b', marker='.', animated=True)
+        self.port_4_Line = Line2D(self.tdata, self.port_4_Data, color='b', marker='.', animated=True)
+        
         self.ax.add_line(self.line)
-        self.ax.add_line(self.lickRightLine)
-        self.ax.add_line(self.lickLeftLine)
+        self.ax.add_line(self.port_1_Line)
+        self.ax.add_line(self.port_2_Line)
+        self.ax.add_line(self.port_3_Line)
+        self.ax.add_line(self.port_4_Line)
+        
         self.ax.set_ylim(self.ymin - 0.1, self.ymax + 0.1)
         self.ax.set_xlim(0, self.maxt)
         self.span = self.ax.axvspan(0, 0, color='blue', alpha=0.2)
@@ -55,13 +64,17 @@ class StreamingWorker(QObject):
         self.elapsed = self.ax.text(0.70, 0.80, '', transform=self.ax.transAxes)
         self.nTotalDataPointsText = self.ax.text(0.70, 0.70, '', transform=self.ax.transAxes)
         self.nDataPointsPlottedText = self.ax.text(0.70, 0.60, '', transform=self.ax.transAxes)
-        self.lickRightText = self.ax.text(1.01, 0.90, 'Right', transform=self.ax.transAxes)
-        self.lickLeftText = self.ax.text(1.01, 0.05, 'Left', transform=self.ax.transAxes)
+        self.port_1_Text = self.ax.text(1.01, 0.91, 'Port_1', transform=self.ax.transAxes)
+        self.port_2_Text = self.ax.text(1.01, 0.60, 'Port_2', transform=self.ax.transAxes)
+        self.port_3_Text = self.ax.text(1.01, 0.30, 'Port_3', transform=self.ax.transAxes)
+        self.port_4_Text = self.ax.text(1.01, 0.01, 'Port_4', transform=self.ax.transAxes)
+        
         self.plotTimer = 0
         self.previousTimer = 0
         self.counter = 0
-        self.lickRight = np.nan
-        self.lickLeft = np.nan
+        self.inputPorts = [np.nan] * 4
+        self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
+        
         self.activateResponseWindow = False
         self.paused = False
         self.isRun = False
@@ -71,6 +84,7 @@ class StreamingWorker(QObject):
         self.ymax = ymax
         self.ymin = ymin
         self.ax.set_ylim(self.ymin - 0.1, self.ymax + 0.1)
+        self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
         self.ax.figure.canvas.draw()
 
     def setXaxis(self, maxt):
@@ -104,8 +118,11 @@ class StreamingWorker(QObject):
         if lastt > self.tdata[0] + self.maxt:  # reset the arrays
             self.tdata = [self.tdata[-1]]
             self.ydata = [self.ydata[-1]]
-            self.lickRightData = [self.lickRightData[-1]]
-            self.lickLeftData = [self.lickLeftData[-1]]
+            self.port_1_Data = [self.port_1_Data[-1]]
+            self.port_2_Data = [self.port_2_Data[-1]]
+            self.port_3_Data = [self.port_3_Data[-1]]
+            self.port_4_Data = [self.port_4_Data[-1]]
+            
             self.ax.set_xlim(self.tdata[0], self.tdata[0] + self.maxt)
             self.ax.figure.canvas.draw()
 
@@ -122,13 +139,18 @@ class StreamingWorker(QObject):
             t = self.tdata[-1] + self.dt
             self.tdata.append(t)
             self.ydata.append(y[i])
-            self.lickRightData.append(self.lickRight)
-            self.lickLeftData.append(self.lickLeft)
+            self.port_1_Data.append(self.inputPorts[0])
+            self.port_2_Data.append(self.inputPorts[1])
+            self.port_3_Data.append(self.inputPorts[2])
+            self.port_4_Data.append(self.inputPorts[3])
             self.nDataPointsPlotted += 1
 
         self.line.set_data(self.tdata, self.ydata)
-        self.lickRightLine.set_data(self.tdata, self.lickRightData)
-        self.lickLeftLine.set_data(self.tdata, self.lickLeftData)
+        self.port_1_Line.set_data(self.tdata, self.port_1_Data)
+        self.port_2_Line.set_data(self.tdata, self.port_2_Data)
+        self.port_3_Line.set_data(self.tdata, self.port_3_Data)
+        self.port_4_Line.set_data(self.tdata, self.port_4_Data)
+        
 
         if self.activateResponseWindow:
             self.spanEnd = self.tdata[-1]  # Make the responseWindow grow with sniff signal.
@@ -138,7 +160,7 @@ class StreamingWorker(QObject):
             # This else statement keeps the responseWindow showing until the canvas gets redrawn because I need to do something with self.span in order to be able to return it.
             self.span.set_xy([[self.spanStart, self.ymin], [self.spanStart, self.ymax], [self.spanEnd, self.ymax], [self.spanEnd, self.ymin], [self.spanStart, self.ymin]])
 
-        return self.line, self.lickRightLine, self.lickLeftLine, self.span,
+        return self.line, self.port_1_Line, self.port_2_Line, self.port_3_Line, self.port_4_Line, self.span,
 
     def getData(self, data):
         self.analogData = data
@@ -193,33 +215,12 @@ class StreamingWorker(QObject):
                 QTimer.singleShot(100, lambda: self.span.set_color(self.spanColor))
                 self.activateResponseWindow = False
 
-    def setInputEvent(self, params):
-        if (len(params) == 0):
-            # Stop plotting the licks.
-            self.lickRight = np.nan
-            self.lickLeft = np.nan
-        else:
-            direction = params[0]
-            enable = params[1]
-            correct = params[2]
-            if (direction == 'R'):
-                if (enable == 1):
-                    self.lickRight = self.ymax  # Y-axis max range is 6.0 so make right licks on top half of plot.
-                    if (correct == 1):
-                        self.spanColor = 'g'
-                    elif (correct == 0):
-                        self.spanColor = 'r'
-                elif (enable == 0):
-                    self.lickRight = np.nan
-            elif (direction == 'L'):
-                if (enable == 1):
-                    self.lickLeft = self.ymin  # Y-axis min range is -6.0 so make left licks on bottom half of plot.
-                    if (correct == 1):
-                        self.spanColor = 'g'
-                    elif (correct == 0):
-                        self.spanColor = 'r'
-                elif (enable == 0):
-                    self.lickLeft = np.nan
+    def setInputEvent(self, inputs):
+        for i in range(len(inputs)):
+            if inputs[i]:
+                self.inputPorts[i] = self.triggeredValues[i]
+            else:
+                self.inputPorts[i] = np.nan
 
     def pauseAnimation(self):
         if not self.paused:
@@ -247,8 +248,11 @@ class StreamingWorker(QObject):
     def resetPlot(self):
         self.tdata = [0]
         self.ydata = [0]
-        self.lickRightData = [np.nan]
-        self.lickLeftData = [np.nan]
+        self.port_1_Data = [np.nan]
+        self.port_2_Data = [np.nan]
+        self.port_3_Data = [np.nan]
+        self.port_4_Data = [np.nan]
+        
         self.ax.set_xlim(0, self.maxt)
 
         self.timeText.set_text('')
@@ -262,8 +266,8 @@ class StreamingWorker(QObject):
         self.plotTimer = 0
         self.previousTimer = 0
         self.counter = 0
-        self.lickRight = np.nan
-        self.lickLeft = np.nan
+        self.inputPorts = [np.nan] * 4
+        
         self.spanStart = 0
         self.spanEnd = 0
         self.activateResponseWindow = False

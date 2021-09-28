@@ -913,7 +913,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.finished.connect(self._endTask)  # This serves to stop the other threads when the protocol thread completes all trials.
         self.protocolWorker.finished.connect(self.protocolWorker.deleteLater)
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
-        self.protocolWorker.trialStartSignal.connect(self.inputEventWorker.newTrialSlot)
         self.protocolWorker.newStateSignal.connect(self._updateCurrentState)
         self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
         self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
