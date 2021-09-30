@@ -23,7 +23,7 @@ class ResultsPlotWorker(QObject):
         self.graphWidget.addLegend()
         self.xAxisReady = False
         self.groupedVials = {}
-        self.resultsDict = {}
+        self.resultsList = []
         self.plottingMode = 0
 
     def getWidget(self):
@@ -34,14 +34,17 @@ class ResultsPlotWorker(QObject):
 
     def setPlottingMode(self, value):
         self.plottingMode = value
-        if self.resultsDict:  # self.resultsDict will only hold the dict after the first trial.
-            self.updatePlot(self.resultsDict)
+        if self.resultsList:  # self.resultsList will only hold the dict(s) after the first trial.
+            self.updatePlot(self.resultsList)
 
-    def updatePlot(self, resultsDict):
-        self.resultsDict = resultsDict
+    def updatePlot(self, resultsList):
+        # This function currently only plots vials of the first olfactometer (regardless of the plottingMode).
+
+        self.resultsList = resultsList
         if not self.xAxisReady:
-            flowrates = list(resultsDict.values())  # Get a list of each vial's sub dictionary whose keys are flowrates, instead of doing resultsDict['vial_5'] since vial number '5' might not always exist.
+            flowrates = list(resultsList[0].values())  # Get a list of each vial's sub dictionary whose keys are flowrates, instead of doing resultsList[0]['vial_5'] since vial number '5' might not always exist.
             ticks = list(flowrates[0].keys())  #  flowrates is a list of dictionaries that contain the flowrates, but the values are all the same because they are the same set of flowrates. So just take the first element in that list and then make a list of the flowrates.
+            ticks.sort(key=int)
             xdict = dict(enumerate(ticks))
             self.xAxis.setTicks([xdict.items()])
             self.graphWidget.setXRange(-1, len(ticks), padding=0)
@@ -54,7 +57,7 @@ class ResultsPlotWorker(QObject):
             # This combines all vials into one line.
             numLeft = []  # list to sum up the left response results from duplicate vials for each flowrate. Will have length equal to the number of flowrates.
             numResponses = []  # list to sum up the total response results (correct + wrong) from duplicate vials for each flowrate. Will have the same length as numLeft.
-            for vial, flowrateDict in resultsDict.items():
+            for vial, flowrateDict in resultsList[0].items():
                 index = 0
                 for flow, totals in flowrateDict.items():
                     if (len(numLeft) < len(flowrateDict)):  # Append each flowrate's total left responses and total responses to their lists until the length of the numLeft list equals the number of flowrates. The numLeft and numResponses lists have the same lengths.
@@ -88,8 +91,8 @@ class ResultsPlotWorker(QObject):
                     numResponses = []  # list to sum up the total response results (correct + wrong) from duplicate vials for each flowrate. Will have the same length as numLeft.
                     for vial in vialsList:
                         index = 0
-                        for flow, totals in resultsDict[vial].items():
-                            if (len(numLeft) < len(resultsDict[vial])):  # Append each flowrate's total left responses and total responses to their lists until the length of the numLeft list equals the number of flowrates. The numLeft and numResponses lists have the same lengths.
+                        for flow, totals in resultsList[0][vial].items():
+                            if (len(numLeft) < len(resultsList[0][vial])):  # Append each flowrate's total left responses and total responses to their lists until the length of the numLeft list equals the number of flowrates. The numLeft and numResponses lists have the same lengths.
                                 numLeft.append(totals['left'])
                                 numResponses.append(totals['Correct'] + totals['Wrong'])  # I only want the denominator to be the total number of actual responses, not including the NoResponses.
                                 index += 1
@@ -115,7 +118,7 @@ class ResultsPlotWorker(QObject):
         
         elif (self.plottingMode == 2):
             # This plots a line for each vial's results.
-            for vialNum, flowrateDict in resultsDict.items():
+            for vialNum, flowrateDict in resultsList[0].items():
                 xValues = []
                 yValues = []
                 index = 0

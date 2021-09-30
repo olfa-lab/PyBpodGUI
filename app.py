@@ -918,9 +918,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
-        self.protocolWorker.resultsCounterDictSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsDict(x))
-        self.protocolWorker.resultsCounterDictSignal.connect(self.resultsPlot.updatePlot)
-        self.protocolWorker.resultsCounterDictSignal.connect(self.flowUsagePlot.updatePlot)
+        self.protocolWorker.resultsCounterListSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsList(x))
+        self.protocolWorker.resultsCounterListSignal.connect(self.resultsPlot.updatePlot)
+        self.protocolWorker.resultsCounterListSignal.connect(self.flowUsagePlot.updatePlot)
         self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
         self.protocolWorker.duplicateVialsSignal.connect(self.flowUsagePlot.receiveDuplicatesDict)
         self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)

@@ -19,7 +19,7 @@ class ProtocolWorker(QObject):
     stateNumSignal = pyqtSignal(int)  
     responseResultSignal = pyqtSignal(str)  # sends the response result of the current trial with it to update the GUI.
     totalsDictSignal = pyqtSignal(dict)  # sends the session totals with it to update the GUI.
-    resultsCounterDictSignal = pyqtSignal(dict) # sends the results for each flow rate with it to update the GUI's results plot.
+    resultsCounterListSignal = pyqtSignal(list) # sends the results for each flow rate with it to update the GUI's results plot.
     saveTrialDataDictSignal = pyqtSignal(dict)  # 'dict' is interpreted as 'QVariantMap' by PyQt5 and thus can only have strings as keys. Use 'object' instead if you want to use non-strings as keys. 
     saveTotalResultsSignal = pyqtSignal(dict)
     noResponseAbortSignal = pyqtSignal()
@@ -65,9 +65,12 @@ class ProtocolWorker(QObject):
         self.odors = []
         self.concs = []
         self.flows = []
-        self.resultsCounterDict = {}
+        self.resultsCounterList = []
+        self.vialIndex = 0
+        self.flowIndex = 0
         self.stimIndex = 0
         self.stimList = []
+        self.nOlfas = 0
 
     # @pyqtSlot()  # Even with this decorator, I still need to use lambda when connecting a signal to this function.
     def setLeftWaterDuration(self, duration):
@@ -188,20 +191,22 @@ class ProtocolWorker(QObject):
             self.consecutiveNoResponses = 0  # Reset counter to 0 because there was a response.
 
             if (self.experimentType == 'oneOdorIntensity'):
-                vialNum = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                flow = self.stimList[0]['olfas']['olfa_0']['mfc_1_flow']
-                self.resultsCounterDict[vialNum][str(flow)][self.correctResponse] += 1
-                self.resultsCounterDict[vialNum][str(flow)]['Correct'] += 1
-                self.resultsCounterDict[vialNum][str(flow)]['Total'] += 1
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
+                    self.resultsCounterList[i][vialNum][str(flow)][self.correctResponse] += 1
+                    self.resultsCounterList[i][vialNum][str(flow)]['Correct'] += 1
+                    self.resultsCounterList[i][vialNum][str(flow)]['Total'] += 1
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
             
             elif (self.experimentType == 'twoOdorMatch'):
-                firstVial = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                secondVial = self.stimList[1]['olfas']['olfa_0']['vialNum']
-                self.resultsCounterDict[firstVial][secondVial][self.correctResponse] += 1
-                self.resultsCounterDict[firstVial][secondVial]['Correct'] += 1
-                self.resultsCounterDict[firstVial][secondVial]['Total'] += 1
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    firstVial = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    secondVial = self.stimList[1]['olfas'][f'olfa_{i}']['vialNum']
+                    self.resultsCounterList[i][firstVial][secondVial][self.correctResponse] += 1
+                    self.resultsCounterList[i][firstVial][secondVial]['Correct'] += 1
+                    self.resultsCounterList[i][firstVial][secondVial]['Total'] += 1
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
             
             self.totalCorrect += 1
             sessionTotals = self.getTotalsDict()
@@ -215,26 +220,28 @@ class ProtocolWorker(QObject):
             self.consecutiveNoResponses = 0  # Reset counter to 0 because there was a response.
 
             if (self.experimentType == 'oneOdorIntensity'):
-                vialNum = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                flow = self.stimList[0]['olfas']['olfa_0']['mfc_1_flow']
-                if self.correctResponse == 'left':
-                    self.resultsCounterDict[vialNum][str(flow)]['right'] += 1  # increment the opposite direction because the response was wrong.
-                elif self.correctResponse == 'right':
-                    self.resultsCounterDict[vialNum][str(flow)]['left'] += 1  # increment the opposite direction because the response was wrong.
-                self.resultsCounterDict[vialNum][str(flow)]['Wrong'] += 1
-                self.resultsCounterDict[vialNum][str(flow)]['Total'] += 1
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
+                    if self.correctResponse == 'left':
+                        self.resultsCounterList[i][vialNum][str(flow)]['right'] += 1  # increment the opposite direction because the response was wrong.
+                    elif self.correctResponse == 'right':
+                        self.resultsCounterList[i][vialNum][str(flow)]['left'] += 1  # increment the opposite direction because the response was wrong.
+                    self.resultsCounterList[i][vialNum][str(flow)]['Wrong'] += 1
+                    self.resultsCounterList[i][vialNum][str(flow)]['Total'] += 1
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
             
             elif (self.experimentType == 'twoOdorMatch'):
-                firstVial = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                secondVial = self.stimList[1]['olfas']['olfa_0']['vialNum']
-                if self.correctResponse == 'left':
-                    self.resultsCounterDict[firstVial][secondVial]['right'] += 1  # increment the opposite direction because the response was wrong.
-                elif self.correctResponse == 'right':
-                    self.resultsCounterDict[firstVial][secondVial]['left'] += 1  # increment the opposite direction because the response was wrong.
-                self.resultsCounterDict[firstVial][secondVial]['Wrong'] += 1
-                self.resultsCounterDict[firstVial][secondVial]['Total'] += 1
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    firstVial = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    secondVial = self.stimList[1]['olfas'][f'olfa_{i}']['vialNum']
+                    if self.correctResponse == 'left':
+                        self.resultsCounterList[i][firstVial][secondVial]['right'] += 1  # increment the opposite direction because the response was wrong.
+                    elif self.correctResponse == 'right':
+                        self.resultsCounterList[i][firstVial][secondVial]['left'] += 1  # increment the opposite direction because the response was wrong.
+                    self.resultsCounterList[i][firstVial][secondVial]['Wrong'] += 1
+                    self.resultsCounterList[i][firstVial][secondVial]['Total'] += 1
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
             
             self.totalWrong += 1
             sessionTotals = self.getTotalsDict()
@@ -251,18 +258,20 @@ class ProtocolWorker(QObject):
                 self.consecutiveNoResponses = 1  # Reset counter to 1 because it should start counting now.
 
             if (self.experimentType == 'oneOdorIntensity'):
-                vialNum = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                flow = self.stimList[0]['olfas']['olfa_0']['mfc_1_flow']
-                self.resultsCounterDict[vialNum][str(flow)]['NoResponse'] += 1
-                self.resultsCounterDict[vialNum][str(flow)]['Total'] += 1
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
+                    self.resultsCounterList[i][vialNum][str(flow)]['NoResponse'] += 1
+                    self.resultsCounterList[i][vialNum][str(flow)]['Total'] += 1
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
 
             elif (self.experimentType == 'twoOdorMatch'):
-                firstVial = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                secondVial = self.stimList[1]['olfas']['olfa_0']['vialNum']
-                self.resultsCounterDict[firstVial][secondVial]['NoResponse'] += 1
-                self.resultsCounterDict[firstVial][secondVial]['Total'] += 1
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    firstVial = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    secondVial = self.stimList[1]['olfas'][f'olfa_{i}']['vialNum']
+                    self.resultsCounterList[i][firstVial][secondVial]['NoResponse'] += 1
+                    self.resultsCounterList[i][firstVial][secondVial]['Total'] += 1
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
             
             self.totalNoResponses += 1
             sessionTotals = self.getTotalsDict()
@@ -273,160 +282,214 @@ class ProtocolWorker(QObject):
             self.responseResultSignal.emit(self.currentResponseResult)
 
             if (self.experimentType == 'oneOdorIntensity'):
-                vialNum = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                flow = self.stimList[0]['olfas']['olfa_0']['mfc_1_flow']
-                self.resultsCounterDict[vialNum][str(flow)]['Total'] += 1  # Only increment the total since this is technically not a valid trial if there was no sniff.
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
+                    self.resultsCounterList[i][vialNum][str(flow)]['Total'] += 1  # Only increment the total since this is technically not a valid trial if there was no sniff.
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
             
             elif (self.experimentType == 'twoOdorMatch'):
-                firstVial = self.stimList[0]['olfas']['olfa_0']['vialNum']
-                secondVial = self.stimList[1]['olfas']['olfa_0']['vialNum']
-                self.resultsCounterDict[firstVial][secondVial]['Total'] += 1  # Only increment the total since this is technically not a valid trial if there was no sniff.
-                self.resultsCounterDictSignal.emit(self.resultsCounterDict)
+                for i in range(self.nOlfas):
+                    firstVial = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
+                    secondVial = self.stimList[1]['olfas'][f'olfa_{i}']['vialNum']
+                    self.resultsCounterList[i][firstVial][secondVial]['Total'] += 1  # Only increment the total since this is technically not a valid trial if there was no sniff.
+                    self.resultsCounterListSignal.emit(self.resultsCounterList)
 
     def groupDuplicateVials(self, odors, concs, vials):
-        currentOdor = ''
-        currentConc = 0
+        # This will only group duplicates within a single olfactometer, not across other olfactometers.
         duplicateVials = {}
-        for i in range(len(odors)):
-            currentOdor = odors[i].split('_')[0]  # If two odors in the olfa config file are the same and have the same concentration, then I put underscore and the vial number at the end of the odor name's string (e.g. 'limonene_5') to bypass the olfactometer code raising an error when two or more vials match.
-            currentConc = concs[i]
-            for j in range(len(odors)):
-                if (currentOdor == odors[j].split('_')[0]) and (currentConc == concs[j]):  # if the odor names are the same and the concentrations are the same, then the two vials are duplicates.
-                    if currentOdor not in duplicateVials:
-                        duplicateVials[currentOdor] = {str(currentConc): [vials[j]]}
-                    elif str(currentConc) not in duplicateVials[currentOdor]:  # This means currentOdor must already be in duplicateVials, but there is another conc of that odor in the olfa config file for which another vial was found to match.
-                        duplicateVials[currentOdor][str(currentConc)] = [vials[j]]  # When first creating the key, put the indices for i and j in the list because they are the first match found.
-                    elif vials[j] not in duplicateVials[currentOdor][str(currentConc)]:  # Check if vial was already added to avoid appending again when looping over an odor name that was already used.
-                        duplicateVials[currentOdor][str(currentConc)].append(vials[j])  # Then append vials[j] whenever another match is found.
+        for x in range(self.nOlfas):  # odors is a list of n lists where n is equal to nOlfas. odors, concs, and vials all have the same length.
+            currentOdor = ''
+            currentConc = 0
+            for i in range(len(odors[x])):
+                currentOdor = odors[x][i].split('_')[0]  # If two odors in the olfa config file are the same and have the same concentration, then I put underscore and the vial number at the end of the odor name's string (e.g. 'limonene_5') to bypass the olfactometer code raising an error when two or more vials match.
+                currentConc = concs[x][i]
+                for j in range(len(odors[x])):
+                    if (currentOdor == odors[x][j].split('_')[0]) and (currentConc == concs[x][j]):  # if the odor names are the same and the concentrations are the same, then the two vials are duplicates.
+                        if currentOdor not in duplicateVials:
+                            duplicateVials[currentOdor] = {str(currentConc): [vials[x][j]]}
+                        elif str(currentConc) not in duplicateVials[currentOdor]:  # This means currentOdor must already be in duplicateVials, but there is another conc of that odor in the olfa config file for which another vial was found to match.
+                            duplicateVials[currentOdor][str(currentConc)] = [vials[x][j]]  # When first creating the key, put the indices for i and j in the list because they are the first match found.
+                        elif vials[x][j] not in duplicateVials[currentOdor][str(currentConc)]:  # Check if vial was already added to avoid appending again when looping over an odor name that was already used.
+                            duplicateVials[currentOdor][str(currentConc)].append(vials[x][j])  # Then append vials[j] whenever another match is found.
         
         self.duplicateVialsSignal.emit(duplicateVials)
     
     def getOdorsFromConfigFile(self):
         with open(self.olfaConfigFileName, 'r') as configFile:
             self.olfaConfigDict = json.load(configFile)
+            self.nOlfas = len(self.olfaConfigDict['Olfactometers'])
 
         if (self.experimentType == 'oneOdorIntensity'):
             self.stimulusFunction = self.oneOdorIntensityRandomizer
 
-            if (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
-                raise KeyError("No flowrates given in olfa config file.")
-            else:
-                self.flows = self.olfaConfigDict['Olfactometers'][0]['flowrates']
+            olfaIndex = 0
+            for olfaDict in self.olfaConfigDict['Olfactometers']:  # self.olfacConfigDict['Olfactometers'] is a list of dictionaries.
+                if (len(olfaDict['flowrates']) == 0):
+                    raise KeyError("No flowrates given in olfa config file.")
+                else:
+                    self.flows.append(olfaDict['flowrates'])
 
-            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
-                if not (vialInfo['odor'] == 'dummy'):
-                    self.odors.append(vialInfo['odor'])
-                    self.concs.append(vialInfo['conc'])
-                    self.vials.append(vialNum)
-                    self.resultsCounterDict[vialNum] = {}
-                    for flow in self.flows:
-                        self.resultsCounterDict[vialNum][str(flow)] = {
+                odors = []
+                concs = []
+                vials = []
+                resultsCounterDict = {}
+                for vialNum, vialInfo in olfaDict['Vials'].items():
+                    if not (vialInfo['odor'] == 'dummy'):
+                        odors.append(vialInfo['odor'])
+                        concs.append(vialInfo['conc'])
+                        vials.append(vialNum)
+                        resultsCounterDict[vialNum] = {}
+                        for flow in self.flows[olfaIndex]:
+                            resultsCounterDict[vialNum][str(flow)] = {
+                                'right': 0,  # initizialize counters to zero.
+                                'left': 0,
+                                'Correct': 0,
+                                'Wrong': 0,
+                                'NoResponse': 0,
+                                'Total': 0
+                            }
+                self.odors.append(odors)
+                self.concs.append(concs)
+                self.vials.append(vials)
+                self.resultsCounterList.append(resultsCounterDict)
+                olfaIndex += 1
+
+            self.groupDuplicateVials(self.odors, self.concs, self.vials)
+
+        elif (self.experimentType == 'twoOdorMatch'):
+            self.stimulusFunction = self.twoOdorMatchRandomizer
+
+            for olfaDict in self.olfaConfigDict['Olfactometers']:  # self.olfacConfigDict['Olfactometers'] is a list of dictionaries.
+                if (len(olfaDict['flowrates']) == 0):
+                    self.flows.append([100])  # Assume only one flow rate, which is max.
+                else:
+                    self.flows.append(olfaDict['flowrates'])
+                
+                odors = []
+                concs = []
+                vials = []
+                resultsCounterDict = {}
+                for vialNum, vialInfo in olfaDict['Vials'].items():
+                    if not (vialInfo['odor'] == 'dummy'):
+                        odors.append(vialInfo['odor'])
+                        concs.append(vialInfo['conc'])
+                        vials.append(vialNum)
+                        resultsCounterDict[vialNum] = {}
+
+                # Once we have all the vials as keys for the first odor, loop over a second time to fill the second dimension sub dictionary with keys for the second odor, for which each key's value will be a sub dict with the total results for that vial pair.       
+                for vialNum1 in resultsCounterDict.keys():
+                    for vialNum2 in vials:
+                        resultsCounterDict[vialNum1][vialNum2] = {
                             'right': 0,  # initizialize counters to zero.
                             'left': 0,
                             'Correct': 0,
                             'Wrong': 0,
                             'NoResponse': 0,
                             'Total': 0
-                        }            
-            self.groupDuplicateVials(self.odors, self.concs, self.vials)
-
-        elif (self.experimentType == 'twoOdorMatch'):
-            self.stimulusFunction = self.twoOdorMatchRandomizer
-
-            if (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
-                self.flows.append(100)  # Assume only one flow rate, which is max.
-            else:
-                self.flows = self.olfaConfigDict['Olfactometers'][0]['flowrates']
-               
-            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
-                if not (vialInfo['odor'] == 'dummy'):
-                    self.odors.append(vialInfo['odor'])
-                    self.concs.append(vialInfo['conc'])
-                    self.vials.append(vialNum)
-                    self.resultsCounterDict[vialNum] = {}
-
-            # Once we have all the vials as keys for the first odor, loop over a second time to fill the second dimension sub dictionary with keys for the second odor, for which each key's value will be a sub dict with the total results for that vial pair.       
-            for vialNum1 in self.resultsCounterDict.keys():
-                for vialNum2 in self.vials:
-                    self.resultsCounterDict[vialNum1][vialNum2] = {
-                        'right': 0,  # initizialize counters to zero.
-                        'left': 0,
-                        'Correct': 0,
-                        'Wrong': 0,
-                        'NoResponse': 0,
-                        'Total': 0
-                    }            
+                        }
+                self.odors.append(odors)
+                self.concs.append(concs)
+                self.vials.append(vials)
+                self.resultsCounterList.append(resultsCounterDict)
 
     def oneOdorIntensityRandomizer(self):
-        vialIndex = np.random.randint(len(self.vials))  # random int for index of vial  
-        currentFlow = np.random.choice(self.flows)      
-        flow_threshold = np.sqrt(self.flows[0] * self.flows[-1])
-        #If flow is lower than flow_threshold == ~30 , 'left' is correct. Otherwise, 'right' is correct
-        if currentFlow < flow_threshold:
-            self.correctResponse = 'left'
-        else:
-            self.correctResponse = 'right'        
+        # This structure should work fine since its safe to assume intensity experiments will not use mixtures
+        # so there will be only one olfactometer. But there will be a problem if more than one olfactometer is
+        # used: the correctResponse will be re-determined for each olfactometer because the currentFlow will
+        # not always be the same across the olfactometers. Each olfactometer's list of flowrates will get shuffled
+        # separately, so the self.flowIndex will not always point to the same flowrate. The correctResponse will
+        # be based on the last parameters of the last olfactometer in the loop. Again, if only one olfactometer
+        # exists, there will not be a problem.
+        ostim = {'olfas': {}}
+        for i in range(self.nOlfas):  # Loop thru each olfa if there is more than one (which will create a mixture)
+            if (self.vialIndex == len(self.vials[i])):
+                np.random.shuffle(self.vials[i])  # Re-shuffle when the index iterated through the entire list of vials for the olfa with index i.
+                self.vialIndex = 0  # Start iteration from the beginning.
+            
+            if (self.flowIndex == len(self.flows[i])):
+                np.random.shuffle(self.flows[i])  # Re-shuffle when the index iterated through the entire list of flowrates for the olfa with index i.
+                self.flowIndex = 0  # Start iteration from the beginning.
 
-        ostim = {
-            'olfas': {
-                'olfa_0': {
-                    'dilutors': {},
-                    'mfc_0_flow': 1000 - currentFlow,
-                    'mfc_1_flow': currentFlow,
-                    'odor': self.odors[vialIndex],
-                    'vialconc': self.concs[vialIndex],
-                    'vialNum': self.vials[vialIndex]
-                }
+            currentVial = self.vials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
+            currentFlow = self.flows[i][self.flowIndex]  # This will return an int for a flowrate of the olfa wiht index i.
+            flow_threshold = np.sqrt(min(self.flows[i]) * max(self.flows[i]))  # Since the list gets shuffled, I cannot use the first and last index as the min and max because the list is no longer sorted.
+            # If flow is lower than flow_threshold == ~30 , 'left' is correct. Otherwise, 'right' is correct
+            if (currentFlow < flow_threshold):
+                self.correctResponse = 'left'
+            else:
+                self.correctResponse = 'right'       
+
+            ostim['olfas'][f'olfa_{i}'] = {
+                'dilutors': {},
+                'mfc_0_flow': 1000 - currentFlow,
+                'mfc_1_flow': currentFlow,
+                'odor': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['odor'],
+                'vialconc': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc'],
+                'vialNum': currentVial
             }
-        }
         self.stimList.clear()
         self.stimList.append(ostim)
+        self.vialIndex += 1
+        self.flowIndex += 1
 
     def twoOdorMatchRandomizer(self):
-        currentFlow = np.random.choice(self.flows)
-        vialIndex = np.random.randint(len(self.vials))  # random int for index of vial
-        vialNum0 = self.vials[vialIndex]
-        odorName0 = self.odors[vialIndex]
-        odorConc0 = self.concs[vialIndex]
-        ostim0 = {
-            'olfas': {
-                'olfa_0': {
-                    'dilutors': {},
-                    'mfc_0_flow': 1000 - currentFlow,
-                    'mfc_1_flow': currentFlow,
-                    'odor': odorName0,
-                    'vialconc': odorConc0,
-                    'vialNum': vialNum0
-                }
-            }
-        }
-        currentFlow = np.random.choice(self.flows)
-        vialIndex = np.random.randint(len(self.vials))  # random int for index of vial
-        vialNum1 = self.vials[vialIndex]
-        odorName1 = self.odors[vialIndex]
-        odorConc1 = self.concs[vialIndex]
-        ostim1 = {
-            'olfas': {
-                'olfa_0': {
-                    'dilutors': {},
-                    'mfc_0_flow': 1000 - currentFlow,
-                    'mfc_1_flow': currentFlow,
-                    'odor': odorName1,
-                    'vialconc': odorConc1,
-                    'vialNum': vialNum1
-                }
-            }
-        }
-        # If the two odor names and concentrations are the same, 'right' is correct. If different, 'left' is correct.
-        if (odorName0 == odorName1) and (odorConc0 == odorConc1):
-            self.correctResponse = 'right'
-        else:
-            self.correctResponse = 'left'
+        self.stimList.clear()  # Clear the previous trial's stimuli.
 
-        self.stimList.clear()
-        self.stimList.append(ostim0)
-        self.stimList.append(ostim1)
+        stimOdors = []
+        for x in range(2):  # For the two odor presentations.
+            stimOdors.append([])
+            ostim = {'olfas': {}}
+            for i in range(self.nOlfas):  # Loop thru each olfa if there is more than one (which will create a mixture)
+                if (self.vialIndex == len(self.vials[i])):
+                    np.random.shuffle(self.vials[i])  # Re-shuffle when the index iterated through the entire list of vials for the olfa with index i.
+                    self.vialIndex = 0  # Start iteration from the beginning.
+                
+                if (self.flowIndex == len(self.flows[i])):
+                    np.random.shuffle(self.flows[i])  # Re-shuffle when the index iterated through the entire list of flowrates for the olfa with index i.
+                    self.flowIndex = 0  # Start iteration from the beginning.
+
+                currentVial = self.vials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
+                currentFlow = self.flows[i][self.flowIndex]  # This will return an int for a flowrate of the olfa with index i.
+                currentOdor = self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['odor']
+                currentConc = self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc']
+                stimOdors[x].append(currentOdor)
+                
+                ostim['olfas'][f'olfa_{i}'] = {
+                    'dilutors': {},
+                    'mfc_0_flow': 1000 - currentFlow,
+                    'mfc_1_flow': currentFlow,
+                    'odor': currentOdor,
+                    'vialconc': currentConc,
+                    'vialNum': currentVial
+                }
+            self.stimList.append(ostim)
+            self.vialIndex += 1
+            self.flowIndex += 1
+
+        matches = []
+        for x in range(len(stimOdors[0])):  # Both sublists in stimOdors have the same length (equal to self.nOlfas) so its ok to just use the first sublist's length.
+            matches.append(stimOdors[0][x] == stimOdors[1][x])  # Check if the odor of the x olfa of the first stimulus is equal to the odor of the x olfa of the second stimulus.
+        
+        # If each odor of each olfactometer of the first stimulus is equal to each odor of each corresponding olfactometer of the second stimulus, then matches will contain only
+        # True boolean values and all(matches) will return True.
+        if all(matches):
+            self.correctResponse = 'left'
+        else:
+            self.correctResponse = 'right'
+
+        # if od0_1st==od0_2nd and od1_1st==od1_2nd:
+        #     if 'empty' not in [od0_1st, od0_2nd, od1_1st, od1_2nd]:
+        #         if ni0_1st/ni1_1st == ni0_2nd/ni1_2nd:
+        #             response = 'Left'
+        #         else:
+        #             #Mixtures with same components with different ratio
+        #             #This pattern is missing in some protocol types
+        #             response = 'Right'
+        #     else:
+        #         response = 'Left'
+        # else:
+        #     response = 'Right'       
 
     def stimulusFunction(self):
         # Will be overloaded with another function.

@@ -24,7 +24,7 @@ class FlowUsagePlotWorker(QObject):
         self.graphWidget.setYRange(0, self.ymax, padding=0)
         self.xAxisReady = False
         self.groupedVials = {}
-        self.resultsDict = {}
+        self.resultsList = []
         self.plottingMode = 0
 
     def getWidget(self):
@@ -35,14 +35,17 @@ class FlowUsagePlotWorker(QObject):
 
     def setPlottingMode(self, value):
         self.plottingMode = value
-        if self.resultsDict:  # self.resultsDict will only hold the dict after the first trial.
-            self.updatePlot(self.resultsDict)
+        if self.resultsList:  # self.resultsList will only hold the dict(s) after the first trial.
+            self.updatePlot(self.resultsList)
     
-    def updatePlot(self, resultsDict):
-        self.resultsDict = resultsDict
+    def updatePlot(self, resultsList):
+        # This function currently only plots vials of the first olfactometer (regardless of the plottingMode).
+
+        self.resultsList = resultsList
         if not self.xAxisReady:
-            flowrates = list(resultsDict.values())  # Get a list of each vial's sub dictionary whose keys are flowrates, instead of doing resultsDict['vial_5'] since vial number '5' might not always exist.
+            flowrates = list(resultsList[0].values())  # Get a list of each vial's sub dictionary whose keys are flowrates, instead of doing resultsList[0]['vial_5'] since vial number '5' might not always exist.
             ticks = list(flowrates[0].keys())  #  flowrates is a list of dictionaries that contain the flowrates, but the values are all the same because they are the same set of flowrates. So just take the first element in that list and then make a list of the flowrates.
+            ticks.sort(key=int)
             xdict = dict(enumerate(ticks))
             self.xAxis.setTicks([xdict.items()])
             self.graphWidget.setXRange(-1, len(ticks), padding=0)
@@ -54,7 +57,7 @@ class FlowUsagePlotWorker(QObject):
         if (self.plottingMode == 0):
             # This combines all vials into one line.
             allTotals = []  # list to sum up the total usage from all vials for each flowrate.
-            for vialNum, flowrateDict in resultsDict.items():
+            for vialNum, flowrateDict in resultsList[0].items():
                 index = 0
                 for flow, totals in flowrateDict.items():
                     if (len(allTotals) < len(flowrateDict)):  # Append each flowrate's total usage to the list until the length of the allTotals list equals the number of flowrates.
@@ -80,8 +83,8 @@ class FlowUsagePlotWorker(QObject):
                     numTotal = []  # list to sum up the total usage from duplicate vials for each flowrate.
                     for vial in vialsList:
                         index = 0
-                        for flow, totals in resultsDict[vial].items():
-                            if (len(numTotal) < len(resultsDict[vial])):  # Append each flowrate's total usage to the list until the length of the list equals the number of flowrates.
+                        for flow, totals in resultsList[0][vial].items():
+                            if (len(numTotal) < len(resultsList[0][vial])):  # Append each flowrate's total usage to the list until the length of the list equals the number of flowrates.
                                 numTotal.append(totals['Total'])
                                 index += 1
                             else:  # Once numTotal has the same length as the number of flowrates, stop appending and instead use the index to add to each element's sum. 
@@ -100,7 +103,7 @@ class FlowUsagePlotWorker(QObject):
 
         elif (self.plottingMode == 2):
             # This is for plotting a line for each vial.
-            for vialNum, flowrateDict in resultsDict.items():
+            for vialNum, flowrateDict in resultsList[0].items():
                 xValues = []
                 yValues = []
                 index = 0

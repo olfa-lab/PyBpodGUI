@@ -110,7 +110,7 @@ class SaveDataWorker(QObject):
         self.resultsRowsAppended = False  # This will be used to append the results Totals to the resultsTable only once after the first trial and then iterate and update the rows for every successive trial onwards.
         self.trialNum = 1
         self.infoDict = {}
-        self.totalResultsDict = {}
+        self.totalResultsList = []
 
         self.adc = analogInModule
         if self.adc:
@@ -132,9 +132,9 @@ class SaveDataWorker(QObject):
         logging.info("incoming infoDict")
         self.infoDict = infoDict
 
-    def receiveTotalResultsDict(self, resultsDict):
-        logging.info('incoming total results dict')
-        self.totalResultsDict = resultsDict
+    def receiveTotalResultsList(self, resultsList):
+        logging.info('incoming total results list')
+        self.totalResultsList = resultsList
 
     def saveTotalResults(self):
         logging.info('attempting to save result totals data')
@@ -144,70 +144,79 @@ class SaveDataWorker(QObject):
                 # Instead, I want to keep the rows from the first trial and just update the values for the totals for each flowrate. To do that, I must iterate through each resultsTable
                 # inside the resultsGroup.
                 for table in self.h5file.walk_nodes(self.resultsGroup, "Table"):
-                    vial = table._v_name.strip('vial_')  # I need the string form of the vial number only, to use as the key.
+                    tableNameSplit = table._v_name.split('_')  # will return ['olfa', '0', 'vial', '5'] as an example
+                    olfa = int(tableNameSplit[1])  # convert to int to use as index.  
+                    vial = tableNameSplit[3]  # already in string form to use as a key.
                     for row in table.iterrows():
                         key = str(row['flowRate'])  # flowrate is saved as a UInt8Col in the table so need to convert back to string.
-                        row['totalUsage'] = self.totalResultsDict[vial][key]['Total']
-                        row['totalRight'] = self.totalResultsDict[vial][key]['right']
-                        row['totalLeft'] = self.totalResultsDict[vial][key]['left']
-                        row['totalCorrect'] = self.totalResultsDict[vial][key]['Correct']
-                        row['totalWrong'] = self.totalResultsDict[vial][key]['Wrong']
-                        row['totalNoResponse'] = self.totalResultsDict[vial][key]['NoResponse']
+                        row['totalUsage'] = self.totalResultsList[olfa][vial][key]['Total']
+                        row['totalRight'] = self.totalResultsList[olfa][vial][key]['right']
+                        row['totalLeft'] = self.totalResultsList[olfa][vial][key]['left']
+                        row['totalCorrect'] = self.totalResultsList[olfa][vial][key]['Correct']
+                        row['totalWrong'] = self.totalResultsList[olfa][vial][key]['Wrong']
+                        row['totalNoResponse'] = self.totalResultsList[olfa][vial][key]['NoResponse']
                         row.update()
                     table.flush()
             else:
                 # This means the rows have not yet been appended to the results table after the first trial.
-                if self.totalResultsDict:  # Check that its not empty first.
+                if self.totalResultsList:  # Check that its not empty first.
                     self.resultsGroup = self.h5file.create_group(where='/', name='total_results', title='Total Response Results')
-                    for vialNum, flowrateDict in self.totalResultsDict.items():
-                        self.resultsTable = self.h5file.create_table(where='/total_results', name=f'vial_{vialNum}', description=OneOdorResultsData, title=f'Vial {vialNum} Total Response Results')
-                        self.resultsRow = self.resultsTable.row
-                        for flowrate, total in flowrateDict.items():
-                            self.resultsRow['flowRate'] = flowrate  # flowrate is a string here, but when saved into the table, it gets converted to UInt8Col.
-                            self.resultsRow['totalUsage'] = total['Total']
-                            self.resultsRow['totalRight'] = total['right']
-                            self.resultsRow['totalLeft'] = total['left']
-                            self.resultsRow['totalCorrect'] = total['Correct']
-                            self.resultsRow['totalWrong'] = total['Wrong']
-                            self.resultsRow['totalNoResponse'] = total['NoResponse']
-                            self.resultsRow.append()
-                        self.resultsTable.flush()
+                    for i in range(len(self.totalResultsList)):  # self.totalResultsList is a list of dictionaries where each dictionary is a resultsCounterDict from the protocolWorker.
+                        for vialNum, flowrateDict in self.totalResultsList[i].items():
+                            self.resultsTable = self.h5file.create_table(where='/total_results', name=f'olfa_{i}_vial_{vialNum}', description=OneOdorResultsData, title=f'Olfa {i} Vial {vialNum} Total Response Results')
+                            self.resultsRow = self.resultsTable.row
+                            sortedFlowrates = sorted(list(flowrateDict.keys()), key=int)  # I sort the flowrates by numeric value because for some reason they get sorted alphabetically ever since I used a list for self.totalResultsList to hold dictionaries for each olfactometer, even though I save the flowrate keys in sorted order to each vial's dictionary.
+                            for flowrate in sortedFlowrates:
+                                self.resultsRow['flowRate'] = flowrate  # flowrate is a string here, but when saved into the table, it gets converted to UInt8Col.
+                                self.resultsRow['totalUsage'] = self.totalResultsList[i][vialNum][flowrate]['Total']
+                                self.resultsRow['totalRight'] = self.totalResultsList[i][vialNum][flowrate]['right']
+                                self.resultsRow['totalLeft'] = self.totalResultsList[i][vialNum][flowrate]['left']
+                                self.resultsRow['totalCorrect'] = self.totalResultsList[i][vialNum][flowrate]['Correct']
+                                self.resultsRow['totalWrong'] = self.totalResultsList[i][vialNum][flowrate]['Wrong']
+                                self.resultsRow['totalNoResponse'] = self.totalResultsList[i][vialNum][flowrate]['NoResponse']
+                                self.resultsRow.append()
+                            self.resultsTable.flush()
                     self.resultsRowsAppended = True
 
         elif self.experimentType == 'twoOdorMatch':
             if self.resultsRowsAppended:
                 # If the rows were appended to the resultsTable for the first trial already, then do not use append again because it will continue to append new rows below the last.
                 # Instead, I want to keep the rows from the first trial and just update the values for the totals for each flowrate. To do that, I must iterate through each row
-                # inside the resultsTable. Since the table's rows will be iterated in the same order as they were read from the totalResultsDict and appended, there only needs to
-                # be one for loop instead of two nested for loops. The number of rows will be equal to the total number of permutations for the two vials used in each trial.
-                for row in self.resultsTable.iterrows():
-                    firstVial = str(row['odorA_vial'])  # odorA_vial is an UInt8Col in the resultsTable, so need to convert back to string to use as a key.
-                    secondVial = str(row['odorB_vial'])  # same goes for odorB_vial.
-                    row['totalUsage'] = self.totalResultsDict[firstVial][secondVial]['Total']
-                    row['totalRight'] = self.totalResultsDict[firstVial][secondVial]['right']
-                    row['totalLeft'] = self.totalResultsDict[firstVial][secondVial]['left']
-                    row['totalCorrect'] = self.totalResultsDict[firstVial][secondVial]['Correct']
-                    row['totalWrong'] = self.totalResultsDict[firstVial][secondVial]['Wrong']
-                    row['totalNoResponse'] = self.totalResultsDict[firstVial][secondVial]['NoResponse']
-                    row.update()
-                self.resultsTable.flush()
+                # inside each resultsTable. Since the table's rows will be iterated in the same order as they were read from the totalResultsList and appended, there only needs to
+                # be one for loop for each resultsTable instead of two nested for loops. The number of rows will be equal to the total number of permutations for the two vials used in each trial.
+                for table in self.h5file.walk_nodes(self.resultsGroup, "Table"):
+                    tableNameSplit = table._v_name.split('_')  # will return ['olfa', '0'] as an example
+                    olfa = int(tableNameSplit[1])  # convert to int to use as index.  
+                    for row in table.iterrows():
+                        firstVial = str(row['odorA_vial'])  # odorA_vial is an UInt8Col in the resultsTable, so need to convert back to string to use as a key.
+                        secondVial = str(row['odorB_vial'])  # same goes for odorB_vial.
+                        row['totalUsage'] = self.totalResultsList[olfa][firstVial][secondVial]['Total']
+                        row['totalRight'] = self.totalResultsList[olfa][firstVial][secondVial]['right']
+                        row['totalLeft'] = self.totalResultsList[olfa][firstVial][secondVial]['left']
+                        row['totalCorrect'] = self.totalResultsList[olfa][firstVial][secondVial]['Correct']
+                        row['totalWrong'] = self.totalResultsList[olfa][firstVial][secondVial]['Wrong']
+                        row['totalNoResponse'] = self.totalResultsList[olfa][firstVial][secondVial]['NoResponse']
+                        row.update()
+                    table.flush()
             else:
                 # This means the rows have not yet been appended to the results table after the first trial, so create the table now.
-                if self.totalResultsDict:  # Check that its not empty first.
-                    self.resultsTable = self.h5file.create_table(where='/', name=f'totalResults', description=TwoOdorResultsData, title=f'Total Response Results')
-                    self.resultsRow = self.resultsTable.row
-                    for firstVial in self.totalResultsDict.keys():
-                        for secondVial in self.totalResultsDict[firstVial].keys():
-                            self.resultsRow['odorA_vial'] = firstVial  # firstVial is a string here, but will be converted to an UInt8Col in the resultsTable.
-                            self.resultsRow['odorB_vial'] = secondVial  # secondVial is also a string here and will also be converted to UInt8Col.
-                            self.resultsRow['totalUsage'] = self.totalResultsDict[firstVial][secondVial]['Total']
-                            self.resultsRow['totalRight'] = self.totalResultsDict[firstVial][secondVial]['right']
-                            self.resultsRow['totalLeft'] = self.totalResultsDict[firstVial][secondVial]['left']
-                            self.resultsRow['totalCorrect'] = self.totalResultsDict[firstVial][secondVial]['Correct']
-                            self.resultsRow['totalWrong'] = self.totalResultsDict[firstVial][secondVial]['Wrong']
-                            self.resultsRow['totalNoResponse'] = self.totalResultsDict[firstVial][secondVial]['NoResponse']
-                            self.resultsRow.append()
-                        self.resultsTable.flush()
+                if self.totalResultsList:  # Check that its not empty first.
+                    self.resultsGroup = self.h5file.create_group(where='/', name='total_results', title='Total Response Results')
+                    for i in range(len(self.totalResultsList)):  # self.totalResultsList is a list of dictionaries where each dictionary is a resultsCounterDict from the protocolWorker.
+                        self.resultsTable = self.h5file.create_table(where='/total_results', name=f'olfa_{i}', description=TwoOdorResultsData, title=f'Olfa {i} Total Response Results')
+                        self.resultsRow = self.resultsTable.row
+                        for firstVial in self.totalResultsList[i].keys():
+                            for secondVial in self.totalResultsList[i][firstVial].keys():
+                                self.resultsRow['odorA_vial'] = firstVial  # firstVial is a string here, but will be converted to an UInt8Col in the resultsTable.
+                                self.resultsRow['odorB_vial'] = secondVial  # secondVial is also a string here and will also be converted to UInt8Col.
+                                self.resultsRow['totalUsage'] = self.totalResultsList[i][firstVial][secondVial]['Total']
+                                self.resultsRow['totalRight'] = self.totalResultsList[i][firstVial][secondVial]['right']
+                                self.resultsRow['totalLeft'] = self.totalResultsList[i][firstVial][secondVial]['left']
+                                self.resultsRow['totalCorrect'] = self.totalResultsList[i][firstVial][secondVial]['Correct']
+                                self.resultsRow['totalWrong'] = self.totalResultsList[i][firstVial][secondVial]['Wrong']
+                                self.resultsRow['totalNoResponse'] = self.totalResultsList[i][firstVial][secondVial]['NoResponse']
+                                self.resultsRow.append()
+                            self.resultsTable.flush()
                     self.resultsRowsAppended = True
         
         logging.info('results data has been written to disk')
