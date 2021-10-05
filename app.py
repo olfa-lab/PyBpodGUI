@@ -470,6 +470,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.streaming.resetPlot()
             self.streaming.resumeAnimation()
 
+        self.resultsPlot.setExperimentType(self.experimentType)
+
         self.startButton.setEnabled(False)
         self.calibLeftWaterButton.setEnabled(False)
         self.calibRightWaterButton.setEnabled(False)
