@@ -371,11 +371,11 @@ class ProtocolWorker(QObject):
                 vials = []
                 resultsCounterDict = {}
                 for vialNum, vialInfo in olfaDict['Vials'].items():
-                    if not (vialInfo['odor'] == 'dummy'):
-                        odors.append(vialInfo['odor'])
-                        concs.append(vialInfo['conc'])
-                        vials.append(vialNum)
-                        resultsCounterDict[vialNum] = {}
+                    # if not (vialInfo['odor'] == 'dummy'):
+                    odors.append(vialInfo['odor'])
+                    concs.append(vialInfo['conc'])
+                    vials.append(vialNum)
+                    resultsCounterDict[vialNum] = {}
 
                 # Once we have all the vials as keys for the first odor, loop over a second time to fill the second dimension sub dictionary with keys for the second odor, for which each key's value will be a sub dict with the total results for that vial pair.       
                 for vialNum1 in resultsCounterDict.keys():
