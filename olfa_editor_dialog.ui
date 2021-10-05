@@ -55,18 +55,18 @@
     </property>
     <layout class="QGridLayout" name="vialsGridLayout">
      <item row="2" column="0">
-      <layout class="QFormLayout" name="vialFormLayout_5">
+      <layout class="QFormLayout" name="vialFormLayout_9">
        <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel_5">
+        <widget class="QLabel" name="vialNumLabel_9">
          <property name="text">
           <string>Vial num</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit_5">
+        <widget class="QLineEdit" name="vialNumLineEdit_9">
          <property name="text">
-          <string>5</string>
+          <string>9</string>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -74,24 +74,24 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="vialOdorNameLabel_5">
+        <widget class="QLabel" name="vialOdorNameLabel_9">
          <property name="text">
           <string>Odor name</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="vialOdorNameLineEdit_5"/>
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_9"/>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="vialConcLabel_5">
+        <widget class="QLabel" name="vialConcLabel_9">
          <property name="text">
           <string>Concentration</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="vialConcLineEdit_5"/>
+        <widget class="QLineEdit" name="vialConcLineEdit_9"/>
        </item>
       </layout>
      </item>
@@ -103,6 +103,47 @@
       </widget>
      </item>
      <item row="2" column="6">
+      <layout class="QFormLayout" name="vialFormLayout_12">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_12">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_12">
+         <property name="text">
+          <string>12</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_12">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_12"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_12">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_12"/>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="6">
       <layout class="QFormLayout" name="vialFormLayout_8">
        <item row="0" column="0">
         <widget class="QLabel" name="vialNumLabel_8">
@@ -143,47 +184,6 @@
        </item>
       </layout>
      </item>
-     <item row="0" column="6">
-      <layout class="QFormLayout" name="vialFormLayout_4">
-       <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel_4">
-         <property name="text">
-          <string>Vial num</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit_4">
-         <property name="text">
-          <string>4</string>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="vialOdorNameLabel_4">
-         <property name="text">
-          <string>Odor name</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="vialOdorNameLineEdit_4"/>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="vialConcLabel_4">
-         <property name="text">
-          <string>Concentration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="vialConcLineEdit_4"/>
-       </item>
-      </layout>
-     </item>
      <item row="0" column="3">
       <widget class="Line" name="line_2">
        <property name="orientation">
@@ -199,6 +199,129 @@
       </widget>
      </item>
      <item row="2" column="2">
+      <layout class="QFormLayout" name="vialFormLayout_10">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_10">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_10">
+         <property name="text">
+          <string>10</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_10">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_10"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_10">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_10"/>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="4">
+      <layout class="QFormLayout" name="valFormLayout_7">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_7">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_7">
+         <property name="text">
+          <string>7</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_7">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_7"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_7">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_7"/>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="0">
+      <layout class="QFormLayout" name="vialFormLayout_5">
+       <item row="0" column="0">
+        <widget class="QLabel" name="vialNumLabel_5">
+         <property name="text">
+          <string>Vial num</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="vialNumLineEdit_5">
+         <property name="text">
+          <string>5</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="vialOdorNameLabel_5">
+         <property name="text">
+          <string>Odor name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_5"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="vialConcLabel_5">
+         <property name="text">
+          <string>Concentration</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="vialConcLineEdit_5"/>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="2">
       <layout class="QFormLayout" name="vialFormLayout_6">
        <item row="0" column="0">
         <widget class="QLabel" name="vialNumLabel_6">
@@ -239,142 +362,19 @@
        </item>
       </layout>
      </item>
-     <item row="0" column="4">
-      <layout class="QFormLayout" name="valFormLayout_3">
-       <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel_3">
-         <property name="text">
-          <string>Vial num</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit_3">
-         <property name="text">
-          <string>3</string>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="vialOdorNameLabel_3">
-         <property name="text">
-          <string>Odor name</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="vialOdorNameLineEdit_3"/>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="vialConcLabel_3">
-         <property name="text">
-          <string>Concentration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="vialConcLineEdit_3"/>
-       </item>
-      </layout>
-     </item>
-     <item row="0" column="0">
-      <layout class="QFormLayout" name="vialFormLayout_1">
-       <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel_1">
-         <property name="text">
-          <string>Vial num</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit_1">
-         <property name="text">
-          <string>1</string>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="vialOdorNameLabel_1">
-         <property name="text">
-          <string>Odor name</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="vialOdorNameLineEdit_1"/>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="vialConcLabel_1">
-         <property name="text">
-          <string>Concentration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="vialConcLineEdit_1"/>
-       </item>
-      </layout>
-     </item>
-     <item row="0" column="2">
-      <layout class="QFormLayout" name="vialFormLayout_2">
-       <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel_2">
-         <property name="text">
-          <string>Vial num</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit_2">
-         <property name="text">
-          <string>2</string>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="vialOdorNameLabel_2">
-         <property name="text">
-          <string>Odor name</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="vialOdorNameLineEdit_2"/>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="vialConcLabel_2">
-         <property name="text">
-          <string>Concentration</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="vialConcLineEdit_2"/>
-       </item>
-      </layout>
-     </item>
      <item row="2" column="4">
-      <layout class="QFormLayout" name="vialFormLayout_7">
+      <layout class="QFormLayout" name="vialFormLayout_11">
        <item row="0" column="0">
-        <widget class="QLabel" name="vialNumLabel_7">
+        <widget class="QLabel" name="vialNumLabel_11">
          <property name="text">
           <string>Vial num</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="vialNumLineEdit_7">
+        <widget class="QLineEdit" name="vialNumLineEdit_11">
          <property name="text">
-          <string>7</string>
+          <string>11</string>
          </property>
          <property name="readOnly">
           <bool>true</bool>
@@ -382,24 +382,24 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="vialOdorNameLabel_7">
+        <widget class="QLabel" name="vialOdorNameLabel_11">
          <property name="text">
           <string>Odor name</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="vialOdorNameLineEdit_7"/>
+        <widget class="QLineEdit" name="vialOdorNameLineEdit_11"/>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="vialConcLabel_7">
+        <widget class="QLabel" name="vialConcLabel_11">
          <property name="text">
           <string>Concentration</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="vialConcLineEdit_7"/>
+        <widget class="QLineEdit" name="vialConcLineEdit_11"/>
        </item>
       </layout>
      </item>
