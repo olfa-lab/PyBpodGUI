@@ -75,6 +75,10 @@ Things to do:
 
     * __X__ show the number of times each flow rate was used throughout the experiment, either with a plot or with QLineEdit fields.
 
+    * __X__ make the protocolWorker check how many olfas are in the config file and use that number to randomize the parameters for each of the olfas and put them all in the stim dict.
+
+    * __X__ shuffle a list of all the vials and then iterate through it instead of randomly choosing a vial every trial.
+
     * _____ use the newer olfactometer code
 
     * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
@@ -100,10 +104,6 @@ Things to do:
 
     * _____ get rid of variables that hold the value/text in fields like lineEdits, spinBoxes, and comboBoxes because it is redundant. 
 
-    * _____ make an option for the user to select their desired mode of generating the stimuli (once at the start of each trial,
-            or generate a list of length nTrials at the start of the experiment and iterate with each trial (and show that list in its own window),
-            or randomly sort a list of length equal to the number of vials to avoid consecutive repetitions and iterate with each trial and when finished iterating, randomly sort it again or just append to a single larger list equal to size of nTrials)
-
     * _____ make an option to reconnect devices (close serial port and then open again) so that user can enable device that previously was not enabled when the 'Connect Devices' button was clicked without having to restart the application.
 
     * _____ fix the issue where the timestamps of the analog data samples stops being synchronized with the bpod's time whenever a trial is paused.
@@ -119,8 +119,6 @@ Things to do:
     * _____ make the streaming plot show the all the inputs and make another plot to show all the outputs.
 
     * _____ make the streaming plot able to plot more than one channel from the analog input.
-
-    * _____ make the protocolWorker check how many olfas are in the config file and use that number to randomize the parameters for each of the olfas and put them all in the stim dict.
 
 
 Questions to research:
