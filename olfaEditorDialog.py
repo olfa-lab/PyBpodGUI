@@ -601,7 +601,7 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             QMessageBox.warning(self, "Warning", "Please enter at least one vial!")
             return
 
-        if 'Dilutors' in self.olfaConfigDict['Olfactometers'][0]:  # This means at least one input field was edited with a valid input.
+        if ('Dilutors' in self.olfaConfigDict['Olfactometers'][0]) and (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) > 0):  # This means at least one input field was edited with a valid input.
             if (self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0] == {}):
                 self.olfaConfigDict['Olfactometers'][0]['Dilutors'].clear()  # Empty all contents of the list but do not delete the 'Dilutors' key
                 # self.olfaConfigDict['Olfactometers'][0]['Dilutors'].pop(0)
