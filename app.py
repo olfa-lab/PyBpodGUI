@@ -471,6 +471,9 @@ class Window(QMainWindow, Ui_MainWindow):
             self.streaming.resumeAnimation()
 
         self.resultsPlot.setExperimentType(self.experimentType)
+        self.flowUsagePlot.setExperimentType(self.experimentType)
+        if (self.experimentType == 'twoOdorMatch'):
+            self.flowUsagePlotSubWindow.showShaded()
 
         self.startButton.setEnabled(False)
         self.calibLeftWaterButton.setEnabled(False)
