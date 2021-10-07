@@ -202,14 +202,14 @@ class MFCAlicatDigArduino(MFC):
         _ = self.parent_device.send_command(command_get)
         # stick around querying the olfactometer until it gets the command.
         confirmation = self.parent_device.send_command(command)
-        while (confirmation is None or not confirmation.startswith("MFC set")) and time.time() - start_time < .2:
+        while (confirmation is None or not confirmation.startswith(b"MFC set")) and time.time() - start_time < .2:
             confirmation = self.parent_device.send_command(command)
         # stick around querying the olfactometer until it gets the flow data from the alicat.
         returnstring = self.parent_device.send_command(command_get)
-        while (returnstring is None or returnstring.startswith("Error -2")) and time.time() - start_time < .2:
+        while (returnstring is None or returnstring.startswith(b"Error -2")) and time.time() - start_time < .2:
             returnstring = self.parent_device.send_command(command_get)
         # once it returns a good string, parse the string and return the flow.
-        li = returnstring.split(' ')
+        li = returnstring.split(b' ')
         if len(li) > 4:
             r_str = li[4]  # 5th column is mass flow, so index 4.
             try:
