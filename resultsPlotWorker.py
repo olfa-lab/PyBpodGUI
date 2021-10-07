@@ -48,7 +48,6 @@ class ResultsPlotWorker(QObject):
     
     def oneOdorIntensity(self, resultsList):
         # This function currently only plots vials of the first olfactometer (regardless of the plottingMode).
-        logging.info("hello===============================================")
         self.resultsList = resultsList
         if not self.xAxisReady:
             flowrates = list(resultsList[0].values())  # Get a list of each vial's sub dictionary whose keys are flowrates, instead of doing resultsList[0]['vial_5'] since vial number '5' might not always exist.
@@ -150,7 +149,6 @@ class ResultsPlotWorker(QObject):
         logging.info('results plot updated')
     
     def twoOdorMatch(self, resultsList):
-        logging.info("hello+++++++++++++++++++++++++++++++++++++++++++++++++++++++")
         if not self.axisReady:
             self.xAxis = self.graphWidget.getAxis('bottom')
             xticks = list(resultsList[0].keys())
@@ -179,16 +177,16 @@ class ResultsPlotWorker(QObject):
                     data[i][j] = (numCorrect / numResponses) * 255.0
                 else:
                     data[i][j] = 0.0
-
+        logging.info(data)
         # axes = {'t':None, 'x':0, 'y':1, 'c':None}  # When 'x':0 and 'y':1, then each array inside data will be displayed as a column.
         axes = {'t':None, 'x':1, 'y':0, 'c':None}  # When 'x':1 and 'y':0, then each array inside data will be displayed as a row.
-        self.image.setImage(img=data, autoLevels=False, levels=(0, 255), axes=axes, levelMode='mono')
+        self.image.setImage(image=data, autoLevels=False, levels=(0.0, 255.0), axes=axes, levelMode='mono')
+        # self.image.setImage(data)
 
     def setExperimentType(self, experimentType):
         self.experimentType = experimentType
 
         if (experimentType == 'oneOdorIntensity'):
-            self.updatePlot = self.oneOdorIntensity
             styles = {'color':'blue', 'font-size': '10pt'}
             self.graphWidget.setBackground('w')
             self.graphWidget.setTitle('Percent Left Licks For Each Flow Rate', color='b', size='10pt')
@@ -203,7 +201,6 @@ class ResultsPlotWorker(QObject):
             self.plottingMode = 0
         
         elif (experimentType == 'twoOdorMatch'):
-            self.updatePlot = self.twoOdorMatch
             self.graphWidget.setBackground('k')
             self.graphWidget.setTitle('Percent Correct For Each Odor', color='w', size='10pt')
             self.image = pg.ImageItem()
@@ -212,3 +209,12 @@ class ResultsPlotWorker(QObject):
             self.groupedVials = {}
             self.resultsList = []
             self.plottingMode = 0
+
+            
+            # This is another way to display an image. This method does not create a PlotWidget.
+            # self.image = pg.ImageView(view=pg.PlotItem())
+            # self.image.show()
+            # self.image.ui.histogram.hide()
+            # self.image.ui.roiBtn.hide()
+            # self.image.ui.menuBtn.hide()
+            # self.image.setImage(img=data, autoLevels=False, levels=(0, 255), axes=axes, levelMode='mono')
