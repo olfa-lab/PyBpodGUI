@@ -115,6 +115,7 @@ class SaveDataWorker(QObject):
         self.adc = analogInModule
         if self.adc:
             self.maxVoltage = self.adc.getChannelInputVoltageMax(0)  # Assuming user is using channel 0.
+            self.minVoltage = self.adc.getChannelInputVoltageMin(0)
             self.samplingPeriod = 1 / (self.adc.getSamplingRate())
             self.analogDataBufferSize = 4
             self.analogDataBuffer = np.zeros(shape=self.analogDataBufferSize, dtype='float32')
@@ -378,11 +379,14 @@ class SaveDataWorker(QObject):
 
                     # convert decimal bit value to voltage.
                     for i in range(len(samples)):
-                        if samples[i] >= 4096:
-                            samples[i] -= 4096
-                            voltages[i] = (samples[i] * self.maxVoltage) / 4096
-                        elif samples[i] < 4096:
-                            voltages[i] = ((samples[i] * self.maxVoltage) / 4096) - self.maxVoltage
+                        if (self.minVoltage == 0):  # This is when input voltage range is 0V to 10V.
+                            voltages[i] = ((samples[i] * self.maxVoltage) / 8192)
+                        else:
+                            if samples[i] >= 4096:
+                                samples[i] -= 4096
+                                voltages[i] = (samples[i] * self.maxVoltage) / 4096
+                            elif samples[i] < 4096:
+                                voltages[i] = ((samples[i] * self.maxVoltage) / 4096) - self.maxVoltage
 
                     # Start saving to file when the trial starts, which is indicated when a syncByte is received and 'self.stateNum' is updated with the syncByte's value.
                     if not (self.stateNum == 0):
