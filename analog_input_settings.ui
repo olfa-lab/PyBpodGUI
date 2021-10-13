@@ -6,845 +6,899 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>868</width>
-    <height>334</height>
+    <width>832</width>
+    <height>247</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>510</x>
-     <y>290</y>
-     <width>341</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QWidget" name="gridLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>829</width>
-     <height>169</height>
-    </rect>
-   </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="4" column="7">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_7">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="5">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_5">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="3" column="7">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_7">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="5">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_5">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_1">
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="6" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_6">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="7" column="7" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_7">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QSpinBox" name="samplingRateSpinBox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>20000</number>
+     </property>
+     <property name="value">
+      <number>1000</number>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="8">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_8">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <item>
       <property name="text">
-       <string/>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="2">
-     <widget class="QLabel" name="channelLabel_2">
+     </item>
+     <item>
       <property name="text">
-       <string>Channel 2</string>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QLabel" name="channelLabel_1">
+     </item>
+     <item>
       <property name="text">
-       <string>Channel 1</string>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="4" column="2">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="0">
-     <widget class="QLabel" name="enableUSBStreamingLabel">
+     </item>
+     <item>
       <property name="text">
-       <string>Enable USB Streaming:</string>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="inputVoltageRangeLabel">
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="5">
+    <widget class="QLabel" name="channelLabel_5">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 5</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3">
+    <widget class="QLabel" name="channelLabel_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 3</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="samplingRateLabel">
+     <property name="text">
+      <string>Sampling Rate (Hz):</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="3">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="inputVoltageRangeLabel">
+     <property name="text">
+      <string>Input Voltage Range:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLabel" name="channelLabel_1">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="5" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="6" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_6">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_1">
+     <item>
       <property name="text">
-       <string>Input Voltage Range:</string>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="thresholdVoltageLabel">
+     </item>
+     <item>
       <property name="text">
-       <string>Threshold Voltage:</string>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="5">
-     <widget class="QLabel" name="channelLabel_5">
+     </item>
+     <item>
       <property name="text">
-       <string>Channel 5</string>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="2" column="8">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_8">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="4" column="6">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_6">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0">
-     <widget class="QLabel" name="enableModuleStreamingLabel">
+     </item>
+     <item>
       <property name="text">
-       <string>Enable Module Streaming:</string>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="6" column="2" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="6" column="5" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="8">
+    <widget class="QLabel" name="channelLabel_8">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 8</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="3" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="5">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="5" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="2" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="4" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="8" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_8">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="6">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_6">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="4">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <item>
       <property name="text">
-       <string/>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="6" column="3" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_3">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="8">
-     <widget class="QLabel" name="channelLabel_8">
+     </item>
+     <item>
       <property name="text">
-       <string>Channel 8</string>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="3">
-     <widget class="QLabel" name="channelLabel_3">
+     </item>
+     <item>
       <property name="text">
-       <string>Channel 3</string>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="4" column="5">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_5">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="7">
-     <widget class="QLabel" name="channelLabel_7">
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="resetVoltageLabel">
+     <property name="text">
+      <string>Reset Voltage</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="8">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_8">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <item>
       <property name="text">
-       <string>Channel 7</string>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="2" column="4">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_4">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="6" column="4" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_4">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="6" column="7" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_7">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="4" column="8">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_8">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_1">
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="4">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_4">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="1" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_1"/>
-    </item>
-    <item row="2" column="1">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_1">
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="1" column="4">
-     <widget class="QLabel" name="channelLabel_4">
+     </item>
+     <item>
       <property name="text">
-       <string>Channel 4</string>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="3" column="6">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_6">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="6">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_6">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="4" column="3">
-     <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_3">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="8" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_8">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_1">
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_1">
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="7">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_7">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="6">
+    <widget class="QLabel" name="channelLabel_6">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 6</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="3" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="enableModuleStreamingLabel">
+     <property name="text">
+      <string>Enable Module Streaming:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="8">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_8">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="7">
+    <widget class="QLabel" name="channelLabel_7">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 7</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="6">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_6">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <item>
       <property name="text">
-       <string/>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="resetVoltageLabel">
+     </item>
+     <item>
       <property name="text">
-       <string>Reset Voltage</string>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="3" column="4">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_4">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="8">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_8">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="7">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_7">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="2" column="3">
-     <widget class="QComboBox" name="inputVoltageRangeComboBox_3">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>-10V:10V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-5V:5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>-2.5V:2.5V</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>0V:10V</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="3" column="3">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_3">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="5" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableUSBStreamingCheckBox_5">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="6">
-     <widget class="QLabel" name="channelLabel_6">
+     </item>
+     <item>
       <property name="text">
-       <string>Channel 6</string>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="3" column="2">
-     <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="minimum">
-       <double>-10.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="0">
-     <widget class="QLabel" name="enableSMEventReportingLabel">
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="7">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_7">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="6" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_6">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_1"/>
+   </item>
+   <item row="8" column="4" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="enableSMEventReportingLabel">
+     <property name="text">
+      <string>Enable SM Event Reporting:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QLabel" name="channelLabel_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="6" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_6">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_1"/>
+   </item>
+   <item row="4" column="4">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="enableUSBStreamingLabel">
+     <property name="text">
+      <string>Enable USB Streaming:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="4">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_1">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="6">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_6">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="7" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_7">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QSpinBox" name="nActiveChannelsSpinBox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>8</number>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="3">
+    <widget class="QDoubleSpinBox" name="thresholdVoltageDoubleSpinBox_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="5">
+    <widget class="QDoubleSpinBox" name="resetVoltageDoubleSpinBox_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="4" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <item>
       <property name="text">
-       <string>Enable SM Event Reporting:</string>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="1" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_1">
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="2" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="3" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_3">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="4" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_4">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="7" column="3" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="7">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_7">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <item>
       <property name="text">
-       <string/>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="5" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_5">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="6" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_6">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="7" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_7">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="5" column="8" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableSMEventReportingCheckBox_8">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="7" column="8" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableUSBStreamingCheckBox_8">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="2" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="5">
+    <widget class="QComboBox" name="inputVoltageRangeComboBox_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <item>
       <property name="text">
-       <string/>
+       <string>-10V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="7" column="1" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_1"/>
-    </item>
-    <item row="7" column="2" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_2">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-5V:5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="7" column="3" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_3">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>-2.5V:2.5V</string>
       </property>
-     </widget>
-    </item>
-    <item row="7" column="4" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_4">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
+     </item>
+     <item>
       <property name="text">
-       <string/>
+       <string>0V:10V</string>
       </property>
-     </widget>
-    </item>
-    <item row="7" column="5" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_5">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="6" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_6">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="7" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_7">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="8" alignment="Qt::AlignHCenter">
-     <widget class="QCheckBox" name="enableModuleStreamingCheckBox_8">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QLabel" name="headerLabel">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>10</y>
-     <width>231</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Analog Input Module Settings</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="formLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>50</y>
-     <width>251</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <layout class="QFormLayout" name="formLayout">
-    <item row="0" column="0">
-     <widget class="QLabel" name="nActiveChannelsLabel">
-      <property name="text">
-       <string>Num Of Active Channels:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QSpinBox" name="nActiveChannelsSpinBox">
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>8</number>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="samplingRateLabel">
-      <property name="text">
-       <string>Sampling Rate (Hz):</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QSpinBox" name="samplingRateSpinBox">
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>20000</number>
-      </property>
-      <property name="value">
-       <number>1000</number>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+     </item>
+    </widget>
+   </item>
+   <item row="6" column="8" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableSMEventReportingCheckBox_8">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="7" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="enableModuleStreamingCheckBox_7">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="thresholdVoltageLabel">
+     <property name="text">
+      <string>Threshold Voltage:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="nActiveChannelsLabel">
+     <property name="text">
+      <string>Num Of Active Channels:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4">
+    <widget class="QLabel" name="channelLabel_4">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 4</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="7" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
+ <tabstops>
+  <tabstop>nActiveChannelsSpinBox</tabstop>
+  <tabstop>samplingRateSpinBox</tabstop>
+  <tabstop>inputVoltageRangeComboBox_1</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_1</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_1</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_1</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_1</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_1</tabstop>
+  <tabstop>inputVoltageRangeComboBox_2</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_2</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_2</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_2</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_2</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_2</tabstop>
+  <tabstop>inputVoltageRangeComboBox_3</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_3</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_3</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_3</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_3</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_3</tabstop>
+  <tabstop>inputVoltageRangeComboBox_4</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_4</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_4</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_4</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_4</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_4</tabstop>
+  <tabstop>inputVoltageRangeComboBox_5</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_5</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_5</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_5</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_5</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_5</tabstop>
+  <tabstop>inputVoltageRangeComboBox_6</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_6</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_6</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_6</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_6</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_6</tabstop>
+  <tabstop>inputVoltageRangeComboBox_7</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_7</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_7</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_7</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_7</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_7</tabstop>
+  <tabstop>inputVoltageRangeComboBox_8</tabstop>
+  <tabstop>thresholdVoltageDoubleSpinBox_8</tabstop>
+  <tabstop>resetVoltageDoubleSpinBox_8</tabstop>
+  <tabstop>enableSMEventReportingCheckBox_8</tabstop>
+  <tabstop>enableUSBStreamingCheckBox_8</tabstop>
+  <tabstop>enableModuleStreamingCheckBox_8</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
