@@ -10,11 +10,11 @@ from datetime import datetime
 from serial.serialutil import SerialException
 
 from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow, QWidget, QGridLayout, QPushButton)
+    QApplication, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow)
 from PyQt5.QtCore import QObject, QThread, QTime, QTimer, pyqtSignal, pyqtSlot, Qt
 from PyQt5.QtGui import QCloseEvent
 
-from main_window_ui_2 import Ui_MainWindow
+from main_window_ui import Ui_MainWindow
 from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import AnalogInException, BpodAnalogIn
@@ -23,11 +23,9 @@ import olfactometry
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
 from protocolWorker import ProtocolWorker
-# from streamingWorker import StreamingWorker
-from newStreamingWorker import StreamingWorker
+from streamingWorker import StreamingWorker
 from flowUsagePlotWorker import FlowUsagePlotWorker
 from resultsPlotWorker import ResultsPlotWorker
-# from calibrateWaterWorker import CalibrateWaterWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
 from analogInputSettingsDialog import AnalogInputSettingsDialog
@@ -109,8 +107,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.finalValveButton.setEnabled(False)
         self.leftWaterValveButton.setEnabled(False)
         self.rightWaterValveButton.setEnabled(False)
-        self.calibLeftWaterButton.setEnabled(False)
-        self.calibRightWaterButton.setEnabled(False)
+        self.flushLeftWaterButton.setEnabled(False)
+        self.flushRightWaterButton.setEnabled(False)
 
         self.currentTrialSubWindow = MyQMdiSubWindow()
         self.currentTrialSubWindow.closed.connect(self._updateViewMenu)
@@ -167,8 +165,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.finalValveButton.clicked.connect(self._toggleFinalValve)
         self.leftWaterValveButton.clicked.connect(self._toggleLeftWaterValve)
         self.rightWaterValveButton.clicked.connect(self._toggleRightWaterValve)
-        self.calibLeftWaterButton.clicked.connect(self._calibrateLeftWaterValve)
-        self.calibRightWaterButton.clicked.connect(self._calibrateRightWaterValve)
+        self.flushLeftWaterButton.clicked.connect(self._flushLeftWaterValve)
+        self.flushRightWaterButton.clicked.connect(self._flushRightWaterValve)
         self.connectDevicesButton.clicked.connect(self._connectDevices)
         self.resultsPlotCombineAllVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(0))
         self.resultsPlotCombineLikeVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(1))
@@ -392,8 +390,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.finalValveButton.setEnabled(True)
         self.leftWaterValveButton.setEnabled(True)
         self.rightWaterValveButton.setEnabled(True)
-        self.calibLeftWaterButton.setEnabled(True)
-        self.calibRightWaterButton.setEnabled(True)
+        self.flushLeftWaterButton.setEnabled(True)
+        self.flushRightWaterButton.setEnabled(True)
 
     def _runTask(self):
         if self.mouseNumber is None:
@@ -476,8 +474,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.flowUsagePlotSubWindow.showShaded()
 
         self.startButton.setEnabled(False)
-        self.calibLeftWaterButton.setEnabled(False)
-        self.calibRightWaterButton.setEnabled(False)
+        self.flushLeftWaterButton.setEnabled(False)
+        self.flushRightWaterButton.setEnabled(False)
         self.stopButton.setEnabled(True)
         self.pauseButton.setEnabled(True)
         if self.olfaCheckBox.isChecked():
@@ -500,8 +498,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.pauseButton.setEnabled(False)
         self.pauseButton.setText('Pause')
         self.isPaused = False
-        self.calibLeftWaterButton.setEnabled(True)
-        self.calibRightWaterButton.setEnabled(True)
+        self.flushLeftWaterButton.setEnabled(True)
+        self.flushRightWaterButton.setEnabled(True)
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
         self._experimentCompleteDialog()
@@ -605,33 +603,33 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.myBpod is not None:
             self.myBpod.manual_override(Bpod.ChannelTypes.OUTPUT, Bpod.ChannelNames.VALVE, channel_number=channelNum, value=0)
 
-    def _calibrateLeftWaterValve(self):
+    def _flushLeftWaterValve(self):
         if self.myBpod is not None:
             self.leftWaterValveButton.setEnabled(False)
             self.rightWaterValveButton.setEnabled(False)
-            self.calibLeftWaterButton.setEnabled(False)
-            self.calibRightWaterButton.setEnabled(False)
+            self.flushLeftWaterButton.setEnabled(False)
+            self.flushRightWaterButton.setEnabled(False)
             self.startButton.setEnabled(False)
 
             self.timerCounter = 0
             self.isOpen = False
             self.timer = QTimer(self)
-            self.timer.timeout.connect(self._calibrateLeftWaterValveToggler)
+            self.timer.timeout.connect(self._flushLeftWaterValveToggler)
 
             self.waterFlushProgress = QProgressDialog("Flushing left water valve...", "Cancel", 0, 100, self)
             self.waterFlushProgress.setWindowModality(Qt.WindowModal)
 
             self.timer.start(self.leftWaterValveDuration)
 
-    def _calibrateLeftWaterValveToggler(self):
+    def _flushLeftWaterValveToggler(self):
         if self.waterFlushProgress.wasCanceled():  # first check if user cancelled.
             self._closeValve(self.leftWaterValve)
             self.timer.stop()
 
             self.leftWaterValveButton.setEnabled(True)
             self.rightWaterValveButton.setEnabled(True)
-            self.calibLeftWaterButton.setEnabled(True)
-            self.calibRightWaterButton.setEnabled(True)
+            self.flushLeftWaterButton.setEnabled(True)
+            self.flushRightWaterButton.setEnabled(True)
             self.startButton.setEnabled(True)
 
         elif (self.timerCounter < 100):
@@ -650,39 +648,39 @@ class Window(QMainWindow, Ui_MainWindow):
 
             self.leftWaterValveButton.setEnabled(True)
             self.rightWaterValveButton.setEnabled(True)
-            self.calibLeftWaterButton.setEnabled(True)
-            self.calibRightWaterButton.setEnabled(True)
+            self.flushLeftWaterButton.setEnabled(True)
+            self.flushRightWaterButton.setEnabled(True)
             self.startButton.setEnabled(True)
 
-    def _calibrateRightWaterValve(self):
+    def _flushRightWaterValve(self):
         # self._runCalibrateWaterThread(self.rightWaterValve, self.rightWaterValveDuration)
 
         if self.myBpod is not None:
             self.leftWaterValveButton.setEnabled(False)
             self.rightWaterValveButton.setEnabled(False)
-            self.calibLeftWaterButton.setEnabled(False)
-            self.calibRightWaterButton.setEnabled(False)
+            self.flushLeftWaterButton.setEnabled(False)
+            self.flushRightWaterButton.setEnabled(False)
             self.startButton.setEnabled(False)
 
             self.timerCounter = 0
             self.isOpen = False
             self.timer = QTimer(self)
-            self.timer.timeout.connect(self._calibrateRightWaterValveToggler)
+            self.timer.timeout.connect(self._flushRightWaterValveToggler)
 
             self.waterFlushProgress = QProgressDialog("Flushing right water valve...", "Cancel", 0, 100, self)
             self.waterFlushProgress.setWindowModality(Qt.WindowModal)
 
             self.timer.start(self.rightWaterValveDuration)
 
-    def _calibrateRightWaterValveToggler(self):
+    def _flushRightWaterValveToggler(self):
         if self.waterFlushProgress.wasCanceled():  # first check if user cancelled.
             self._closeValve(self.rightWaterValve)
             self.timer.stop()
 
             self.leftWaterValveButton.setEnabled(True)
             self.rightWaterValveButton.setEnabled(True)
-            self.calibLeftWaterButton.setEnabled(True)
-            self.calibRightWaterButton.setEnabled(True)
+            self.flushLeftWaterButton.setEnabled(True)
+            self.flushRightWaterButton.setEnabled(True)
             self.startButton.setEnabled(True)
 
         elif (self.timerCounter < 100):
@@ -701,8 +699,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
             self.leftWaterValveButton.setEnabled(True)
             self.rightWaterValveButton.setEnabled(True)
-            self.calibLeftWaterButton.setEnabled(True)
-            self.calibRightWaterButton.setEnabled(True)
+            self.flushLeftWaterButton.setEnabled(True)
+            self.flushRightWaterButton.setEnabled(True)
             self.startButton.setEnabled(True)
 
     def _recordMouseNumber(self):
@@ -940,19 +938,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")
-
-    # def _runCalibrateWaterThread(self, valveNum, duration):
-    #     self.calibrateWaterThread = QThread()
-    #     self.calibrateWaterWorker = CalibrateWaterWorker(valveNum=valveNum, duration=duration)
-    #     self.calibrateWaterWorker.moveToThread(self.calibrateWaterThread)
-    #     self.calibrateWaterThread.started.connect(self.calibrateWaterWorker.run)
-    #     self.calibrateWaterWorker.finished.connect(self.calibrateWaterThread.quit)
-    #     self.calibrateWaterWorker.finished.connect(self.calibrateWaterWorker.deleteLater)
-    #     self.calibrateWaterThread.finished.connect(self.calibrateWaterThread.deleteLater)
-    #     self.calibrateWaterWorker.openValveSignal.connect(lambda: self._openValve(valveNum))
-    #     self.calibrateWaterWorker.closeValveSignal.connect(lambda: self._closeValve(valveNum))
-    #     self.calibrateWaterThread.start()
-    #     logging.info("calibrateWaterThread start")
 
 
 if __name__ == "__main__":
