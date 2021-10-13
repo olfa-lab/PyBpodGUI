@@ -43,52 +43,44 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             self.connectSignalsSlots()
 
     def populateFields(self):
+        self.mfcTypeComboBox_0.addItems(['analog', 'alicat_digital', 'alicat_digital_raw'])
+        self.mfcAddressComboBox_0.addItems(['A', 'B'])
+        self.mfcArduinoPortNumComboBox_0.addItems(['1', '2'])
+        self.mfcGasComboBox_0.addItems(['Air', 'Nitrogen', 'vac'])
+
         self.mfcTypeComboBox_1.addItems(['analog', 'alicat_digital', 'alicat_digital_raw'])
         self.mfcAddressComboBox_1.addItems(['A', 'B'])
         self.mfcArduinoPortNumComboBox_1.addItems(['1', '2'])
-        self.mfcCapacityComboBox_1.addItems(['1000', '100'])
         self.mfcGasComboBox_1.addItems(['Air', 'Nitrogen', 'vac'])
-
-        self.mfcTypeComboBox_2.addItems(['analog', 'alicat_digital', 'alicat_digital_raw'])
-        self.mfcAddressComboBox_2.addItems(['A', 'B'])
-        self.mfcArduinoPortNumComboBox_2.addItems(['1', '2'])
-        self.mfcCapacityComboBox_2.addItems(['1000', '100'])
-        self.mfcGasComboBox_2.addItems(['Air', 'Nitrogen', 'vac'])
         
+        self.dilutorMFCTypeComboBox_0.addItems(['analog', 'alicat_digital', 'alicat_digital_raw'])
+        self.dilutorMFCAddressComboBox_0.addItems(['A', 'B'])
+        self.dilutorMFCGasComboBox_0.addItems(['Air', 'Nitrogen', 'vac'])
+
         self.dilutorMFCTypeComboBox_1.addItems(['analog', 'alicat_digital', 'alicat_digital_raw'])
         self.dilutorMFCAddressComboBox_1.addItems(['A', 'B'])
-        self.dilutorMFCCapacityComboBox_1.addItems(['2000', '1000', '100'])
         self.dilutorMFCGasComboBox_1.addItems(['Air', 'Nitrogen', 'vac'])
-
-        self.dilutorMFCTypeComboBox_2.addItems(['analog', 'alicat_digital', 'alicat_digital_raw'])
-        self.dilutorMFCAddressComboBox_2.addItems(['A', 'B'])
-        self.dilutorMFCCapacityComboBox_2.addItems(['2000', '1000', '100'])
-        self.dilutorMFCGasComboBox_2.addItems(['Air', 'Nitrogen', 'vac'])
 
         self.dilutorTypeComboBox.addItem('serial_forwarding')
         self.interfaceComboBox.addItem('teensy')
 
+        self.mfcTypeComboBox_0.setCurrentIndex(-1)
+        self.mfcAddressComboBox_0.setCurrentIndex(-1)
+        self.mfcArduinoPortNumComboBox_0.setCurrentIndex(-1)
+        self.mfcGasComboBox_0.setCurrentIndex(-1)
+
         self.mfcTypeComboBox_1.setCurrentIndex(-1)
         self.mfcAddressComboBox_1.setCurrentIndex(-1)
         self.mfcArduinoPortNumComboBox_1.setCurrentIndex(-1)
-        self.mfcCapacityComboBox_1.setCurrentIndex(-1)
         self.mfcGasComboBox_1.setCurrentIndex(-1)
-
-        self.mfcTypeComboBox_2.setCurrentIndex(-1)
-        self.mfcAddressComboBox_2.setCurrentIndex(-1)
-        self.mfcArduinoPortNumComboBox_2.setCurrentIndex(-1)
-        self.mfcCapacityComboBox_2.setCurrentIndex(-1)
-        self.mfcGasComboBox_2.setCurrentIndex(-1)
         
+        self.dilutorMFCTypeComboBox_0.setCurrentIndex(-1)
+        self.dilutorMFCAddressComboBox_0.setCurrentIndex(-1)
+        self.dilutorMFCGasComboBox_0.setCurrentIndex(-1)
+
         self.dilutorMFCTypeComboBox_1.setCurrentIndex(-1)
         self.dilutorMFCAddressComboBox_1.setCurrentIndex(-1)
-        self.dilutorMFCCapacityComboBox_1.setCurrentIndex(-1)
         self.dilutorMFCGasComboBox_1.setCurrentIndex(-1)
-
-        self.dilutorMFCTypeComboBox_2.setCurrentIndex(-1)
-        self.dilutorMFCAddressComboBox_2.setCurrentIndex(-1)
-        self.dilutorMFCCapacityComboBox_2.setCurrentIndex(-1)
-        self.dilutorMFCGasComboBox_2.setCurrentIndex(-1)
 
         self.dilutorTypeComboBox.setCurrentIndex(-1)
         self.interfaceComboBox.setCurrentIndex(-1)
@@ -96,26 +88,26 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
     def displayCurrentValues(self):
         try:
             mfcType = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['MFC_type']
-            self.mfcTypeComboBox_1.setCurrentText(mfcType)
+            self.mfcTypeComboBox_0.setCurrentText(mfcType)
             address = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['address']
-            self.mfcAddressComboBox_1.setCurrentText(address)
+            self.mfcAddressComboBox_0.setCurrentText(address)
             arduinoPortNum = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['arduino_port_num']
-            self.mfcArduinoPortNumComboBox_1.setCurrentText(str(arduinoPortNum))
+            self.mfcArduinoPortNumComboBox_0.setCurrentText(str(arduinoPortNum))
             capacity = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['capacity']
-            self.mfcCapacityComboBox_1.setCurrentText(str(capacity))
+            self.mfcCapacitySpinBox_0.setValue(capacity)
             gas = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['gas']
-            self.mfcGasComboBox_1.setCurrentText(gas)
+            self.mfcGasComboBox_0.setCurrentText(gas)
 
             mfcType = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['MFC_type']
-            self.mfcTypeComboBox_2.setCurrentText(mfcType)
+            self.mfcTypeComboBox_1.setCurrentText(mfcType)
             address = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['address']
-            self.mfcAddressComboBox_2.setCurrentText(address)
+            self.mfcAddressComboBox_1.setCurrentText(address)
             arduinoPortNum = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['arduino_port_num']
-            self.mfcArduinoPortNumComboBox_2.setCurrentText(str(arduinoPortNum))
+            self.mfcArduinoPortNumComboBox_1.setCurrentText(str(arduinoPortNum))
             capacity = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['capacity']
-            self.mfcCapacityComboBox_2.setCurrentText(str(capacity))
+            self.mfcCapacitySpinBox_1.setValue(capacity)
             gas = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['gas']
-            self.mfcGasComboBox_2.setCurrentText(gas)
+            self.mfcGasComboBox_1.setCurrentText(gas)
 
             comPort = self.olfaConfigDict['Olfactometers'][0]['com_port']
             self.comPortLineEdit.setText(str(comPort))
@@ -130,101 +122,104 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             slaveIndex = self.olfaConfigDict['Olfactometers'][0]['slave_index']
             self.slaveIndexLineEdit.setText(str(slaveIndex))
 
+            for flow in self.olfaConfigDict['Olfactometers'][0]['flowrates']:
+                self.flowratesListWidget.addItem(str(flow))
+            
             if '5' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['odor']
                     self.vialOdorNameLineEdit_5.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['conc']
-                    self.vialConcLineEdit_5.setText(str(conc))
+                    self.vialConcDoubleSpinBox_5.setValue(conc)
             if '6' in self.olfaConfigDict['Olfactometers'][0]['Vials']:  
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:  
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['odor']
                     self.vialOdorNameLineEdit_6.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:    
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['conc']
-                    self.vialConcLineEdit_6.setText(str(conc))
+                    self.vialConcDoubleSpinBox_6.setValue(conc)
             if '7' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:  
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['odor']
                     self.vialOdorNameLineEdit_7.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:    
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['conc']
-                    self.vialConcLineEdit_7.setText(str(conc))
+                    self.vialConcDoubleSpinBox_7.setValue(conc)
             if '8' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:  
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['odor']
                     self.vialOdorNameLineEdit_8.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:    
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['conc']
-                    self.vialConcLineEdit_8.setText(str(conc))
+                    self.vialConcDoubleSpinBox_8.setValue(conc)
             if '9' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:  
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['odor']
                     self.vialOdorNameLineEdit_9.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:    
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['conc']
-                    self.vialConcLineEdit_9.setText(str(conc))
+                    self.vialConcDoubleSpinBox_9.setValue(conc)
             if '10' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:  
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['odor']
                     self.vialOdorNameLineEdit_10.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:    
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['conc']
-                    self.vialConcLineEdit_10.setText(str(conc))
+                    self.vialConcDoubleSpinBox_10.setValue(conc)
             if '11' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:  
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['odor']
                     self.vialOdorNameLineEdit_11.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:    
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['conc']
-                    self.vialConcLineEdit_11.setText(str(conc))
+                    self.vialConcDoubleSpinBox_11.setValue(conc)
             if '12' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
                 if 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:  
                     odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['odor']
                     self.vialOdorNameLineEdit_12.setText(odor)
                 if 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:    
                     conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['conc']
-                    self.vialConcLineEdit_12.setText(str(conc))
+                    self.vialConcDoubleSpinBox_12.setValue(conc)
 
             if ('Dilutors' in self.olfaConfigDict['Olfactometers'][0]) and (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) > 0):
                 dilutorMFCType = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['MFC_type']
-                self.dilutorMFCTypeComboBox_1.setCurrentText(dilutorMFCType)
+                self.dilutorMFCTypeComboBox_0.setCurrentText(dilutorMFCType)
                 dilutorMFCAddress = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['address']
-                self.dilutorMFCAddressComboBox_1.setCurrentText(dilutorMFCAddress)
+                self.dilutorMFCAddressComboBox_0.setCurrentText(dilutorMFCAddress)
                 dilutorMFCCapacity = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['capacity']
-                self.dilutorMFCCapacityComboBox_1.setCurrentText(str(dilutorMFCCapacity))
+                self.dilutorMFCCapacitySpinBox_0.setValue(dilutorMFCCapacity)
                 dilutorMFCGas = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['gas']
-                self.dilutorMFCGasComboBox_1.setCurrentText(dilutorMFCGas)
+                self.dilutorMFCGasComboBox_0.setCurrentText(dilutorMFCGas)
 
                 dilutorMFCType = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['MFC_type']
-                self.dilutorMFCTypeComboBox_2.setCurrentText(dilutorMFCType)
+                self.dilutorMFCTypeComboBox_1.setCurrentText(dilutorMFCType)
                 dilutorMFCAddress = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['address']
-                self.dilutorMFCAddressComboBox_2.setCurrentText(dilutorMFCAddress)
+                self.dilutorMFCAddressComboBox_1.setCurrentText(dilutorMFCAddress)
                 dilutorMFCCapacity = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['capacity']
-                self.dilutorMFCCapacityComboBox_2.setCurrentText(str(dilutorMFCCapacity))
+                self.dilutorMFCCapacitySpinBox_1.setValue(dilutorMFCCapacity)
                 dilutorMFCGas = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['gas']
-                self.dilutorMFCGasComboBox_2.setCurrentText(dilutorMFCGas)
+                self.dilutorMFCGasComboBox_1.setCurrentText(dilutorMFCGas)
 
                 dilutorCOMPort = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['com_port']
                 self.dilutorComPortLineEdit.setText(str(dilutorCOMPort))
                 dilutorType = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['dilutor_type']
                 self.dilutorTypeComboBox.setCurrentText(dilutorType)
-        except KeyError:
-            QMessageBox.warning(self, "Warning", "There was an error displaying contents of the file. One or more values may be missing or invalid.")
+        except KeyError as err:
+            QMessageBox.warning(self, "Warning", f"There was an error displaying contents of the file. One or more values may be missing or invalid.\nKeyError: {err}")
 
     def connectSignalsSlots(self):
+            self.mfcTypeComboBox_0.currentIndexChanged.connect(self.recordMFCType_0)
+            self.mfcAddressComboBox_0.currentIndexChanged.connect(self.recordMFCAddress_0)
+            self.mfcArduinoPortNumComboBox_0.currentIndexChanged.connect(self.recordMFCArduinoPortNum_0)
+            self.mfcCapacitySpinBox_0.valueChanged.connect(self.recordMFCCapacity_0)
+            self.mfcGasComboBox_0.currentIndexChanged.connect(self.recordMFCGas_0)
+
             self.mfcTypeComboBox_1.currentIndexChanged.connect(self.recordMFCType_1)
             self.mfcAddressComboBox_1.currentIndexChanged.connect(self.recordMFCAddress_1)
             self.mfcArduinoPortNumComboBox_1.currentIndexChanged.connect(self.recordMFCArduinoPortNum_1)
-            self.mfcCapacityComboBox_1.currentIndexChanged.connect(self.recordMFCCapacity_1)
+            self.mfcCapacitySpinBox_1.valueChanged.connect(self.recordMFCCapacity_1)
             self.mfcGasComboBox_1.currentIndexChanged.connect(self.recordMFCGas_1)
-
-            self.mfcTypeComboBox_2.currentIndexChanged.connect(self.recordMFCType_2)
-            self.mfcAddressComboBox_2.currentIndexChanged.connect(self.recordMFCAddress_2)
-            self.mfcArduinoPortNumComboBox_2.currentIndexChanged.connect(self.recordMFCArduinoPortNum_2)
-            self.mfcCapacityComboBox_2.currentIndexChanged.connect(self.recordMFCCapacity_2)
-            self.mfcGasComboBox_2.currentIndexChanged.connect(self.recordMFCGas_2)
 
             self.comPortLineEdit.editingFinished.connect(self.recordCOMPort)
             self.interfaceComboBox.currentIndexChanged.connect(self.recordInterface)
@@ -234,68 +229,83 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             self.slaveIndexLineEdit.editingFinished.connect(self.recordSlaveIndex)
 
             self.vialOdorNameLineEdit_5.editingFinished.connect(self.recordVialOdorName_5)
-            self.vialConcLineEdit_5.editingFinished.connect(self.recordVialConc_5)
+            self.vialConcDoubleSpinBox_5.valueChanged.connect(self.recordVialConc_5)
             self.vialOdorNameLineEdit_6.editingFinished.connect(self.recordVialOdorName_6)
-            self.vialConcLineEdit_6.editingFinished.connect(self.recordVialConc_6)
+            self.vialConcDoubleSpinBox_6.valueChanged.connect(self.recordVialConc_6)
             self.vialOdorNameLineEdit_7.editingFinished.connect(self.recordVialOdorName_7)
-            self.vialConcLineEdit_7.editingFinished.connect(self.recordVialConc_7)
+            self.vialConcDoubleSpinBox_7.valueChanged.connect(self.recordVialConc_7)
             self.vialOdorNameLineEdit_8.editingFinished.connect(self.recordVialOdorName_8)
-            self.vialConcLineEdit_8.editingFinished.connect(self.recordVialConc_8)
+            self.vialConcDoubleSpinBox_8.valueChanged.connect(self.recordVialConc_8)
             self.vialOdorNameLineEdit_9.editingFinished.connect(self.recordVialOdorName_9)
-            self.vialConcLineEdit_9.editingFinished.connect(self.recordVialConc_9)
+            self.vialConcDoubleSpinBox_9.valueChanged.connect(self.recordVialConc_9)
             self.vialOdorNameLineEdit_10.editingFinished.connect(self.recordVialOdorName_10)
-            self.vialConcLineEdit_10.editingFinished.connect(self.recordVialConc_10)
+            self.vialConcDoubleSpinBox_10.valueChanged.connect(self.recordVialConc_10)
             self.vialOdorNameLineEdit_11.editingFinished.connect(self.recordVialOdorName_11)
-            self.vialConcLineEdit_11.editingFinished.connect(self.recordVialConc_11)
+            self.vialConcDoubleSpinBox_11.valueChanged.connect(self.recordVialConc_11)
             self.vialOdorNameLineEdit_12.editingFinished.connect(self.recordVialOdorName_12)
-            self.vialConcLineEdit_12.editingFinished.connect(self.recordVialConc_12)
+            self.vialConcDoubleSpinBox_12.valueChanged.connect(self.recordVialConc_12)
 
             self.dilutorComPortLineEdit.editingFinished.connect(self.recordDilutorCOMPort)
             self.dilutorTypeComboBox.currentIndexChanged.connect(self.recordDilutorType)
 
+            self.dilutorMFCTypeComboBox_0.currentIndexChanged.connect(self.recordDilutorMFCType_0)
+            self.dilutorMFCAddressComboBox_0.currentIndexChanged.connect(self.recordDilutorMFCAddress_0)
+            self.dilutorMFCCapacitySpinBox_0.valueChanged.connect(self.recordDilutorMFCCapacity_0)
+            self.dilutorMFCGasComboBox_0.currentIndexChanged.connect(self.recordDilutorMFCGas_0)
+
             self.dilutorMFCTypeComboBox_1.currentIndexChanged.connect(self.recordDilutorMFCType_1)
             self.dilutorMFCAddressComboBox_1.currentIndexChanged.connect(self.recordDilutorMFCAddress_1)
-            self.dilutorMFCCapacityComboBox_1.currentIndexChanged.connect(self.recordDilutorMFCCapacity_1)
+            self.dilutorMFCCapacitySpinBox_1.valueChanged.connect(self.recordDilutorMFCCapacity_1)
             self.dilutorMFCGasComboBox_1.currentIndexChanged.connect(self.recordDilutorMFCGas_1)
-
-            self.dilutorMFCTypeComboBox_2.currentIndexChanged.connect(self.recordDilutorMFCType_2)
-            self.dilutorMFCAddressComboBox_2.currentIndexChanged.connect(self.recordDilutorMFCAddress_2)
-            self.dilutorMFCCapacityComboBox_2.currentIndexChanged.connect(self.recordDilutorMFCCapacity_2)
-            self.dilutorMFCGasComboBox_2.currentIndexChanged.connect(self.recordDilutorMFCGas_2)
 
             self.buttonBox.accepted.connect(self.saveToCurrentFile)
             self.saveAsButton.clicked.connect(self.saveAsNewFile)
             self.clearDilutorButton.clicked.connect(self.clearDilutor)
+            self.addFlowrateButton.clicked.connect(self.addFlowrate)
+            self.removeFlowrateButton.clicked.connect(self.removeFlowrate)
+
+    def addFlowrate(self):
+        if 'flowrates' not in self.olfaConfigDict['Olfactometers'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['flowrates'] = []
+        self.olfaConfigDict['Olfactometers'][0]['flowrates'].append(self.flowrateSpinBox.value())
+        self.flowratesListWidget.addItem(str(self.flowrateSpinBox.value()))
+
+    def removeFlowrate(self):
+        itemRemoved = self.flowratesListWidget.takeItem(self.flowratesListWidget.currentRow())
+        if itemRemoved is not None:
+            self.olfaConfigDict['Olfactometers'][0]['flowrates'].remove(int(itemRemoved.text()))  # itemRemoved is of type QListWidgetItem.
+            del itemRemoved  # According to Qt docs, Qt does not manage items removed from a ListWidget so they need to be deleted manually.
+    
+    def recordMFCType_0(self):
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['MFC_type'] = self.mfcTypeComboBox_0.currentText()
+        
+    def recordMFCAddress_0(self):
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['address'] = self.mfcAddressComboBox_0.currentText()
+
+    def recordMFCArduinoPortNum_0(self):
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_0.currentText())
+
+    def recordMFCCapacity_0(self, value):
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['capacity'] = value
+
+    def recordMFCGas_0(self):
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['gas'] = self.mfcGasComboBox_0.currentText()
 
     def recordMFCType_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['MFC_type'] = self.mfcTypeComboBox_1.currentText()
-        
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['MFC_type'] = self.mfcTypeComboBox_1.currentText()
+
     def recordMFCAddress_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['address'] = self.mfcAddressComboBox_1.currentText()
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['address'] = self.mfcAddressComboBox_1.currentText()
 
     def recordMFCArduinoPortNum_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_1.currentText())
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_1.currentText())
 
-    def recordMFCCapacity_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['capacity'] = int(self.mfcCapacityComboBox_1.currentText())
+    def recordMFCCapacity_1(self, value):
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['capacity'] = value
+        self.flowrateSpinBox.setMaximum(value)  # MFC_0 is configured to always permit 1000 SCCM flowrate, while MFC_1 will be adjusted using the flowrates listed by the user. So set the maximum to be its capacity.
 
     def recordMFCGas_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['gas'] = self.mfcGasComboBox_1.currentText()
-
-    def recordMFCType_2(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['MFC_type'] = self.mfcTypeComboBox_2.currentText()
-
-    def recordMFCAddress_2(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['address'] = self.mfcAddressComboBox_2.currentText()
-
-    def recordMFCArduinoPortNum_2(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_2.currentText())
-
-    def recordMFCCapacity_2(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['capacity'] = int(self.mfcCapacityComboBox_2.currentText())
-
-    def recordMFCGas_2(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['gas'] = self.mfcGasComboBox_2.currentText()
+        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['gas'] = self.mfcGasComboBox_1.currentText()
 
     def recordCOMPort(self):
         if not (self.comPortLineEdit.text() == ''):
@@ -338,12 +348,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_5(self):
+    def recordVialConc_5(self, value):
         if '5' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['5'] = {}
-        if not (self.vialConcLineEdit_5.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['conc'] = float(self.vialConcLineEdit_5.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_5.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['conc']  # Delete the key if it was created.
 
     def recordVialOdorName_6(self):
@@ -354,12 +364,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_6(self):
+    def recordVialConc_6(self, value):
         if '6' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['6'] = {}
-        if not (self.vialConcLineEdit_6.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['conc'] = float(self.vialConcLineEdit_6.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_6.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['conc']  # Delete the key if it was created.
 
     def recordVialOdorName_7(self):
@@ -370,12 +380,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_7(self):
+    def recordVialConc_7(self, value):
         if '7' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['7'] = {}
-        if not (self.vialConcLineEdit_7.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['conc'] = float(self.vialConcLineEdit_7.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_7.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['conc']  # Delete the key if it was created.
 
     def recordVialOdorName_8(self):
@@ -386,12 +396,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_8(self):
+    def recordVialConc_8(self, value):
         if '8' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['8'] = {}
-        if not (self.vialConcLineEdit_8.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['conc'] = float(self.vialConcLineEdit_8.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_8.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['conc']  # Delete the key if it was created.
 
     def recordVialOdorName_9(self):
@@ -402,12 +412,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_9(self):
+    def recordVialConc_9(self, value):
         if '9' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['9'] = {}
-        if not (self.vialConcLineEdit_9.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['conc'] = float(self.vialConcLineEdit_9.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_9.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['conc']  # Delete the key if it was created.
 
     def recordVialOdorName_10(self):
@@ -418,12 +428,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_10(self):
+    def recordVialConc_10(self, value):
         if '10' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['10'] = {}
-        if not (self.vialConcLineEdit_10.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['conc'] = float(self.vialConcLineEdit_10.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_10.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['conc']  # Delete the key if it was created.
 
     def recordVialOdorName_11(self):
@@ -434,12 +444,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_11(self):
+    def recordVialConc_11(self, value):
         if '11' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['11'] = {}
-        if not (self.vialConcLineEdit_11.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['conc'] = float(self.vialConcLineEdit_11.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_11.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['conc']  # Delete the key if it was created.
 
     def recordVialOdorName_12(self):
@@ -450,12 +460,12 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
         elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:  # Therefore lineEdit must be an empty string.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['odor']  # Delete the key if it was created.
 
-    def recordVialConc_12(self):
+    def recordVialConc_12(self, value):
         if '12' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
             self.olfaConfigDict['Olfactometers'][0]['Vials']['12'] = {}
-        if not (self.vialConcLineEdit_12.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['conc'] = float(self.vialConcLineEdit_12.text())
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:  # Therefore lineEdit must be an empty string.
+        if not (self.vialConcDoubleSpinBox_12.value() == 0.0):
+            self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:  # Therefore doubleSpinBox must be 0.0.
             del self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['conc']  # Delete the key if it was created.
 
     def recordDilutorCOMPort(self):
@@ -471,73 +481,75 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
         self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['dilutor_type'] = self.dilutorTypeComboBox.currentText()
 
+    def recordDilutorMFCType_0(self):
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['MFC_type'] = self.dilutorMFCTypeComboBox_0.currentText()
+
+    def recordDilutorMFCAddress_0(self):
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['address'] = self.dilutorMFCAddressComboBox_0.currentText()
+
+    def recordDilutorMFCCapacity_0(self, value):
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
+        if (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) == 0):
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'].append({})
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['capacity'] = value
+
+    def recordDilutorMFCGas_0(self):
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['gas'] = self.dilutorMFCGasComboBox_0.currentText()
+
     def recordDilutorMFCType_1(self):
         if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
         if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['MFC_type'] = self.dilutorMFCTypeComboBox_1.currentText()
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['MFC_type'] = self.dilutorMFCTypeComboBox_1.currentText()
 
     def recordDilutorMFCAddress_1(self):
         if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
         if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['address'] = self.dilutorMFCAddressComboBox_1.currentText()
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['address'] = self.dilutorMFCAddressComboBox_1.currentText()
 
-    def recordDilutorMFCCapacity_1(self):
+    def recordDilutorMFCCapacity_1(self, value):
         if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
         if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['capacity'] = int(self.dilutorMFCCapacityComboBox_1.currentText())
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['capacity'] = value
 
     def recordDilutorMFCGas_1(self):
         if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
         if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
             self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['gas'] = self.dilutorMFCGasComboBox_1.currentText()
-
-    def recordDilutorMFCType_2(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['MFC_type'] = self.dilutorMFCTypeComboBox_2.currentText()
-
-    def recordDilutorMFCAddress_2(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['address'] = self.dilutorMFCAddressComboBox_2.currentText()
-
-    def recordDilutorMFCCapacity_2(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['capacity'] = int(self.dilutorMFCCapacityComboBox_2.currentText())
-
-    def recordDilutorMFCGas_2(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['gas'] = self.dilutorMFCGasComboBox_2.currentText()
+        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['gas'] = self.dilutorMFCGasComboBox_1.currentText()
 
     def clearDilutor(self):
         if 'Dilutors' in self.olfaConfigDict['Olfactometers'][0]:
+            self.dilutorMFCTypeComboBox_0.setCurrentIndex(-1)
+            self.dilutorMFCAddressComboBox_0.setCurrentIndex(-1)
+            self.dilutorMFCCapacitySpinBox_0.setValue(0)
+            self.dilutorMFCGasComboBox_0.setCurrentIndex(-1)
+
             self.dilutorMFCTypeComboBox_1.setCurrentIndex(-1)
             self.dilutorMFCAddressComboBox_1.setCurrentIndex(-1)
-            self.dilutorMFCCapacityComboBox_1.setCurrentIndex(-1)
+            self.dilutorMFCCapacitySpinBox_1.setValue(0)
             self.dilutorMFCGasComboBox_1.setCurrentIndex(-1)
-
-            self.dilutorMFCTypeComboBox_2.setCurrentIndex(-1)
-            self.dilutorMFCAddressComboBox_2.setCurrentIndex(-1)
-            self.dilutorMFCCapacityComboBox_2.setCurrentIndex(-1)
-            self.dilutorMFCGasComboBox_2.setCurrentIndex(-1)
 
             self.dilutorTypeComboBox.setCurrentIndex(-1)
             self.dilutorComPortLineEdit.clear()
@@ -583,6 +595,10 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
                 QMessageBox.warning(self, "Warning", f"Please choose the gas type of the olfactometer MFC {i}!")
                 return
 
+        if ('flowrates' not in self.olfaConfigDict['Olfactometers'][0]) or (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
+            QMessageBox.warning(self, "Warning", "Please enter at least one flowrate!")
+            return
+        
         if (len(self.olfaConfigDict['Olfactometers'][0]['Vials']) > 0):
             emptyVials = []
             for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
@@ -675,6 +691,10 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
                     QMessageBox.warning(self, "Warning", f"Please choose the gas type of the olfactometer MFC {i}!")
                     return
 
+            if ('flowrates' not in self.olfaConfigDict['Olfactometers'][0]) or (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
+                QMessageBox.warning(self, "Warning", "Please enter at least one flowrate!")
+                return
+            
             if (len(self.olfaConfigDict['Olfactometers'][0]['Vials']) > 0):
                 emptyVials = []
                 for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
