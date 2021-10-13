@@ -182,6 +182,8 @@ class ProtocolWorker(QObject):
         self.currentStateName = self.sma.state_names[self.sma.current_state]
         self.newStateSignal.emit(self.currentStateName)
         self.stateNumSignal.emit(self.sma.current_state)
+        # logging.info(self.sma.hardware.channels.output_channel_names)
+        # logging.info(self.sma.output_matrix)
         
         if self.currentStateName == 'Correct':
             self.currentResponseResult = 'Correct'
@@ -422,7 +424,7 @@ class ProtocolWorker(QObject):
 
             ostim['olfas'][f'olfa_{i}'] = {
                 'dilutors': {},
-                'mfc_0_flow': 1000 - currentFlow,
+                'mfc_0_flow': 1000,
                 'mfc_1_flow': currentFlow,
                 'odor': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['odor'],
                 'vialconc': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc'],
@@ -457,7 +459,7 @@ class ProtocolWorker(QObject):
                 
                 ostim['olfas'][f'olfa_{i}'] = {
                     'dilutors': {},
-                    'mfc_0_flow': 1000 - currentFlow,
+                    'mfc_0_flow': 1000,
                     'mfc_1_flow': currentFlow,
                     'odor': currentOdor,
                     'vialconc': currentConc,
