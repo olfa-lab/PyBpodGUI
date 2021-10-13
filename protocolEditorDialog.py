@@ -14,28 +14,6 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 
-'''
-Things to do:
-
-    * __X__ generate state machine by reading from json file
-
-    * __X__ generate default softcode definitions for each state to emit signals for the GUI and other threads.
-    
-    * __X__ configure tab order for line edit fields
-    
-    * _____ alert when a state is used in a change state condition but it was not defined
-    
-    * _____ ability to use variables that change with each trial
-    
-    * _____ ability to define softcode actions
-    
-    * _____ ability to define loaded serial messages
-
-    * _____ make the dialog read a valid protocol file and display the file's contents so that the user can edit an existing file instead of only creating a new one.
-
-'''
-
-
 class SimpleItem(QGraphicsItem):
 
     def __init__(self, x, y, num, name, timer, change_conditions, output_actions):
@@ -70,14 +48,12 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
     def __init__(self, eventNamesList, outputChannelsList, protocolFileName=None, parent=None):
         super().__init__()
         self.setupUi(self)
-        self.showFlowRatesWidget()
         self.protocolFileName = protocolFileName
         if self.protocolFileName:
             with open(self.protocolFileName, 'r') as protocolFile:
                 self.allStatesDict = json.load(protocolFile)
         else:
             self.allStatesDict = {'states': []}
-        self.intensityPercentages = []
         self.stateDict = {
             'stateName': '',
             'stateTimer': 0,
@@ -147,13 +123,9 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         self.clearStateChangeConditionsButton.clicked.connect(self.clearStateChangeConditions)
         self.addStateButton.clicked.connect(self.addStateToView)
         self.removeStateButton.clicked.connect(self.removeStateFromView)
-        self.nextButton.clicked.connect(self.showStateMachineWidget)
-        self.backButton.clicked.connect(self.showFlowRatesWidget)
         self.cancelButton.clicked.connect(self.reject)
         self.saveButton.clicked.connect(self.saveFile)
         self.saveAsButton.clicked.connect(self.saveAsNewFileDialog)
-        self.addOdorIntensityButton.clicked.connect(self.addOdorIntensity)
-        self.removeOdorIntensityButton.clicked.connect(self.removeOdorIntensity)
 
     def displayFileContents(self):
         if (len(self.allStatesDict['states']) > 0):
@@ -170,57 +142,6 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
                 self.scene.addItem(stateItem)
                 self.xposition += 200
                 self.counter += 1
-        
-        if ('intensityPercentages' in self.allStatesDict) and (len(self.allStatesDict['intensityPercentages']) > 0):
-            for i in self.allStatesDict['intensityPercentages']:
-                self.intensityPercentages.append(i)
-                self.intensityPercentageListWidget.addItem(str(i))
-
-            # I delete because the user might not want to use odor intensity so they would remove them all using the odor intensity editor.
-            # That would clear the self.intensityPercentages list, but the list within the self.allStatesDict['intensityPercentages'],
-            # that existed at the time the protocol file was read, would not get removed. It gets recreated when the user saves the file,
-            # if there are any intensity percentages added.
-            del self.allStatesDict['intensityPercentages']
-
-    def showFlowRatesWidget(self):
-        self.stateMachineWidget.hide()
-        self.odorIntensityWidget.show()
-        self.odorIntensityWidget.move(10, 10)
-        self.cancelButton.move(20, 430)
-        self.backButton.move(90, 430)
-        self.nextButton.move(160, 430)
-        self.saveButton.move(230, 430)
-        self.saveAsButton.move(300, 430)
-        self.resize(380, 460)
-        self.saveAsButton.setEnabled(False)
-        self.saveButton.setEnabled(False)
-        self.backButton.setEnabled(False)
-        self.nextButton.setEnabled(True)
-
-    def showStateMachineWidget(self):
-        self.odorIntensityWidget.hide()
-        self.stateMachineWidget.show()
-        self.cancelButton.move(380, 850)
-        self.backButton.move(450, 850)
-        self.nextButton.move(520, 850)
-        self.saveButton.move(590, 850)
-        self.saveAsButton.move(660, 850)
-        self.resize(750, 900)
-        self.saveAsButton.setEnabled(True)
-        self.backButton.setEnabled(True)
-        self.nextButton.setEnabled(False)
-        if self.protocolFileName:
-            self.saveButton.setEnabled(True)
-
-    def addOdorIntensity(self):
-        self.intensityPercentages.append(self.intensityPercentageSpinBox.value())
-        self.intensityPercentageListWidget.addItem(str(self.intensityPercentageSpinBox.value()))
-
-    def removeOdorIntensity(self):
-        itemRemoved = self.intensityPercentageListWidget.takeItem(self.intensityPercentageListWidget.currentRow())
-        if itemRemoved is not None:
-            self.intensityPercentages.remove(int(itemRemoved.text()))  # itemRemoved is of type QListWidgetItem.
-            del itemRemoved  # According to Qt docs, Qt does not manage items removed from a ListWidget so they need to be deleted manually.
 
     def recordStateName(self, index=None):
         if index is None:
@@ -247,7 +168,6 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
 
     def recordStateChangeName(self, index=None):
         if index is None:
-            logging.info('editing finished')
             stateChangeName = self.stateChangeNameComboBox.currentText()
             findIndex = self.stateChangeNameComboBox.findText(stateChangeName)
             if (findIndex == -1):  # -1 means the Text was not found in the combobox
@@ -257,7 +177,6 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             else:
                 self.stateChangeNameComboBox.setCurrentIndex(findIndex)  # item already in combobox so use its index.
         else:   
-            logging.info('current index changed')     
             # Check that user made a selection for both stateChangeEvent and stateChangeName first.
             # Index 0 is 'Select...' which is not a valid selection. Index -1 means no selection at all.
             if (self.stateChangeEventComboBox.currentIndex() > 0):
@@ -486,27 +405,15 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             self.clearOutputActions()
     
     def removeStateFromView(self):
-        pass
-    
-    # def openFileNameDialog(self):
-    #     options = QFileDialog.Options()
-    #     options |= QFileDialog.DontUseNativeDialog
-    #     fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","All Files (*);;Python Files (*.py)", options=options)
-    #     if fileName:
-    #         print(fileName)
-    
-    # def openFileNamesDialog(self):
-    #     options = QFileDialog.Options()
-    #     options |= QFileDialog.DontUseNativeDialog
-    #     files, _ = QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
-    #     if files:
-    #         print(files)
+        stateItems = self.scene.items()
+        self.scene.removeItem(stateItems[0])  # first element is the most recent item added.
+        self.xposition -= 200  # decrement to account for the state that was removed.
+        self.counter -= 1  # decrement to account for the state that was removed.
+        self.allStatesDict['states'].pop()  # remove the most recently added state (which will be the last item in the list).
     
     def saveFile(self):
         if self.protocolFileName:
             with open(self.protocolFileName, 'w') as protocolFile:
-                if (len(self.intensityPercentages) > 0):
-                    self.allStatesDict['intensityPercentages'] = self.intensityPercentages
                 json.dump(self.allStatesDict, protocolFile, indent=4)
                     
             self.accept()  # Closes the dialog window.
@@ -518,8 +425,6 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "protocol.json", "All Files (*);;JSON Files (*.json);;Text Files (*.txt)", options=options)
             if fileName:
                 with open(fileName, 'w') as fname:
-                    if (len(self.intensityPercentages) > 0):
-                        self.allStatesDict['intensityPercentages'] = self.intensityPercentages
                     json.dump(self.allStatesDict, fname, indent=4)
                     
                 self.accept()  # Closes the dialog window.

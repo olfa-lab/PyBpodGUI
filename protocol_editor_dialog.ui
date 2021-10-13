@@ -6,440 +6,213 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1135</width>
-    <height>887</height>
+    <width>654</width>
+    <height>738</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QWidget" name="stateMachineWidget" native="true">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>731</width>
-     <height>821</height>
-    </rect>
-   </property>
-   <widget class="QPushButton" name="removeStateButton">
-    <property name="geometry">
-     <rect>
-      <x>630</x>
-      <y>500</y>
-      <width>81</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Remove State</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="graphicsView">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>90</y>
-      <width>701</width>
-      <height>401</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="addNewStateLabel">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>520</y>
-      <width>181</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add new state to the state machine</string>
-    </property>
-   </widget>
-   <widget class="QWidget" name="gridLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>550</y>
-      <width>701</width>
-      <height>252</height>
-     </rect>
-    </property>
-    <layout class="QGridLayout" name="stateMachineGridLayout">
-     <item row="2" column="4">
-      <widget class="QLabel" name="stateChangeNameLabel">
-       <property name="text">
-        <string>State Change Name</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="5">
-      <widget class="QLabel" name="outputChannelNameLabel">
-       <property name="text">
-        <string>Output Channel Name</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="stateTimerLabel">
-       <property name="text">
-        <string>State Timer (secs)</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="3">
-      <widget class="QLabel" name="stateChangeEventLabel">
-       <property name="text">
-        <string>State Change Event</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="3" colspan="2">
-      <widget class="QPushButton" name="addStateChangeConditionButton">
-       <property name="text">
-        <string>Add state change condition</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="5" colspan="2">
-      <widget class="QPushButton" name="addOutputActionButton">
-       <property name="text">
-        <string>Add output action</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="3" colspan="2">
-      <widget class="QPushButton" name="clearStateChangeConditionsButton">
-       <property name="text">
-        <string>Clear all entries</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="5" colspan="2">
-      <widget class="QListWidget" name="outputActionsListWidget"/>
-     </item>
-     <item row="2" column="6">
-      <widget class="QLabel" name="outputChannelValueLabel">
-       <property name="text">
-        <string>Output Channel Value</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5" colspan="2">
-      <widget class="QLabel" name="outputActionsLabel">
-       <property name="text">
-        <string>Output Actions</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="stateNameLabel">
-       <property name="text">
-        <string>State Name</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="4">
-      <widget class="QComboBox" name="stateChangeNameComboBox">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="5">
-      <widget class="QComboBox" name="outputChannelNameComboBox"/>
-     </item>
-     <item row="3" column="3">
-      <widget class="QComboBox" name="stateChangeEventComboBox"/>
-     </item>
-     <item row="5" column="5" colspan="2">
-      <widget class="QPushButton" name="clearOutputActionsButton">
-       <property name="text">
-        <string>Clear all entries</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="3" colspan="2">
-      <widget class="QLabel" name="stateChangeConditionsLabel">
-       <property name="text">
-        <string>State Change Conditions</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="6">
-      <widget class="QComboBox" name="outputChannelValueComboBox"/>
-     </item>
-     <item row="1" column="3" colspan="2">
-      <widget class="QListWidget" name="stateChangeConditionsListWidget"/>
-     </item>
-     <item row="1" column="1" alignment="Qt::AlignTop">
-      <widget class="QComboBox" name="stateTimerComboBox">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0" alignment="Qt::AlignTop">
-      <widget class="QComboBox" name="stateNameComboBox">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QLabel" name="stateFlowchartLabel">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>70</y>
-      <width>141</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>State flowchart diagram</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="addStateButton">
-    <property name="geometry">
-     <rect>
-      <x>540</x>
-      <y>500</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add State</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="stateMachineHeaderLabel">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>161</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>State Machine Editor</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>30</y>
-      <width>451</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Create the states that will be added to the state machine here.</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QWidget" name="odorIntensityWidget" native="true">
-   <property name="geometry">
-    <rect>
-     <x>760</x>
-     <y>10</y>
-     <width>351</width>
-     <height>421</height>
-    </rect>
-   </property>
-   <widget class="QPushButton" name="removeOdorIntensityButton">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>380</y>
-      <width>81</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Remove</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="addOdorIntensityButton">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>380</y>
-      <width>81</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add</string>
-    </property>
-   </widget>
-   <widget class="QListWidget" name="intensityPercentageListWidget">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>122</y>
-      <width>179</width>
-      <height>201</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="intensityPercentageListLabel">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>92</y>
-      <width>191</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>List of odor intensities to use</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="intensityPercentageSpinBox">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>340</y>
-      <width>81</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="prefix">
-     <string/>
-    </property>
-    <property name="minimum">
-     <number>1</number>
-    </property>
-    <property name="maximum">
-     <number>100</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="intensityPercentageLabel">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>342</y>
-      <width>91</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Percentage:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="odorIntensityHeaderLabel">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>10</y>
-      <width>201</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Odor Intensity Editor</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="odorIntensitySubHeaderLabel">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>40</y>
-      <width>321</width>
-      <height>51</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add/remove odor intensity percentages here for odor intensity experiments, if applicable. Otherwise, click 'Next' to proceed to the State Machine Editor.</string>
-    </property>
-    <property name="wordWrap">
-     <bool>true</bool>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QPushButton" name="nextButton">
-   <property name="geometry">
-    <rect>
-     <x>520</x>
-     <y>850</y>
-     <width>61</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Next</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="backButton">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>850</y>
-     <width>61</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Back</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="cancelButton">
-   <property name="geometry">
-    <rect>
-     <x>380</x>
-     <y>850</y>
-     <width>61</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Cancel</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="saveButton">
-   <property name="geometry">
-    <rect>
-     <x>590</x>
-     <y>850</y>
-     <width>61</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Save</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="saveAsButton">
-   <property name="geometry">
-    <rect>
-     <x>660</x>
-     <y>850</y>
-     <width>61</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Save As</string>
-   </property>
-  </widget>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="stateFlowchartLabel">
+     <property name="text">
+      <string>State flowchart diagram</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="4">
+    <widget class="QPushButton" name="addStateButton">
+     <property name="text">
+      <string>Add State</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="2">
+    <widget class="QComboBox" name="stateChangeEventComboBox"/>
+   </item>
+   <item row="4" column="3">
+    <widget class="QLabel" name="stateChangeNameLabel">
+     <property name="text">
+      <string>State Change Name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="5">
+    <widget class="QComboBox" name="outputChannelValueComboBox"/>
+   </item>
+   <item row="4" column="5">
+    <widget class="QLabel" name="outputChannelValueLabel">
+     <property name="text">
+      <string>Output Channel Value</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="4">
+    <widget class="QLabel" name="outputChannelNameLabel">
+     <property name="text">
+      <string>Output Channel Name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLabel" name="stateTimerLabel">
+     <property name="text">
+      <string>State Timer (secs)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" alignment="Qt::AlignTop">
+    <widget class="QComboBox" name="stateNameComboBox">
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="4" colspan="2">
+    <widget class="QPushButton" name="addOutputActionButton">
+     <property name="text">
+      <string>Add output action</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="stateNameLabel">
+     <property name="text">
+      <string>State Name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="QPushButton" name="saveButton">
+     <property name="text">
+      <string>Save</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="2" colspan="2">
+    <widget class="QPushButton" name="clearStateChangeConditionsButton">
+     <property name="text">
+      <string>Clear all entries</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4" colspan="2">
+    <widget class="QLabel" name="outputActionsLabel">
+     <property name="text">
+      <string>Output Actions</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="4" colspan="2">
+    <widget class="QPushButton" name="clearOutputActionsButton">
+     <property name="text">
+      <string>Clear all entries</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2" colspan="2">
+    <widget class="QLabel" name="stateChangeConditionsLabel">
+     <property name="text">
+      <string>State Change Conditions</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" alignment="Qt::AlignTop">
+    <widget class="QComboBox" name="stateTimerComboBox">
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="6">
+    <widget class="QGraphicsView" name="graphicsView"/>
+   </item>
+   <item row="3" column="4" colspan="2">
+    <widget class="QListWidget" name="outputActionsListWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="4">
+    <widget class="QComboBox" name="outputChannelNameComboBox"/>
+   </item>
+   <item row="9" column="5">
+    <widget class="QPushButton" name="removeStateButton">
+     <property name="text">
+      <string>Remove State</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QLabel" name="stateChangeEventLabel">
+     <property name="text">
+      <string>State Change Event</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QPushButton" name="cancelButton">
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="2">
+    <widget class="QPushButton" name="saveAsButton">
+     <property name="text">
+      <string>Save As</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2" colspan="2">
+    <widget class="QListWidget" name="stateChangeConditionsListWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2" colspan="2">
+    <widget class="QPushButton" name="addStateChangeConditionButton">
+     <property name="text">
+      <string>Add state change condition</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="3">
+    <widget class="QComboBox" name="stateChangeNameComboBox">
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="6">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>30</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
  </widget>
  <tabstops>
+  <tabstop>graphicsView</tabstop>
   <tabstop>stateNameComboBox</tabstop>
   <tabstop>stateTimerComboBox</tabstop>
   <tabstop>stateChangeConditionsListWidget</tabstop>
@@ -455,15 +228,8 @@
   <tabstop>addStateButton</tabstop>
   <tabstop>removeStateButton</tabstop>
   <tabstop>cancelButton</tabstop>
-  <tabstop>backButton</tabstop>
-  <tabstop>nextButton</tabstop>
   <tabstop>saveButton</tabstop>
   <tabstop>saveAsButton</tabstop>
-  <tabstop>graphicsView</tabstop>
-  <tabstop>intensityPercentageListWidget</tabstop>
-  <tabstop>intensityPercentageSpinBox</tabstop>
-  <tabstop>addOdorIntensityButton</tabstop>
-  <tabstop>removeOdorIntensityButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>
