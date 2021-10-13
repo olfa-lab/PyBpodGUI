@@ -24,12 +24,6 @@ class InputEventWorker(QObject):
         self.currentPort4Out = 0
         self.inputPorts = [0, 0, 0, 0]
 
-    # Since it is not possible for the inputEventThread to call this function when getting
-    # a signal (because the thread is in an infinite loop), how about trying to modify the
-    # value of 'self.newTrail' directly (instead of via a setter function like this)?
-    # def newTrialSlot(self, correctResponse):
-    #     pass
-
     def run(self):
         logging.info("InputEventThread is running")
         self.checkForNewInputEvent()

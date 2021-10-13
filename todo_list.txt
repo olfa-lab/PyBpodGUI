@@ -112,13 +112,15 @@ Things to do:
 
     * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.
 
-    * _____ make sure the olfactometer sets dummy vial and all outputs of the bpod turn off when experiment finishes or an error occurs. 
+    * _____ make sure the olfactometer sets dummy vial and all outputs of the bpod turn off when experiment finishes or an error occurs or when application exits. 
 
     * _____ instead of randomly choosing the odor for two odor intensity experiment, make an option to always alternate between the two odors.
 
     * _____ make the streaming plot show the all the inputs and make another plot to show all the outputs.
 
     * _____ make the streaming plot able to plot more than one channel from the analog input.
+
+    * _____ allow each vial to use its own list of flowrates.
 
 
 Questions to research:
