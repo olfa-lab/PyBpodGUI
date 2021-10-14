@@ -1,25 +1,17 @@
 import sys
-import os
-import time
-import copy
-import collections
-import tables
-import numpy as np
 import logging
-from datetime import datetime
 from serial.serialutil import SerialException
 
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow)
-from PyQt5.QtCore import QObject, QThread, QTime, QTimer, pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow
+from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt
 from PyQt5.QtGui import QCloseEvent
 
-from main_window_ui import Ui_MainWindow
 from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import AnalogInException, BpodAnalogIn
 import olfactometry
 
+from python_ui_files.main_window_ui import Ui_MainWindow
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
 from protocolWorker import ProtocolWorker
@@ -29,14 +21,6 @@ from resultsPlotWorker import ResultsPlotWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
 from analogInputSettingsDialog import AnalogInputSettingsDialog
-
-# from matplotlib.backends.backend_qt5agg import (
-#     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.animation as animation
-
-import pyqtgraph as pg
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -308,7 +292,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def openProtocolFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","JSON Files (*.json)", options=options)
+        fileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Open Protocol File", directory="protocol_files", filter="JSON Files (*.json)", options=options)
         if fileName:
             self.protocolFileName = fileName
             self.protocolFileLineEdit.setText(fileName)
@@ -317,7 +301,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def openOlfaConfigFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","JSON Files (*.json)", options=options)
+        fileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Open Olfactometer Configuration File", directory="olfactometry_config_files", filter="JSON Files (*.json)", options=options)
         if fileName:
             self.olfaConfigFileName = fileName
             self.olfaFileLineEdit.setText(fileName)
@@ -653,8 +637,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.startButton.setEnabled(True)
 
     def _flushRightWaterValve(self):
-        # self._runCalibrateWaterThread(self.rightWaterValve, self.rightWaterValveDuration)
-
         if self.myBpod is not None:
             self.leftWaterValveButton.setEnabled(False)
             self.rightWaterValveButton.setEnabled(False)

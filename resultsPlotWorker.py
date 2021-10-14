@@ -1,4 +1,3 @@
-import re
 import pyqtgraph as pg
 import logging
 import numpy as np

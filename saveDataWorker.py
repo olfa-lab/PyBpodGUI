@@ -2,9 +2,9 @@ import tables
 import logging
 import os
 import numpy as np
-import time
 from datetime import datetime
-from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
+
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 

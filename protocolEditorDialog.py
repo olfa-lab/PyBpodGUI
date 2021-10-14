@@ -1,17 +1,11 @@
-import sys
 import json
-
-from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMessageBox, QGraphicsScene, QGraphicsItem,
-    QWidget, QInputDialog, QFileDialog)
-from PyQt5.QtCore import QObject, QRectF, Qt
-from PyQt5.QtGui import QPen, QBrush
-
-from protocol_editor_dialog_ui import Ui_Dialog
-
 import logging
-logging.basicConfig(format="%(message)s", level=logging.INFO)
+from PyQt5.QtWidgets import QDialog, QGraphicsScene, QGraphicsItem, QFileDialog
+from PyQt5.QtCore import QRectF, Qt
+from python_ui_files.protocol_editor_dialog_ui import Ui_Dialog
 
+
+logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 class SimpleItem(QGraphicsItem):
@@ -422,7 +416,7 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         if (len(self.allStatesDict['states']) > 0):
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "protocol.json", "All Files (*);;JSON Files (*.json);;Text Files (*.txt)", options=options)
+            fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Protocol File", directory="protocol_files", filter="JSON Files (*.json)", options=options)
             if fileName:
                 with open(fileName, 'w') as fname:
                     json.dump(self.allStatesDict, fname, indent=4)

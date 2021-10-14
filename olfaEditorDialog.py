@@ -1,13 +1,7 @@
-import sys
 import json
 import logging
-
-from PyQt5.QtWidgets import (
-    QApplication, QDialog, QMessageBox,
-    QWidget, QInputDialog, QFileDialog, QDialogButtonBox)
-from PyQt5.QtCore import QObject
-
-from olfa_editor_dialog_ui import Ui_Dialog
+from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog, QDialogButtonBox
+from python_ui_files.olfa_editor_dialog_ui import Ui_Dialog
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -651,97 +645,97 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             self.accept()  # Closes the dialog window.
 
     def saveAsNewFile(self):
+        if 'com_port' not in self.olfaConfigDict['Olfactometers'][0]:
+            QMessageBox.warning(self, "Warning", "Please enter the COM port number for the olfactometer!")
+            return
+        elif 'interface' not in self.olfaConfigDict['Olfactometers'][0]:
+            QMessageBox.warning(self, "Warning", "Please choose the interface for the olfactometer!")
+            return
+        elif 'cassette_1_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+            QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 1!")
+            return
+        elif 'cassette_2_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+            QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 2!")
+            return
+        elif 'master_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+            QMessageBox.warning(self, "Warning", "Please enter the master SN!")
+            return
+        elif 'slave_index' not in self.olfaConfigDict['Olfactometers'][0]:
+            QMessageBox.warning(self, "Warning", "Please enter the slave index number!")
+            return
+        
+        for i in range(len(self.olfaConfigDict['Olfactometers'][0]['MFCs'])):  # There should only be two MFCs here.
+            if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+                QMessageBox.warning(self, "Warning", f"Please choose the MFC type of the olfactometer MFC {i}!")
+                return
+            elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+                QMessageBox.warning(self, "Warning", f"Please choose the address of the olfactometer MFC {i}!")
+                return
+            elif 'arduino_port_num' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+                QMessageBox.warning(self, "Warning", f"Please choose the Arduino port number of the olfactometer MFC {i}!")
+                return
+            elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+                QMessageBox.warning(self, "Warning", f"Please choose the capacity of the olfactometer MFC {i}!")
+                return
+            elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+                QMessageBox.warning(self, "Warning", f"Please choose the gas type of the olfactometer MFC {i}!")
+                return
+
+        if ('flowrates' not in self.olfaConfigDict['Olfactometers'][0]) or (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
+            QMessageBox.warning(self, "Warning", "Please enter at least one flowrate!")
+            return
+        
+        if (len(self.olfaConfigDict['Olfactometers'][0]['Vials']) > 0):
+            emptyVials = []
+            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
+                if ('conc' not in vialInfo) and ('odor' in vialInfo):
+                    QMessageBox.warning(self, "Warning", f"Please enter concentration for vial {vialNum} before saving.")
+                    return
+                elif ('odor' not in vialInfo) and ('conc' in vialInfo):
+                    QMessageBox.warning(self, "Warning", f"Please enter odor name for vial {vialNum} before saving.")
+                    return
+                elif (vialInfo == {}):
+                    emptyVials.append(vialNum)
+
+            for vialNum in emptyVials:
+                del self.olfaConfigDict['Olfactometers'][0]['Vials'][vialNum]  # Delete keys that have empty dict as their value.
+        else:
+            QMessageBox.warning(self, "Warning", "Please enter at least one vial!")
+            return
+
+        if ('Dilutors' in self.olfaConfigDict['Olfactometers'][0]) and (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) > 0):  # This means at least one input field was edited with a valid input.
+            if (self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0] == {}):
+                self.olfaConfigDict['Olfactometers'][0]['Dilutors'].clear()  # Empty all contents of the list but do not delete the 'Dilutors' key
+                # self.olfaConfigDict['Olfactometers'][0]['Dilutors'].pop(0)
+                # del self.olfaConfigDict['Olfactometers'][0]['Dilutors']
+            elif 'com_port' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+                QMessageBox.warning(self, "Warning", "Please enter COM port number for the dilutor!")
+                return
+            elif 'dilutor_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+                QMessageBox.warning(self, "Warning", "Please choose an option for dilutor type!")
+                return
+            elif 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+                QMessageBox.warning(self, "Warning", "Please choose options for both MFCs!")
+                return
+            else:
+                for i in range(len(self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'])):  # There should only be two MFCs here.
+                    if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                        QMessageBox.warning(self, "Warning", f"Please choose an MFC type for MFC {i}!")
+                        return
+                    elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                        QMessageBox.warning(self, "Warning", f"Please choose an address for MFC {i}!")
+                        return
+                    elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                        QMessageBox.warning(self, "Warning", f"Please choose a capacity for MFC {i}!")
+                        return
+                    elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                        QMessageBox.warning(self, "Warning", f"Please choose a gas for MFC {i}!")
+                        return
+        
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()", "olfa_config.json", "JSON Files (*.json)", options=options)
+        fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Config File", directory="olfactometry_config_files", filter="JSON Files (*.json)", options=options)
         if fileName:
-            if 'com_port' not in self.olfaConfigDict['Olfactometers'][0]:
-                QMessageBox.warning(self, "Warning", "Please enter the COM port number for the olfactometer!")
-                return
-            elif 'interface' not in self.olfaConfigDict['Olfactometers'][0]:
-                QMessageBox.warning(self, "Warning", "Please choose the interface for the olfactometer!")
-                return
-            elif 'cassette_1_sn' not in self.olfaConfigDict['Olfactometers'][0]:
-                QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 1!")
-                return
-            elif 'cassette_2_sn' not in self.olfaConfigDict['Olfactometers'][0]:
-                QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 2!")
-                return
-            elif 'master_sn' not in self.olfaConfigDict['Olfactometers'][0]:
-                QMessageBox.warning(self, "Warning", "Please enter the master SN!")
-                return
-            elif 'slave_index' not in self.olfaConfigDict['Olfactometers'][0]:
-                QMessageBox.warning(self, "Warning", "Please enter the slave index number!")
-                return
-            
-            for i in range(len(self.olfaConfigDict['Olfactometers'][0]['MFCs'])):  # There should only be two MFCs here.
-                if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
-                    QMessageBox.warning(self, "Warning", f"Please choose the MFC type of the olfactometer MFC {i}!")
-                    return
-                elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
-                    QMessageBox.warning(self, "Warning", f"Please choose the address of the olfactometer MFC {i}!")
-                    return
-                elif 'arduino_port_num' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
-                    QMessageBox.warning(self, "Warning", f"Please choose the Arduino port number of the olfactometer MFC {i}!")
-                    return
-                elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
-                    QMessageBox.warning(self, "Warning", f"Please choose the capacity of the olfactometer MFC {i}!")
-                    return
-                elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
-                    QMessageBox.warning(self, "Warning", f"Please choose the gas type of the olfactometer MFC {i}!")
-                    return
-
-            if ('flowrates' not in self.olfaConfigDict['Olfactometers'][0]) or (len(self.olfaConfigDict['Olfactometers'][0]['flowrates']) == 0):
-                QMessageBox.warning(self, "Warning", "Please enter at least one flowrate!")
-                return
-            
-            if (len(self.olfaConfigDict['Olfactometers'][0]['Vials']) > 0):
-                emptyVials = []
-                for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
-                    if ('conc' not in vialInfo) and ('odor' in vialInfo):
-                        QMessageBox.warning(self, "Warning", f"Please enter concentration for vial {vialNum} before saving.")
-                        return
-                    elif ('odor' not in vialInfo) and ('conc' in vialInfo):
-                        QMessageBox.warning(self, "Warning", f"Please enter odor name for vial {vialNum} before saving.")
-                        return
-                    elif (vialInfo == {}):
-                        emptyVials.append(vialNum)
-
-                for vialNum in emptyVials:
-                    del self.olfaConfigDict['Olfactometers'][0]['Vials'][vialNum]  # Delete keys that have empty dict as their value.
-            else:
-                QMessageBox.warning(self, "Warning", "Please enter at least one vial!")
-                return
-
-            if ('Dilutors' in self.olfaConfigDict['Olfactometers'][0]) and (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) > 0):  # This means at least one input field was edited with a valid input.
-                if (self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0] == {}):
-                    self.olfaConfigDict['Olfactometers'][0]['Dilutors'].clear()  # Empty all contents of the list but do not delete the 'Dilutors' key
-                    # self.olfaConfigDict['Olfactometers'][0]['Dilutors'].pop(0)
-                    # del self.olfaConfigDict['Olfactometers'][0]['Dilutors']
-                elif 'com_port' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-                    QMessageBox.warning(self, "Warning", "Please enter COM port number for the dilutor!")
-                    return
-                elif 'dilutor_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-                    QMessageBox.warning(self, "Warning", "Please choose an option for dilutor type!")
-                    return
-                elif 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-                    QMessageBox.warning(self, "Warning", "Please choose options for both MFCs!")
-                    return
-                else:
-                    for i in range(len(self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'])):  # There should only be two MFCs here.
-                        if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
-                            QMessageBox.warning(self, "Warning", f"Please choose an MFC type for MFC {i}!")
-                            return
-                        elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
-                            QMessageBox.warning(self, "Warning", f"Please choose an address for MFC {i}!")
-                            return
-                        elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
-                            QMessageBox.warning(self, "Warning", f"Please choose a capacity for MFC {i}!")
-                            return
-                        elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
-                            QMessageBox.warning(self, "Warning", f"Please choose a gas for MFC {i}!")
-                            return
-        
             with open(fileName, 'w') as olfa_config:
                 json.dump(self.olfaConfigDict, olfa_config, indent=4)
                 

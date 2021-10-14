@@ -1,7 +1,6 @@
 import logging
 import json
 import numpy as np
-import time
 from serial.serialutil import SerialException
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
@@ -9,6 +8,7 @@ from pybpodapi.exceptions.bpod_error import BpodErrorException
 
 import olfactometry
 from olfactometry.utils import OlfaException
+
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 

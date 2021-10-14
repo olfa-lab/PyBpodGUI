@@ -2,18 +2,14 @@ import collections
 import numpy as np
 import logging
 import time
-from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal
-# from matplotlib.backends.backend_qt5agg import (
-#     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+from PyQt5.QtCore import QObject, QTimer, pyqtSignal
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
-from pyqtgraph import plot
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
-
 
 
 class StreamingWorker(QObject):  
