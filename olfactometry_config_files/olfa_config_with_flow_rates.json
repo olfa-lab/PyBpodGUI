@@ -22,27 +22,31 @@
             "Vials": {
                 "4": {
                     "conc": 0,
-                    "odor": "dummy"
+                    "odor": "dummy",
+                    "flows": [0]
                 },
                 "5": {
                     "conc": 0.1,
-                    "odor": "limonene_5"
+                    "odor": "limonene_5",
+                    "flows": [10, 13]
                     
                 },
                 "6": {
                     "conc": 0.1,
-                    "odor": "limonene_6"
+                    "odor": "limonene_6",
+                    "flows": [10, 13, 18, 24]
                 },
                 "7": {
                     "conc": 0.1,
-                    "odor": "pinene_7"
+                    "odor": "pinene_7",
+                    "flows": [32, 41]
                 },
                 "8": {
                     "conc": 0.1,
-                    "odor": "pinene_8"
+                    "odor": "pinene_8",
+                    "flows": [32, 41, 56, 100]
                 }
             },
-            "flowrates": [10, 13, 18, 24, 32, 41, 56, 100],
             "cassette_1_sn": 1222,
             "cassette_2_sn": 1234,
             "cleandate": 20140101,

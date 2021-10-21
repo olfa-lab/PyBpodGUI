@@ -327,22 +327,19 @@ class ProtocolWorker(QObject):
 
             olfaIndex = 0
             for olfaDict in self.olfaConfigDict['Olfactometers']:  # self.olfacConfigDict['Olfactometers'] is a list of dictionaries.
-                if (len(olfaDict['flowrates']) == 0):
-                    raise KeyError("No flowrates given in olfa config file.")
-                else:
-                    self.flows.append(olfaDict['flowrates'])
-
                 odors = []
                 concs = []
                 vials = []
+                vialFlows = {}
                 resultsCounterDict = {}
                 for vialNum, vialInfo in olfaDict['Vials'].items():
                     if not (vialInfo['odor'] == 'dummy'):
                         odors.append(vialInfo['odor'])
                         concs.append(vialInfo['conc'])
                         vials.append(vialNum)
+                        vialFlows[vialNum] = vialInfo['flows']  # vialInfo['flows'] is a list.
                         resultsCounterDict[vialNum] = {}
-                        for flow in self.flows[olfaIndex]:
+                        for flow in vialInfo['flows']:
                             resultsCounterDict[vialNum][str(flow)] = {
                                 'right': 0,  # initizialize counters to zero.
                                 'left': 0,
@@ -354,6 +351,7 @@ class ProtocolWorker(QObject):
                 self.odors.append(odors)
                 self.concs.append(concs)
                 self.vials.append(vials)
+                self.flows.append(vialFlows)  # self.flows is a list of dictionaries. Each dictionary has an olfactometer's vial numbers for keys and each key's value is a list of flowrates for that vial.
                 self.resultsCounterList.append(resultsCounterDict)
                 olfaIndex += 1
 
@@ -362,21 +360,19 @@ class ProtocolWorker(QObject):
         elif (self.experimentType == 'twoOdorMatch'):
             self.stimulusFunction = self.twoOdorMatchRandomizer
 
-            for olfaDict in self.olfaConfigDict['Olfactometers']:  # self.olfacConfigDict['Olfactometers'] is a list of dictionaries.
-                if (len(olfaDict['flowrates']) == 0):
-                    self.flows.append([100])  # Assume only one flow rate, which is max.
-                else:
-                    self.flows.append(olfaDict['flowrates'])
-                
+            olfaIndex = 0
+            for olfaDict in self.olfaConfigDict['Olfactometers']:  # self.olfacConfigDict['Olfactometers'] is a list of dictionaries.                
                 odors = []
                 concs = []
                 vials = []
+                vialFlows = {}
                 resultsCounterDict = {}
                 for vialNum, vialInfo in olfaDict['Vials'].items():
                     # if not (vialInfo['odor'] == 'dummy'):
                     odors.append(vialInfo['odor'])
                     concs.append(vialInfo['conc'])
                     vials.append(vialNum)
+                    vialFlows[vialNum] = vialInfo['flows']  # vialInfo['flows'] is a list.
                     resultsCounterDict[vialNum] = {}
 
                 # Once we have all the vials as keys for the first odor, loop over a second time to fill the second dimension sub dictionary with keys for the second odor, for which each key's value will be a sub dict with the total results for that vial pair.       
@@ -393,7 +389,9 @@ class ProtocolWorker(QObject):
                 self.odors.append(odors)
                 self.concs.append(concs)
                 self.vials.append(vials)
+                self.flows.append(vialFlows)  # self.flows is a list of dictionaries. Each dictionary has an olfactometer's vial numbers for keys and each key's value is a list of flowrates for that vial.
                 self.resultsCounterList.append(resultsCounterDict)
+                olfaIndex += 1
 
     def oneOdorIntensityRandomizer(self):
         # This structure should work fine since its safe to assume intensity experiments will not use mixtures
@@ -406,16 +404,17 @@ class ProtocolWorker(QObject):
         ostim = {'olfas': {}}
         for i in range(self.nOlfas):  # Loop thru each olfa if there is more than one (which will create a mixture)
             if (self.vialIndex == len(self.vials[i])):
-                np.random.shuffle(self.vials[i])  # Re-shuffle when the index iterated through the entire list of vials for the olfa with index i.
+                np.random.shuffle(self.vials[i])  # Re-shuffle in-place when the index iterated through the entire list of vials for the olfa with index i.
                 self.vialIndex = 0  # Start iteration from the beginning.
             
-            if (self.flowIndex == len(self.flows[i])):
-                np.random.shuffle(self.flows[i])  # Re-shuffle when the index iterated through the entire list of flowrates for the olfa with index i.
+            currentVial = self.vials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
+            
+            if (self.flowIndex >= len(self.flows[i][currentVial])):  # self.flows is a list of dictionaries and self.flows[i][currentVial] returns a list of integer flowrates for the vial identified by the currentVial key of the olfa with index i. I check if greater than or equal to because the lists of flowrates may not all be the same length across vials.
+                np.random.shuffle(self.flows[i][currentVial])  # Re-shuffle in-place when the index iterated through the entire list of flowrates for the the currentVial of olfa with index i.
                 self.flowIndex = 0  # Start iteration from the beginning.
 
-            currentVial = self.vials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
-            currentFlow = self.flows[i][self.flowIndex]  # This will return an int for a flowrate of the olfa wiht index i.
-            flow_threshold = np.sqrt(min(self.flows[i]) * max(self.flows[i]))  # Since the list gets shuffled, I cannot use the first and last index as the min and max because the list is no longer sorted.
+            currentFlow = self.flows[i][currentVial][self.flowIndex]  # This will return an int for a flowrate of the vial with key currentVial of the olfa with index i.
+            flow_threshold = np.sqrt(min(self.flows[i][currentVial]) * max(self.flows[i][currentVial]))  # Since the list gets shuffled, I cannot use the first and last index as the min and max because the list is no longer sorted.
             # If flow is lower than flow_threshold == ~30 , 'left' is correct. Otherwise, 'right' is correct
             if (currentFlow < flow_threshold):
                 self.correctResponse = 'left'
@@ -444,15 +443,17 @@ class ProtocolWorker(QObject):
             ostim = {'olfas': {}}
             for i in range(self.nOlfas):  # Loop thru each olfa if there is more than one (which will create a mixture)
                 if (self.vialIndex == len(self.vials[i])):
-                    np.random.shuffle(self.vials[i])  # Re-shuffle when the index iterated through the entire list of vials for the olfa with index i.
+                    np.random.shuffle(self.vials[i])  # Re-shuffle in-place  when the index iterated through the entire list of vials for the olfa with index i.
                     self.vialIndex = 0  # Start iteration from the beginning.
                 
-                if (self.flowIndex == len(self.flows[i])):
-                    np.random.shuffle(self.flows[i])  # Re-shuffle when the index iterated through the entire list of flowrates for the olfa with index i.
+                currentVial = self.vials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
+
+                if (self.flowIndex >= len(self.flows[i][currentVial])):  # self.flows is a list of dictionaries and self.flows[i][currentVial] returns a list of integer flowrates for the vial identified by the currentVial key of the olfa with index i. I check if greater than or equal to because the lists of flowrates may not all be the same length across vials.
+                    np.random.shuffle(self.flows[i][currentVial])  # Re-shuffle in-place when the index iterated through the entire list of flowrates for the the currentVial of olfa with index i.
                     self.flowIndex = 0  # Start iteration from the beginning.
 
-                currentVial = self.vials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
-                currentFlow = self.flows[i][self.flowIndex]  # This will return an int for a flowrate of the olfa with index i.
+                
+                currentFlow = self.flows[i][currentVial][self.flowIndex]  # This will return an int for a flowrate of the vial with key currentVial of the olfa with index i.
                 currentOdor = self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['odor']
                 currentConc = self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc']
                 stimOdors[x].append(currentOdor)
@@ -480,6 +481,7 @@ class ProtocolWorker(QObject):
         else:
             self.correctResponse = 'right'
 
+        # This is from Voyor
         # if od0_1st==od0_2nd and od1_1st==od1_2nd:
         #     if 'empty' not in [od0_1st, od0_2nd, od1_1st, od1_2nd]:
         #         if ni0_1st/ni1_1st == ni0_2nd/ni1_2nd:
