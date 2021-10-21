@@ -1,6 +1,6 @@
 import logging
 from PyQt5.QtWidgets import QDialog
-from python_ui_files.analog_input_settings_ui import Ui_Dialog
+from ui_files.analog_input_settings_ui import Ui_Dialog
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)

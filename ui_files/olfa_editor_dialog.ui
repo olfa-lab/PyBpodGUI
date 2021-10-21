@@ -1,0 +1,991 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>611</width>
+    <height>620</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="3" column="0">
+    <widget class="QPushButton" name="saveAsButton">
+     <property name="text">
+      <string>Save As</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="settingsGroupBox">
+     <property name="title">
+      <string>Settings</string>
+     </property>
+     <layout class="QGridLayout" name="settingsGroupBoxGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="comPortLabel">
+        <property name="text">
+         <string>COM Port</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="comPortLineEdit"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="interfaceLabel">
+        <property name="text">
+         <string>Interface</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="interfaceComboBox"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="cassetteSNLabel_1">
+        <property name="text">
+         <string>Cassette 1 SN</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="cassetteSNLineEdit_1"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="cassetteSNLabel_2">
+        <property name="text">
+         <string>Cassette 2 SN</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="cassetteSNLineEdit_2"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="masterSNLabel">
+        <property name="text">
+         <string>Master SN</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="masterSNLineEdit"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="slaveIndexLabel">
+        <property name="text">
+         <string>Slave Index</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="slaveIndexLineEdit"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QGroupBox" name="vialsGroupBox">
+     <property name="title">
+      <string>Vials</string>
+     </property>
+     <layout class="QGridLayout" name="vialsGroupBoxGridLayout">
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="vialNumLineEdit_5">
+        <property name="text">
+         <string>5</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="9">
+       <widget class="QLabel" name="vialConcLabel_12">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="vialOdorNameLabel_5">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_6"/>
+      </item>
+      <item row="0" column="10">
+       <widget class="QLineEdit" name="vialNumLineEdit_8">
+        <property name="text">
+         <string>8</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="flowratesLineEdit_5"/>
+      </item>
+      <item row="6" column="10">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_12"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_5">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_9">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="7">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_11"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_5"/>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="vialNumLineEdit_9">
+        <property name="text">
+         <string>9</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6">
+       <widget class="QLabel" name="vialNumLabel_7">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="3">
+       <widget class="QLabel" name="vialConcLabel_10">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="vialNumLabel_5">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="9">
+       <widget class="QLabel" name="flowratesLabel_8">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="flowratesLabel_5">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="vialConcLabel_5">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="6">
+       <widget class="QLabel" name="vialConcLabel_11">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="vialConcLabel_9">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="10">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_8">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="10">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_12">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="10">
+       <widget class="QLineEdit" name="vialNumLineEdit_12">
+        <property name="text">
+         <string>12</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="10">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_8"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="vialConcLabel_6">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="vialOdorNameLabel_9">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_9"/>
+      </item>
+      <item row="1" column="7">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_7"/>
+      </item>
+      <item row="3" column="7">
+       <widget class="QLineEdit" name="flowratesLineEdit_7"/>
+      </item>
+      <item row="1" column="6">
+       <widget class="QLabel" name="vialOdorNameLabel_7">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="4">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_10">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QLineEdit" name="flowratesLineEdit_6"/>
+      </item>
+      <item row="7" column="7">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_11">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QLabel" name="vialNumLabel_10">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="6">
+       <widget class="QLabel" name="vialNumLabel_11">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="6">
+       <widget class="QLabel" name="flowratesLabel_7">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="7">
+       <widget class="QLineEdit" name="vialNumLineEdit_11">
+        <property name="text">
+         <string>11</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="9">
+       <widget class="QLabel" name="vialOdorNameLabel_12">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="9">
+       <widget class="QLabel" name="vialNumLabel_12">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QLineEdit" name="vialNumLineEdit_6">
+        <property name="text">
+         <string>6</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="10">
+       <widget class="QLineEdit" name="flowratesLineEdit_8"/>
+      </item>
+      <item row="6" column="6">
+       <widget class="QLabel" name="vialOdorNameLabel_11">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="9">
+       <widget class="QLabel" name="vialConcLabel_8">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="vialNumLabel_6">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="4">
+       <widget class="QLineEdit" name="vialNumLineEdit_10">
+        <property name="text">
+         <string>10</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QLabel" name="vialOdorNameLabel_10">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="11">
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="7">
+       <widget class="QLineEdit" name="vialNumLineEdit_7">
+        <property name="text">
+         <string>7</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="flowratesLabel_6">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="vialOdorNameLabel_6">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="7">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_7">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="9">
+       <widget class="QLabel" name="vialOdorNameLabel_8">
+        <property name="text">
+         <string>Odor name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="6">
+       <widget class="QLabel" name="vialConcLabel_7">
+        <property name="text">
+         <string>Concentration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="vialNumLabel_9">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QDoubleSpinBox" name="vialConcDoubleSpinBox_6">
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="maximum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.000100000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="9">
+       <widget class="QLabel" name="vialNumLabel_8">
+        <property name="text">
+         <string>Vial num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="4">
+       <widget class="QLineEdit" name="vialOdorNameLineEdit_10"/>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLineEdit" name="flowratesLineEdit_9"/>
+      </item>
+      <item row="8" column="4">
+       <widget class="QLineEdit" name="flowratesLineEdit_10"/>
+      </item>
+      <item row="8" column="7">
+       <widget class="QLineEdit" name="flowratesLineEdit_11"/>
+      </item>
+      <item row="8" column="10">
+       <widget class="QLineEdit" name="flowratesLineEdit_12"/>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="flowratesLabel_9">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="3">
+       <widget class="QLabel" name="flowratesLabel_10">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="6">
+       <widget class="QLabel" name="flowratesLabel_11">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="9">
+       <widget class="QLabel" name="flowratesLabel_12">
+        <property name="text">
+         <string>Flowrates</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" rowspan="4">
+       <widget class="Line" name="line_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5" rowspan="4">
+       <widget class="Line" name="line_5">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="8" rowspan="4">
+       <widget class="Line" name="line_7">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="8" rowspan="4">
+       <widget class="Line" name="line_8">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="5" rowspan="4">
+       <widget class="Line" name="line_6">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2" rowspan="4">
+       <widget class="Line" name="line_4">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Save</set>
+     </property>
+     <property name="centerButtons">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QGroupBox" name="dilutorsGroupBox">
+     <property name="title">
+      <string>Dilutors</string>
+     </property>
+     <layout class="QGridLayout" name="dilutorsGroupBoxGridLayout">
+      <item row="2" column="3">
+       <widget class="QLabel" name="dilutorMFCCapacityLabel_0">
+        <property name="text">
+         <string>Capacity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" rowspan="4">
+       <widget class="Line" name="line_9">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="7">
+       <widget class="QComboBox" name="dilutorMFCAddressComboBox_1"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="dilutorComPortLabel">
+        <property name="text">
+         <string>COM Port</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QComboBox" name="dilutorMFCTypeComboBox_0"/>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="dilutorMFCAddressLabel_0">
+        <property name="text">
+         <string>Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QSpinBox" name="dilutorMFCCapacitySpinBox_0">
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="6">
+       <widget class="QLabel" name="dilutorMFCCapacityLabel_1">
+        <property name="text">
+         <string>Capacity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="dilutorComPortLineEdit"/>
+      </item>
+      <item row="3" column="4">
+       <widget class="QComboBox" name="dilutorMFCGasComboBox_0"/>
+      </item>
+      <item row="0" column="6">
+       <widget class="QLabel" name="dilutorMFCTypeLabel_1">
+        <property name="text">
+         <string>MFC Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="7">
+       <widget class="QComboBox" name="dilutorMFCGasComboBox_1"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="dilutorTypeLabel">
+        <property name="text">
+         <string>Dilutor Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="6">
+       <widget class="QLabel" name="dilutorMFCAddressLabel_1">
+        <property name="text">
+         <string>Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="7">
+       <widget class="QComboBox" name="dilutorMFCTypeComboBox_1"/>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="dilutorMFCGasLabel_0">
+        <property name="text">
+         <string>Gas</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="dilutorTypeComboBox"/>
+      </item>
+      <item row="1" column="4">
+       <widget class="QComboBox" name="dilutorMFCAddressComboBox_0"/>
+      </item>
+      <item row="3" column="6">
+       <widget class="QLabel" name="dilutorMFCGasLabel_1">
+        <property name="text">
+         <string>Gas</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="dilutorMFCTypeLabel_0">
+        <property name="text">
+         <string>MFC Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="7">
+       <widget class="QSpinBox" name="dilutorMFCCapacitySpinBox_1">
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QPushButton" name="clearDilutorButton">
+        <property name="text">
+         <string>Clear Dilutor</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5" rowspan="4">
+       <widget class="Line" name="line_10">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QGroupBox" name="mfcGroupBox">
+     <property name="title">
+      <string>MFCs</string>
+     </property>
+     <layout class="QGridLayout" name="mfcGroupBoxGridLayout">
+      <item row="5" column="3">
+       <widget class="QLabel" name="mfcGasLabel_1">
+        <property name="text">
+         <string>Gas</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="mfcAddressLabel_0">
+        <property name="text">
+         <string>Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QComboBox" name="mfcTypeComboBox_1"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="mfcTypeLabel_0">
+        <property name="text">
+         <string>MFC Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="mfcGasLabel_0">
+        <property name="text">
+         <string>Gas</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSpinBox" name="mfcCapacitySpinBox_0">
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="mfcCapacityLabel_0">
+        <property name="text">
+         <string>Capacity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="4">
+       <widget class="QComboBox" name="mfcGasComboBox_1"/>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="mfcArduinoPortNumLabel_1">
+        <property name="text">
+         <string>Arduino Port Num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="mfcCapacityLabel_1">
+        <property name="text">
+         <string>Capacity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="mfcAddressComboBox_0"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="mfcAddressLabel_1">
+        <property name="text">
+         <string>Address</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="mfcArduinoPortNumLabel_0">
+        <property name="text">
+         <string>Arduino Port Num</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="mfcTypeLabel_1">
+        <property name="text">
+         <string>MFC Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
+       <widget class="QSpinBox" name="mfcCapacitySpinBox_1">
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2" alignment="Qt::AlignHCenter">
+       <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>MFC 0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QComboBox" name="mfcAddressComboBox_1"/>
+      </item>
+      <item row="5" column="1">
+       <widget class="QComboBox" name="mfcGasComboBox_0"/>
+      </item>
+      <item row="0" column="3" colspan="2" alignment="Qt::AlignHCenter">
+       <widget class="QLabel" name="label_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>MFC 1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QComboBox" name="mfcArduinoPortNumComboBox_1"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="mfcArduinoPortNumComboBox_0"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="mfcTypeComboBox_0"/>
+      </item>
+      <item row="0" column="2" rowspan="6">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>comPortLineEdit</tabstop>
+  <tabstop>interfaceComboBox</tabstop>
+  <tabstop>cassetteSNLineEdit_1</tabstop>
+  <tabstop>cassetteSNLineEdit_2</tabstop>
+  <tabstop>masterSNLineEdit</tabstop>
+  <tabstop>slaveIndexLineEdit</tabstop>
+  <tabstop>mfcTypeComboBox_0</tabstop>
+  <tabstop>mfcAddressComboBox_0</tabstop>
+  <tabstop>mfcArduinoPortNumComboBox_0</tabstop>
+  <tabstop>mfcCapacitySpinBox_0</tabstop>
+  <tabstop>mfcGasComboBox_0</tabstop>
+  <tabstop>mfcTypeComboBox_1</tabstop>
+  <tabstop>mfcAddressComboBox_1</tabstop>
+  <tabstop>mfcArduinoPortNumComboBox_1</tabstop>
+  <tabstop>mfcCapacitySpinBox_1</tabstop>
+  <tabstop>mfcGasComboBox_1</tabstop>
+  <tabstop>vialNumLineEdit_5</tabstop>
+  <tabstop>vialOdorNameLineEdit_5</tabstop>
+  <tabstop>vialConcDoubleSpinBox_5</tabstop>
+  <tabstop>flowratesLineEdit_5</tabstop>
+  <tabstop>vialNumLineEdit_6</tabstop>
+  <tabstop>vialOdorNameLineEdit_6</tabstop>
+  <tabstop>vialConcDoubleSpinBox_6</tabstop>
+  <tabstop>flowratesLineEdit_6</tabstop>
+  <tabstop>vialNumLineEdit_7</tabstop>
+  <tabstop>vialOdorNameLineEdit_7</tabstop>
+  <tabstop>vialConcDoubleSpinBox_7</tabstop>
+  <tabstop>flowratesLineEdit_7</tabstop>
+  <tabstop>vialNumLineEdit_8</tabstop>
+  <tabstop>vialOdorNameLineEdit_8</tabstop>
+  <tabstop>vialConcDoubleSpinBox_8</tabstop>
+  <tabstop>flowratesLineEdit_8</tabstop>
+  <tabstop>vialNumLineEdit_9</tabstop>
+  <tabstop>vialOdorNameLineEdit_9</tabstop>
+  <tabstop>vialConcDoubleSpinBox_9</tabstop>
+  <tabstop>flowratesLineEdit_9</tabstop>
+  <tabstop>vialNumLineEdit_10</tabstop>
+  <tabstop>vialOdorNameLineEdit_10</tabstop>
+  <tabstop>vialConcDoubleSpinBox_10</tabstop>
+  <tabstop>flowratesLineEdit_10</tabstop>
+  <tabstop>vialNumLineEdit_11</tabstop>
+  <tabstop>vialOdorNameLineEdit_11</tabstop>
+  <tabstop>vialConcDoubleSpinBox_11</tabstop>
+  <tabstop>flowratesLineEdit_11</tabstop>
+  <tabstop>vialNumLineEdit_12</tabstop>
+  <tabstop>vialOdorNameLineEdit_12</tabstop>
+  <tabstop>vialConcDoubleSpinBox_12</tabstop>
+  <tabstop>flowratesLineEdit_12</tabstop>
+  <tabstop>dilutorComPortLineEdit</tabstop>
+  <tabstop>dilutorTypeComboBox</tabstop>
+  <tabstop>clearDilutorButton</tabstop>
+  <tabstop>dilutorMFCTypeComboBox_0</tabstop>
+  <tabstop>dilutorMFCAddressComboBox_0</tabstop>
+  <tabstop>dilutorMFCCapacitySpinBox_0</tabstop>
+  <tabstop>dilutorMFCGasComboBox_0</tabstop>
+  <tabstop>dilutorMFCTypeComboBox_1</tabstop>
+  <tabstop>dilutorMFCAddressComboBox_1</tabstop>
+  <tabstop>dilutorMFCCapacitySpinBox_1</tabstop>
+  <tabstop>dilutorMFCGasComboBox_1</tabstop>
+  <tabstop>saveAsButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

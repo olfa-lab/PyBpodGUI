@@ -2,7 +2,7 @@ import json
 import logging
 from PyQt5.QtWidgets import QDialog, QGraphicsScene, QGraphicsItem, QFileDialog
 from PyQt5.QtCore import QRectF, Qt
-from python_ui_files.protocol_editor_dialog_ui import Ui_Dialog
+from ui_files.protocol_editor_dialog_ui import Ui_Dialog
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)

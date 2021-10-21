@@ -11,7 +11,7 @@ from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import AnalogInException, BpodAnalogIn
 import olfactometry
 
-from python_ui_files.main_window_ui import Ui_MainWindow
+from ui_files.main_window_ui import Ui_MainWindow
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
 from protocolWorker import ProtocolWorker
