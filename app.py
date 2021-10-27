@@ -67,7 +67,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker = None
         self.mouseNumber = None
         self.rigLetter = None
-        self.experimentType = None
+        self.numOdorsPerTrial = 1
         self.numTrials = self.nTrialsSpinBox.value()
         self.noResponseCutoff = self.noResponseCutoffSpinBox.value()
         self._recordNoResponseCutoff(self.noResponseCutoff)
@@ -188,8 +188,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.maxtSpinBox.valueChanged.connect(lambda maxt: self.streaming.setXaxis(maxt))
         self.dtDoubleSpinBox.valueChanged.connect(lambda dt: self.streaming.set_dt(dt))
         self.plotIntervalSpinBox.valueChanged.connect(lambda x: self.streaming.setPlotInterval(x))
-
-        self.experimentTypeComboBox.currentTextChanged.connect(self._recordExperimentType)
+        self.numOdorsPerTrialSpinBox.valueChanged.connect(self._recordNumOdorsPerTrial)
 
     def _updateViewMenu(self, objectName):
         if (objectName == self.streamingSubWindow.objectName()):
@@ -384,9 +383,9 @@ class Window(QMainWindow, Ui_MainWindow):
         elif self.rigLetter is None:
             QMessageBox.warning(self, "Warning", "Please enter rig letter!")
             return
-        elif self.experimentType is None:
-            QMessageBox.warning(self, "Warning", "Please choose an experiment type!")
-            return
+        # elif self.numOdorsPerTrial is None:
+        #     QMessageBox.warning(self, "Warning", "Please choose an experiment type!")
+        #     return
         elif self.numTrials is None:
             QMessageBox.warning(self, "Warning", "Please enter number of trials for this experiment!")
             return
@@ -452,9 +451,9 @@ class Window(QMainWindow, Ui_MainWindow):
             self.streaming.resetPlot()
             self.streaming.resumeAnimation()
 
-        self.resultsPlot.setExperimentType(self.experimentType)
-        self.flowUsagePlot.setExperimentType(self.experimentType)
-        if (self.experimentType == 'twoOdorMatch'):
+        self.resultsPlot.setNumOdorsPerTrial(self.numOdorsPerTrial)
+        self.flowUsagePlot.setNumOdorsPerTrial(self.numOdorsPerTrial)
+        if (self.numOdorsPerTrial == 2):
             self.flowUsagePlotSubWindow.showShaded()
 
         self.startButton.setEnabled(False)
@@ -691,8 +690,8 @@ class Window(QMainWindow, Ui_MainWindow):
     def _recordRigLetter(self):
         self.rigLetter = self.rigLetterLineEdit.text()
 
-    def _recordExperimentType(self, text):
-        self.experimentType = text
+    def _recordNumOdorsPerTrial(self, value):
+        self.numOdorsPerTrial = value
 
     def _recordNumTrials(self, value):
         self.numTrials = value
@@ -877,7 +876,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runSaveDataThread(self):
         logging.info(f"from _runSaveDataThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.saveDataThread = QThread()
-        self.saveDataWorker = SaveDataWorker(self.mouseNumber, self.rigLetter, self.experimentType, self.adc)
+        self.saveDataWorker = SaveDataWorker(self.mouseNumber, self.rigLetter, self.numOdorsPerTrial, self.adc)
         self.saveDataWorker.moveToThread(self.saveDataThread)
         self.saveDataThread.started.connect(self.saveDataWorker.run)
         self.saveDataWorker.finished.connect(self.saveDataThread.quit)
@@ -891,7 +890,10 @@ class Window(QMainWindow, Ui_MainWindow):
     def _runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
-        self.protocolWorker = ProtocolWorker(self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.experimentType, self.leftWaterValveDuration, self.rightWaterValveDuration, self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials)
+        self.protocolWorker = ProtocolWorker(
+            self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.numOdorsPerTrial, self.shuffleMultiplierSpinBox.value(), self.leftWaterValveDuration, self.rightWaterValveDuration,
+            self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials
+        )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)

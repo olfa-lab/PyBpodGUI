@@ -13,7 +13,7 @@ class ResultsPlotWorker(QObject):
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.graphWidget = pg.PlotWidget()
         self.colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-        self.experimentType = 'oneOdorIntensity'
+        self.numOdorsPerTrial = 1
 
         # styles = {'color':'blue', 'font-size': '10pt'}
         # self.graphWidget.setBackground('w')
@@ -40,12 +40,12 @@ class ResultsPlotWorker(QObject):
             self.updatePlot(self.resultsList)
 
     def updatePlot(self, resultsList):
-        if (self.experimentType == 'oneOdorIntensity'):
-            self.oneOdorIntensity(resultsList)
-        elif (self.experimentType == 'twoOdorMatch'):
-            self.twoOdorMatch(resultsList)
+        if (self.numOdorsPerTrial == 1):
+            self.oneOdorPlot(resultsList)
+        elif (self.numOdorsPerTrial == 2):
+            self.twoOdorPlot(resultsList)
     
-    def oneOdorIntensity(self, resultsList):
+    def oneOdorPlot(self, resultsList):
         # This function currently only plots vials of the first olfactometer (regardless of the plottingMode).
 
         self.resultsList = resultsList
@@ -141,7 +141,7 @@ class ResultsPlotWorker(QObject):
 
         logging.info('results plot updated')
     
-    def twoOdorMatch(self, resultsList):
+    def twoOdorPlot(self, resultsList):
         if not self.axisReady:
             self.xAxis = self.graphWidget.getAxis('bottom')
             xticks = list(resultsList[0].keys())
@@ -177,10 +177,10 @@ class ResultsPlotWorker(QObject):
         self.image.setImage(image=data, autoLevels=False, levels=(0.0, 255.0), axes=axes, levelMode='mono')
         # self.image.setImage(data)
 
-    def setExperimentType(self, experimentType):
-        self.experimentType = experimentType
+    def setNumOdorsPerTrial(self, numOdorsPerTrial):
+        self.numOdorsPerTrial = numOdorsPerTrial
 
-        if (experimentType == 'oneOdorIntensity'):
+        if (numOdorsPerTrial == 1):
             styles = {'color':'blue', 'font-size': '10pt'}
             self.graphWidget.setBackground('w')
             self.graphWidget.setTitle('Percent Left Licks For Each Flow Rate', color='b', size='10pt')
@@ -194,7 +194,7 @@ class ResultsPlotWorker(QObject):
             self.resultsList = []
             self.plottingMode = 0
         
-        elif (experimentType == 'twoOdorMatch'):
+        elif (numOdorsPerTrial == 2):
             self.graphWidget.setBackground('k')
             self.graphWidget.setTitle('Percent Correct For Each Odor', color='w', size='10pt')
             self.image = pg.ImageItem()

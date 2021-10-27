@@ -1,0 +1,106 @@
+{
+    "states": [
+        {
+            "stateName": "waitFirstOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "presentFirstOdor"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "presentFirstOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "firstDelay"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "firstDelay",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitSecondOdor"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials"
+            }
+        },
+        {
+            "stateName": "WaitSecondOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "PresentSecondOdor"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "PresentSecondOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ]
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {}
+        }
+    ]
+}

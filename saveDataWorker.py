@@ -87,10 +87,10 @@ class SaveDataWorker(QObject):
     analogDataSignal = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
-    def __init__(self, mouseNum, rigLetter, experimentType, analogInModule=None):
+    def __init__(self, mouseNum, rigLetter, numOdorsPerTrial, analogInModule=None):
         super(SaveDataWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
-        self.experimentType = experimentType
+        self.numOdorsPerTrial = numOdorsPerTrial
         dateTimeString = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         fileName = f"results/Mouse_{mouseNum}_Rig_{rigLetter}_{dateTimeString}.h5"
         if not os.path.isdir('results'):
@@ -139,7 +139,7 @@ class SaveDataWorker(QObject):
 
     def saveTotalResults(self):
         logging.info('attempting to save result totals data')
-        if self.experimentType == 'oneOdorIntensity':
+        if (self.numOdorsPerTrial == 1):
             if self.resultsRowsAppended:
                 # If the rows were appended to the resultsTable for the first trial already, then do not use append again because it will continue to append new rows below the last.
                 # Instead, I want to keep the rows from the first trial and just update the values for the totals for each flowrate. To do that, I must iterate through each resultsTable
@@ -179,7 +179,7 @@ class SaveDataWorker(QObject):
                             self.resultsTable.flush()
                     self.resultsRowsAppended = True
 
-        elif self.experimentType == 'twoOdorMatch':
+        elif (self.numOdorsPerTrial == 2):
             if self.resultsRowsAppended:
                 # If the rows were appended to the resultsTable for the first trial already, then do not use append again because it will continue to append new rows below the last.
                 # Instead, I want to keep the rows from the first trial and just update the values for the totals for each flowrate. To do that, I must iterate through each row

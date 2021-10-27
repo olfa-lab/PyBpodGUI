@@ -79,6 +79,8 @@ Things to do:
 
     * __X__ shuffle a list of all the vials and then iterate through it instead of randomly choosing a vial every trial.
 
+    * __X__ allow each vial to use its own list of flowrates.
+
     * _____ use the newer olfactometer code
 
     * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
@@ -120,7 +122,7 @@ Things to do:
 
     * _____ make the streaming plot able to plot more than one channel from the analog input.
 
-    * _____ allow each vial to use its own list of flowrates.
+    * _____ include fields to specify the bpod behavior port number for which the valves and lick sensors are connected to.
 
 
 Questions to research:
