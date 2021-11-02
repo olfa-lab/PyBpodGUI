@@ -283,68 +283,117 @@
         <string>Bpod Control</string>
        </property>
        <layout class="QGridLayout" name="bpodControlSubWindowWidgetGridLayout">
-        <item row="1" column="1">
-         <widget class="QSpinBox" name="rightWaterValveDurationSpinBox">
-          <property name="suffix">
-           <string> ms</string>
-          </property>
-          <property name="maximum">
-           <number>10000</number>
-          </property>
-          <property name="value">
-           <number>250</number>
-          </property>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="leftSensorPortNumComboBox">
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="leftWaterValveDurationLabel">
-          <property name="text">
-           <string>Left Water Valve Duration:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0" colspan="2">
-         <widget class="QPushButton" name="finalValveButton">
-          <property name="text">
-           <string>Final Valve</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="rightWaterValveDurationLabel">
-          <property name="text">
-           <string>Right Water Valve Duration:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QPushButton" name="flushRightWaterButton">
-          <property name="text">
-           <string>Flush Right Water</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
+        <item row="7" column="0">
          <widget class="QPushButton" name="flushLeftWaterButton">
           <property name="text">
            <string>Flush Left Water</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="leftWaterValveButton">
+        <item row="0" column="0">
+         <widget class="QLabel" name="leftSensorPortNumLabel">
           <property name="text">
-           <string>Left Water Valve</string>
-          </property>
-          <property name="checkable">
-           <bool>false</bool>
+           <string>Left Sensor Port Num:</string>
           </property>
          </widget>
         </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="rightWaterValvePortNumLabel">
+          <property name="text">
+           <string>Right Water Valve Port Num:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="rightWaterValveDurationLabel">
+          <property name="text">
+           <string>Right Water Valve Duration:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="leftWaterValvePortNumComboBox">
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
         <item row="3" column="1">
+         <widget class="QComboBox" name="rightSensorPortNumComboBox">
+          <property name="currentIndex">
+           <number>2</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="leftWaterValvePortNumLabel">
+          <property name="text">
+           <string>Left Water Valve Port Num:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
          <widget class="QPushButton" name="rightWaterValveButton">
           <property name="text">
            <string>Right Water Valve</string>
@@ -354,7 +403,37 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
+        <item row="9" column="0" colspan="2">
+         <widget class="QPushButton" name="finalValveButton">
+          <property name="text">
+           <string>Final Valve</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="leftWaterValveDurationLabel">
+          <property name="text">
+           <string>Left Water Valve Duration:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QSpinBox" name="rightWaterValveDurationSpinBox">
+          <property name="suffix">
+           <string> ms</string>
+          </property>
+          <property name="maximum">
+           <number>10000</number>
+          </property>
+          <property name="value">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
          <widget class="QSpinBox" name="leftWaterValveDurationSpinBox">
           <property name="suffix">
            <string> ms</string>
@@ -363,8 +442,93 @@
            <number>10000</number>
           </property>
           <property name="value">
-           <number>250</number>
+           <number>100</number>
           </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="rightSensorPortNumLabel">
+          <property name="text">
+           <string>Right Sensor Port Num:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QPushButton" name="flushRightWaterButton">
+          <property name="text">
+           <string>Flush Right Water</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QPushButton" name="leftWaterValveButton">
+          <property name="text">
+           <string>Left Water Valve</string>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QComboBox" name="rightWaterValvePortNumComboBox">
+          <property name="currentIndex">
+           <number>2</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="finalValvePortNumLabel">
+          <property name="text">
+           <string>Final Valve Port Num:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QComboBox" name="finalValvePortNumComboBox">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>

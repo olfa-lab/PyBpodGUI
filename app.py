@@ -77,9 +77,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.itiMax = self.itiMaxSpinBox.value()
         self.itiMinSpinBox.setMaximum(self.itiMax)  # I do not want the itiMinSpinBox to be higher than the itiMaxSpinBox's current value.
         self.itiMaxSpinBox.setMinimum(self.itiMin)  # I do not want the itiMaxSpinBox to be lower than the itiMinSpinBox's current value.
-        self.leftWaterValve = 1
-        self.finalValve = 2
-        self.rightWaterValve = 3
+        self.leftWaterValve = int(self.leftWaterValvePortNumComboBox.currentText())
+        self.finalValve = int(self.finalValvePortNumComboBox.currentText())
+        self.rightWaterValve = int(self.rightWaterValvePortNumComboBox.currentText())
         self.leftWaterValveDuration = self.leftWaterValveDurationSpinBox.value()
         self.rightWaterValveDuration = self.rightWaterValveDurationSpinBox.value()
         self.protocolFileName = ''
@@ -99,7 +99,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.currentTrialSubWindow.setObjectName("currentTrialSubWindow")
         self.currentTrialSubWindow.setWidget(self.currentTrialSubWindowWidget)
         self.currentTrialSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        self.currentTrialSubWindow.resize(720, 230)
+        # self.currentTrialSubWindow.resize(720, 230)
         self.mdiArea.addSubWindow(self.currentTrialSubWindow)
 
         self.bpodControlSubWindow = MyQMdiSubWindow()
@@ -107,7 +107,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.bpodControlSubWindow.setObjectName("bpodControlSubWindow")
         self.bpodControlSubWindow.setWidget(self.bpodControlSubWindowWidget)
         self.bpodControlSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        self.bpodControlSubWindow.resize(300, 230)
+        # self.bpodControlSubWindow.resize(300, 230)
         self.mdiArea.addSubWindow(self.bpodControlSubWindow)
 
         self.streaming = StreamingWorker(self.maxtSpinBox.value(), self.dtDoubleSpinBox.value(), self.yMinDoubleSpinBox.value(), self.yMaxDoubleSpinBox.value(), self.plotIntervalSpinBox.value())
@@ -177,8 +177,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
         
         self.nTrialsSpinBox.valueChanged.connect(self._recordNumTrials)
-        self.leftWaterValveDurationSpinBox.valueChanged.connect(self._recordLeftWaterValveDuration)
-        self.rightWaterValveDurationSpinBox.valueChanged.connect(self._recordRightWaterValveDuration)
         self.itiMinSpinBox.valueChanged.connect(self._recordMinITI)
         self.itiMaxSpinBox.valueChanged.connect(self._recordMaxITI)
         self.noResponseCutoffSpinBox.valueChanged.connect(self._recordNoResponseCutoff)
@@ -189,6 +187,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.dtDoubleSpinBox.valueChanged.connect(lambda dt: self.streaming.set_dt(dt))
         self.plotIntervalSpinBox.valueChanged.connect(lambda x: self.streaming.setPlotInterval(x))
         self.numOdorsPerTrialSpinBox.valueChanged.connect(self._recordNumOdorsPerTrial)
+
+        self.leftSensorPortNumComboBox.currentTextChanged.connect(self._recordLeftSensorPort)
+        self.leftWaterValvePortNumComboBox.currentTextChanged.connect(self._recordLeftWaterValvePort)
+        self.leftWaterValveDurationSpinBox.valueChanged.connect(self._recordLeftWaterValveDuration)
+        self.rightSensorPortNumComboBox.currentTextChanged.connect(self._recordRightSensorPort)
+        self.rightWaterValvePortNumComboBox.currentTextChanged.connect(self._recordRightWaterValvePort)
+        self.rightWaterValveDurationSpinBox.valueChanged.connect(self._recordRightWaterValveDuration)
+        self.finalValvePortNumComboBox.currentTextChanged.connect(self._recordFinalValvePort)
 
     def _updateViewMenu(self, objectName):
         if (objectName == self.streamingSubWindow.objectName()):
@@ -730,15 +736,38 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.protocolWorker is not None:
             self.protocolWorker.setMaxITI(value)
 
+    def _recordLeftSensorPort(self, text):
+        if self.protocolWorker is not None:
+            self.protocolWorker.setLeftSensorPort(int(text))
+
+    def _recordLeftWaterValvePort(self, text):
+        self.leftWaterValve = int(text)
+        if self.protocolWorker is not None:
+            self.protocolWorker.setLeftWaterValvePort(int(text))
+    
     def _recordLeftWaterValveDuration(self, value):
         self.leftWaterValveDuration = value
         if self.protocolWorker is not None:
             self.protocolWorker.setLeftWaterDuration(value)
 
+    def _recordRightSensorPort(self, text):
+        if self.protocolWorker is not None:
+            self.protocolWorker.setRightSensorPort(int(text))
+
+    def _recordRightWaterValvePort(self, text):
+        self.rightWaterValve = int(text)
+        if self.protocolWorker is not None:
+            self.protocolWorker.setRightWaterValvePort(int(text))
+    
     def _recordRightWaterValveDuration(self, value):
         self.rightWaterValveDuration = value
         if self.protocolWorker is not None:
             self.protocolWorker.setRightWaterDuration(value)
+
+    def _recordFinalValvePort(self, text):
+        self.finalValve = int(text)
+        if self.protocolWorker is not None:
+            self.protocolWorker.setFinalValvePort(int(text))
 
     def _recordBpodSerialPort(self):
         self.bpodSerialPort = self.bpodPortLineEdit.text()
@@ -891,8 +920,10 @@ class Window(QMainWindow, Ui_MainWindow):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
         self.protocolWorker = ProtocolWorker(
-            self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.numOdorsPerTrial, self.shuffleMultiplierSpinBox.value(), self.leftWaterValveDuration, self.rightWaterValveDuration,
-            self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials
+            self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.numOdorsPerTrial, self.shuffleMultiplierSpinBox.value(), 
+            int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDuration,
+            int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDuration,
+            self.finalValve, self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials
         )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
