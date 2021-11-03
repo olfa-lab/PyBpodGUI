@@ -80,7 +80,7 @@ class ProtocolWorker(QObject):
         self.nOlfas = 0
         self.shuffleVials = []
         self.shuffleFlows = []
-        self.correctResponsesList = ['left', 'right'] * self.nTrials  # Make a list of all the correct responses to be used for the entire experiment (i.e. for self.nTrials). The experiment will contain 50% left trials and 50% right trials.
+        self.correctResponsesList = ['left', 'right'] * int(self.nTrials / 2)  # Make a list of all the correct responses to be used for the entire experiment (i.e. for self.nTrials). The experiment will contain 50% left trials and 50% right trials.
         np.random.shuffle(self.correctResponsesList)  # Shuffle the correnct responses and then use self.currentTrialNum as an index to iterate through it. Currently only the twoOdorRandomizer function uses the self.correctResponsesList.
 
     def setLeftSensorPort(self, value):

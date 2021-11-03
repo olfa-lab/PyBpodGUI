@@ -81,15 +81,17 @@ Things to do:
 
     * __X__ allow each vial to use its own list of flowrates.
 
-    * _____ use the newer olfactometer code
+    * __X__ include fields to specify the bpod behavior port number for which the valves and lick sensors are connected to.
 
-    * _____ have a timer (in the state machine) that aborts experiment when no sniff signal for certain amount of time
+    * __X__ make an option to reconnect devices (close serial port and then open again) so that user can enable device that previously was not enabled when the 'Connect Devices' button was clicked without having to restart the application.
+
+    * __X__ make sure the olfactometer sets dummy vial and all outputs of the bpod turn off when experiment finishes or when application exits. 
+    
+    * _____ use the newer olfactometer code
 
     * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
     * _____ implement validators for the line edits to restrict input values
-
-    * _____ try using @pyqtSlot for a function to check if the thread will call it even if its running in an infinite loop.
 
     * _____ create a metadata for the .h5 file
 
@@ -102,11 +104,7 @@ Things to do:
 
     * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
 
-    * _____ make a feature to manually choose what flow rate or what correct response will be for the next trial to de-bias
-
     * _____ get rid of variables that hold the value/text in fields like lineEdits, spinBoxes, and comboBoxes because it is redundant. 
-
-    * _____ make an option to reconnect devices (close serial port and then open again) so that user can enable device that previously was not enabled when the 'Connect Devices' button was clicked without having to restart the application.
 
     * _____ fix the issue where the timestamps of the analog data samples stops being synchronized with the bpod's time whenever a trial is paused.
 
@@ -114,15 +112,9 @@ Things to do:
 
     * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.
 
-    * _____ make sure the olfactometer sets dummy vial and all outputs of the bpod turn off when experiment finishes or an error occurs or when application exits. 
-
-    * _____ instead of randomly choosing the odor for two odor intensity experiment, make an option to always alternate between the two odors.
-
     * _____ make the streaming plot show the all the inputs and make another plot to show all the outputs.
 
     * _____ make the streaming plot able to plot more than one channel from the analog input.
-
-    * _____ include fields to specify the bpod behavior port number for which the valves and lick sensors are connected to.
 
 
 Questions to research:

@@ -87,13 +87,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.analogInputSettings = AnalogInputSettingsDialog()
         self.isPaused = False
 
-        self.startButton.setEnabled(False)  # do not enable start button until user connects devices.
-        self.finalValveButton.setEnabled(False)
-        self.leftWaterValveButton.setEnabled(False)
-        self.rightWaterValveButton.setEnabled(False)
-        self.flushLeftWaterButton.setEnabled(False)
-        self.flushRightWaterButton.setEnabled(False)
-
         self.currentTrialSubWindow = MyQMdiSubWindow()
         self.currentTrialSubWindow.closed.connect(self._updateViewMenu)
         self.currentTrialSubWindow.setObjectName("currentTrialSubWindow")
@@ -152,6 +145,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushLeftWaterButton.clicked.connect(self._flushLeftWaterValve)
         self.flushRightWaterButton.clicked.connect(self._flushRightWaterValve)
         self.connectDevicesButton.clicked.connect(self._connectDevices)
+        self.disconnectDevicesButton.clicked.connect(self._disconnectDevices)
         self.resultsPlotCombineAllVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(0))
         self.resultsPlotCombineLikeVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(1))
         self.resultsPlotSeparateVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(2))
@@ -350,6 +344,7 @@ class Window(QMainWindow, Ui_MainWindow):
     #     logging.info('got analog data. here is what is got:')
     #     logging.info(adcSignal)
     #     self.saveDataWorker.receiveAnalogData(adcSignal)
+    
     def _connectDevices(self):
         try:
             if self.analogInputModuleCheckBox.isChecked():
@@ -375,6 +370,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.startButton.setEnabled(True)  # This means successful connection attempt for enabled devices.
         self.connectDevicesButton.setEnabled(False)  # Disable to prevent clicking again.
         self.connectDevicesButton.setText("Connected")
+        self.disconnectDevicesButton.setEnabled(True)
 
         self.finalValveButton.setEnabled(True)
         self.leftWaterValveButton.setEnabled(True)
@@ -382,6 +378,28 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushLeftWaterButton.setEnabled(True)
         self.flushRightWaterButton.setEnabled(True)
 
+    def _disconnectDevices(self):
+        if self.adc is not None:
+            self.adc.close()
+            del self.adc
+            self.adc = None
+
+        if self.myBpod is not None:
+            self.myBpod.close()
+            del self.myBpod
+            self.myBpod = None
+
+        self.startButton.setEnabled(False)
+        self.connectDevicesButton.setEnabled(True)
+        self.connectDevicesButton.setText("Connect Devices")
+        self.disconnectDevicesButton.setEnabled(False)
+
+        self.finalValveButton.setEnabled(False)
+        self.leftWaterValveButton.setEnabled(False)
+        self.rightWaterValveButton.setEnabled(False)
+        self.flushLeftWaterButton.setEnabled(False)
+        self.flushRightWaterButton.setEnabled(False)   
+    
     def _runTask(self):
         if self.mouseNumber is None:
             QMessageBox.warning(self, "Warning", "Please enter mouse number!")
@@ -389,9 +407,6 @@ class Window(QMainWindow, Ui_MainWindow):
         elif self.rigLetter is None:
             QMessageBox.warning(self, "Warning", "Please enter rig letter!")
             return
-        # elif self.numOdorsPerTrial is None:
-        #     QMessageBox.warning(self, "Warning", "Please choose an experiment type!")
-        #     return
         elif self.numTrials is None:
             QMessageBox.warning(self, "Warning", "Please enter number of trials for this experiment!")
             return
@@ -467,6 +482,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushRightWaterButton.setEnabled(False)
         self.stopButton.setEnabled(True)
         self.pauseButton.setEnabled(True)
+        self.disconnectDevicesButton.setEnabled(False)  # Do not let user disconnect devices while experiment is running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
@@ -482,6 +498,7 @@ class Window(QMainWindow, Ui_MainWindow):
         logging.info("stopRunningSignal emitted")
         
         # self._checkIfRunning()  # causes unhandled python exception when called twice. Check definition for details.
+        self.disconnectDevicesButton.setEnabled(True)
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
         self.pauseButton.setEnabled(False)
@@ -558,11 +575,11 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.adc is not None:
             self.adc.close()
             logging.info('Analog Input Module closed')
-        # if self.olfas is not None:
-        #     self.olfas.close_serials()
-        #     logging.info('olfas close_serials')
-        #     self.olfas.close()
-        #     logging.info('olfas close')
+        if self.olfas is not None:
+            self.olfas.close_serials()
+            logging.info('olfas close_serials')
+            # self.olfas.close()
+            # logging.info('olfas close')
         if self.myBpod is not None:
             self.myBpod.close()
             logging.info('Bpod closed')
