@@ -116,6 +116,8 @@ Things to do:
 
     * _____ make the streaming plot able to plot more than one channel from the analog input.
 
+    * _____ instead of saving the voltages for the entire duration of the trial in the h5 file, make an option to select which at state to start and stop recording voltages using the sync byte.
+
 
 Questions to research:
 
