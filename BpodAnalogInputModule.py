@@ -76,6 +76,9 @@ class BpodAnalogIn(object):
     def getSamplingRate(self):
         return self.SamplingRate
 
+    def getNActiveChannels(self):
+        return self.nActiveChannels
+
     def getChannelInputVoltageMax(self, channelNum):
         if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
             raise AnalogInException("Error getting channel's max input voltage: Must use a value from 0-7 for channelNum")
@@ -100,6 +103,16 @@ class BpodAnalogIn(object):
         elif (self.InputRange[channelNum] == '0V:10V'):
             return 0
 
+    def getChannelThresholdVoltage(self, channelNum):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error getting channel's threshold voltage: Must use a value from 0-7 for channelNum")
+        return self.Thresholds[channelNum]
+
+    def getChannelResetVoltage(self, channelNum):
+        if (channelNum < 0) or (channelNum > (self._nPhysicalChannels - 1)):
+            raise AnalogInException("Error getting channel's reset voltage: Must use a value from 0-7 for channelNum")
+        return self.ResetVoltages[channelNum]
+    
     def setNsamplesToLog(self, nSamples):
         if self._Initialized:
             nSamples2Send = nSamples

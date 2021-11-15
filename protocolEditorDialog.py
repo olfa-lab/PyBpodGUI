@@ -238,13 +238,13 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
         
         elif channelName.startswith('Serial'):
             self.outputChannelValueComboBox.clear()
-            self.outputChannelValueComboBox.addItems(["Value...", 'SyncByte'])
+            self.outputChannelValueComboBox.addItems(["Value...", 'ADC_start', 'ADC_stop'])
             self.outputChannelValueComboBox.addItems([str(x) for x in range(1, 256)])  # Serial and Softcode allow output values from 1 to 255 inclusive.
 
         elif (channelName == 'SoftCode'):
             self.outputChannelValueComboBox.clear()
             self.outputChannelValueComboBox.addItem("Value...")
-            self.outputChannelValueComboBox.addItems([str(x) for x in range(2, 256)])  # Softcode allow output values from 1 to 255 inclusive. But I reserve 1 for use by GUI.
+            self.outputChannelValueComboBox.addItems([str(x) for x in range(4, 256)])  # Softcode allow output values from 1 to 255 inclusive. But I reserve 1 for use by GUI, 2 and 3 for use by olfactometer.
         
         elif channelName.startswith('BNC') or channelName.startswith('Valve'):
             self.outputChannelValueComboBox.clear()

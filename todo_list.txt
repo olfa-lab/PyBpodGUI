@@ -87,13 +87,21 @@ Things to do:
 
     * __X__ make sure the olfactometer sets dummy vial and all outputs of the bpod turn off when experiment finishes or when application exits. 
     
+    * __X__ instead of saving the voltages for the entire duration of the trial in the h5 file, make an option to select which at state to start and stop recording voltages using the sync byte.
+
+    * __X__ save the name of the protocol file used, the name of the olfa config file used, the water valve durations, etc., and the input range, sampling rate, threshold and reset voltages of the analog input module as attributes in the h5 file.
+    
+    * __X__ fix the issue where the timestamps of the analog data samples stops being synchronized with the bpod's time whenever a trial is paused. Try sending a sync byte that will pause the saving using a bpod manual override.
+            Workaround was to discard the trial and repeat it upon resuming.
+
+    * __X__ fix the issue where the bpod detects analog input threshold crossing events while a trial is paused, and once the trial resumes, the bpod immediately proceeds to the state with the 'AnalogIn...' change condition. Try disabling event reporting.
+            Workaround was to discard the trial and repeat it upon resuming.
+    
     * _____ use the newer olfactometer code
 
     * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
     * _____ implement validators for the line edits to restrict input values
-
-    * _____ create a metadata for the .h5 file
 
     * _____ change the worker threads to use timers instead of infinite while loops
 
@@ -106,8 +114,6 @@ Things to do:
 
     * _____ get rid of variables that hold the value/text in fields like lineEdits, spinBoxes, and comboBoxes because it is redundant. 
 
-    * _____ fix the issue where the timestamps of the analog data samples stops being synchronized with the bpod's time whenever a trial is paused.
-
     * _____ make a slider that changes the probability of the shaping reward.
 
     * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.
@@ -116,7 +122,9 @@ Things to do:
 
     * _____ make the streaming plot able to plot more than one channel from the analog input.
 
-    * _____ instead of saving the voltages for the entire duration of the trial in the h5 file, make an option to select which at state to start and stop recording voltages using the sync byte.
+    * _____ make a counter for how many times the water valves are opened manually by the user and their durations and save it in the h5 file.
+
+    * _____ make a plot of the number of left and right trials and a plot of the number of left and right licks and overlay them to inform the user if mouse if biased towards one side.
 
 
 Questions to research:

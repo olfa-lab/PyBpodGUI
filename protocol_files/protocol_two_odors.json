@@ -2,24 +2,23 @@
     "states": [
         {
             "stateName": "WaitForFirstOdor",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "Tup": "WaitForFirstSniff"
             },
             "outputActions": {
-                "Olfactometer": "set_stimulus",
-                "Serial1": "SyncByte"
+                "Olfactometer": "set_stimulus"
             }
         },
         {
             "stateName": "WaitForFirstSniff",
-            "stateTimer": 10,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "AnalogIn1_1": "PresentFirstOdor",
                 "Tup": "NoSniff"
             },
             "outputActions": {
-                "Serial1": "SyncByte"
+                "Serial1": "ADC_start"
             }
         },
         {
@@ -31,8 +30,7 @@
             "outputActions": {
                 "Valve": [
                     "finalValve"
-                ],
-                "Serial1": "SyncByte"
+                ]
             }
         },
         {
@@ -42,19 +40,17 @@
                 "Tup": "WaitForSecondOdor"
             },
             "outputActions": {
-                "Olfactometer": "set_dummy_vials",
-                "Serial1": "SyncByte"
+                "Olfactometer": "set_dummy_vials"
             }
         },
         {
             "stateName": "WaitForSecondOdor",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "Tup": "WaitForSecondSniff"
             },
             "outputActions": {
-                "Olfactometer": "set_stimulus",
-                "Serial1": "SyncByte"
+                "Olfactometer": "set_stimulus"
             }
         },
         {
@@ -64,9 +60,7 @@
                 "AnalogIn1_1": "PresentSecondOdor",
                 "Tup": "NoSniff"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         },
         {
             "stateName": "PresentSecondOdor",
@@ -77,13 +71,12 @@
             "outputActions": {
                 "Valve": [
                     "finalValve"
-                ],
-                "Serial1": "SyncByte"
+                ]
             }
         },
         {
             "stateName": "WaitForResponse",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "Port1In": "leftAction",
                 "Port3In": "rightAction",
@@ -91,7 +84,7 @@
             },
             "outputActions": {
                 "Olfactometer": "set_dummy_vials",
-                "Serial1": "SyncByte"
+                "Serial1": "ADC_stop"
             }
         },
         {
@@ -103,8 +96,7 @@
             "outputActions": {
                 "Valve": [
                     "rewardValve"
-                ],
-                "Serial1": "SyncByte"
+                ]
             }
         },
         {
@@ -113,9 +105,7 @@
             "stateChangeConditions": {
                 "Tup": "ITI"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         },
         {
             "stateName": "NoResponse",
@@ -123,9 +113,7 @@
             "stateChangeConditions": {
                 "Tup": "ITI"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         },
         {
             "stateName": "NoSniff",
@@ -133,9 +121,7 @@
             "stateChangeConditions": {
                 "Tup": "ITI"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         },
         {
             "stateName": "ITI",
@@ -143,10 +129,7 @@
             "stateChangeConditions": {
                 "Tup": "exit"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         }
-    ],
-    "experimentType": "twoOdorMatch"
+    ]
 }

@@ -7,37 +7,35 @@
                 "Tup": "WaitForSniff"
             },
             "outputActions": {
-                "Olfactometer": "set_stimulus",
-                "Serial1": "SyncByte"
+                "Olfactometer": "set_stimulus"
             }
         },
         {
             "stateName": "WaitForSniff",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "AnalogIn1_1": "PresentOdor",
                 "Tup": "NoSniff"
             },
             "outputActions": {
-                "Serial1": "SyncByte"
+                "Serial1": "ADC_start"
             }
         },
         {
             "stateName": "PresentOdor",
-            "stateTimer": 0,
+            "stateTimer": 3,
             "stateChangeConditions": {
-                "AnalogIn1_1": "WaitForResponse"
+                "Tup": "WaitForResponse"
             },
             "outputActions": {
                 "Valve": [
                     "finalValve"
-                ],
-                "Serial1": "SyncByte"
+                ]
             }
         },
         {
             "stateName": "WaitForResponse",
-            "stateTimer": 5,
+            "stateTimer": 3,
             "stateChangeConditions": {
                 "Port1In": "leftAction",
                 "Port3In": "rightAction",
@@ -45,7 +43,7 @@
             },
             "outputActions": {
                 "Olfactometer": "set_dummy_vials",
-                "Serial1": "SyncByte"
+                "Serial1": "ADC_stop"
             }
         },
         {
@@ -57,8 +55,7 @@
             "outputActions": {
                 "Valve": [
                     "rewardValve"
-                ],
-                "Serial1": "SyncByte"
+                ]
             }
         },
         {
@@ -67,9 +64,7 @@
             "stateChangeConditions": {
                 "Tup": "ITI"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         },
         {
             "stateName": "NoResponse",
@@ -77,9 +72,7 @@
             "stateChangeConditions": {
                 "Tup": "ITI"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         },
         {
             "stateName": "NoSniff",
@@ -88,7 +81,7 @@
                 "Tup": "ITI"
             },
             "outputActions": {
-                "Serial1": "SyncByte"
+                "Serial1": "ADC_stop"
             }
         },
         {
@@ -97,9 +90,7 @@
             "stateChangeConditions": {
                 "Tup": "exit"
             },
-            "outputActions": {
-                "Serial1": "SyncByte"
-            }
+            "outputActions": {}
         }
     ]
 }

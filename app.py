@@ -84,7 +84,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveDuration = self.rightWaterValveDurationSpinBox.value()
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
-        self.analogInputSettings = AnalogInputSettingsDialog()
+        self.analogInputSettings = None
         self.isPaused = False
 
         self.currentTrialSubWindow = MyQMdiSubWindow()
@@ -258,6 +258,9 @@ class Window(QMainWindow, Ui_MainWindow):
             self.bpodControlSubWindow.hide()
     
     def _launchAnalogInputSettings(self):
+        if self.analogInputSettings is None:
+            self.analogInputSettings = AnalogInputSettingsDialog(parent=self)
+            self.analogInputSettings.accepted.connect(self.configureAnalogModule)
         self.analogInputSettings.show()
 
     def _launchOlfaGUI(self):
@@ -307,15 +310,18 @@ class Window(QMainWindow, Ui_MainWindow):
             logging.info(f"The file {fileName} has been loaded.")
 
     def configureAnalogModule(self):
-        settings = self.analogInputSettings.getSettings()
-        logging.info(settings)
-        self.adc.setNactiveChannels(settings['nActiveChannels'])
-        self.adc.setSamplingRate(settings['samplingRate'])
-        self.adc.setInputRange(settings['inputRanges'])
-        self.adc.setStream2USB(settings['enableUSBStreaming'])
-        self.adc.setSMeventsEnabled(settings['enableSMEventReporting'])
-        self.adc.setThresholds(settings['thresholdVoltages'])
-        self.adc.setResetVoltages(settings['resetVoltages'])
+        if self.adc is not None:
+            if self.analogInputSettings is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings from it.
+                self.analogInputSettings = AnalogInputSettingsDialog(parent=self)
+                self.analogInputSettings.accepted.connect(self.configureAnalogModule)
+            settings = self.analogInputSettings.getSettings()
+            self.adc.setNactiveChannels(settings['nActiveChannels'])
+            self.adc.setSamplingRate(settings['samplingRate'])
+            self.adc.setInputRange(settings['inputRanges'])
+            self.adc.setStream2USB(settings['enableUSBStreaming'])
+            self.adc.setSMeventsEnabled(settings['enableSMEventReporting'])
+            self.adc.setThresholds(settings['thresholdVoltages'])
+            self.adc.setResetVoltages(settings['resetVoltages'])
 
     def startAnalogModule(self):
         self.adc.startReportingEvents()
@@ -335,8 +341,19 @@ class Window(QMainWindow, Ui_MainWindow):
         #     except BpodErrorException:
         #         logging.info("could not stop logging")
 
-        # logging.info("attempting to stop reporting events")
-        # self.adc.stopReportingEvents()  # Not necessary to stop event reporting. Will not make difference. And also usually fails first two tries.
+        # For some reason, the stopReportingEvents() function raises an exception the first two tries (sometimes more).
+        # So this while loop keeps attempting to call the function until it is successful. It is important
+        # to stop event reporting while a trial is paused. Otherwise, the bpod will continue to receive
+        # threshold crossing events that occur while paused, which will lead to the transition to the next
+        # state given by that analog input event immediately after the trial resumes. This also happens
+        # just by clicking the resume button even if the voltage does not cross the threshold.
+        # while True:
+        #     try:
+        #         self.adc.stopReportingEvents()
+        #         logging.info("Event reporting stopped.")
+        #         break
+        #     except AnalogInException:
+        #         logging.info("Could not stop event reporting. Trying again...")
 
     
     # def _getSDCardLog(self):
@@ -351,6 +368,10 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.adc = BpodAnalogIn(serial_port=self.adcSerialPort)
                 self.configureAnalogModule()
         except SerialException:
+            if self.adc is not None:
+                self.adc.close()
+                del self.adc
+                self.adc = None
             QMessageBox.warning(self, "Warning", "Cannot connect analog input module! Check that serial port is correct and try again!")
             return
         except AnalogInException as err:
@@ -359,11 +380,22 @@ class Window(QMainWindow, Ui_MainWindow):
 
         try:
             self.myBpod = Bpod(serial_port=self.bpodSerialPort)
+            for m in self.myBpod.modules:
+                if m.name.startswith('AnalogIn'):
+                    self.adcBpodChannel = m.serial_port
+
         except (SerialException, UnicodeDecodeError):
-            if self.myBpod:
+            if self.myBpod is not None:
                 self.myBpod.close()
                 del self.myBpod
                 self.myBpod = None
+            
+            # Check if analog input module was already connected and close it to free the serial port because if it is connected, then when user clicks the "Connect Devices" button again,
+            # a Serial Exception will be raised for the analog module since the program connects to it first before the bpod.
+            if self.adc is not None:
+                self.adc.close()
+                del self.adc
+                self.adc = None
             QMessageBox.warning(self, "Warning", "Cannot connect to bpod! Check that serial port is correct and try again!")
             return
 
@@ -461,7 +493,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
 
         # Check if adc was created which would mean the user enabled the checkbox and the analog input module was connected.
-        if self.adc:
+        if self.adc is not None:
             self.startAnalogModule()
         
         self._runSaveDataThread()
@@ -483,6 +515,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.stopButton.setEnabled(True)
         self.pauseButton.setEnabled(True)
         self.disconnectDevicesButton.setEnabled(False)  # Do not let user disconnect devices while experiment is running.
+        if self.adc is not None:
+            self.actionConfigureAnalogInSettings.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
@@ -490,7 +524,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _endTask(self):
         self.streaming.pauseAnimation()
-        if self.adc:
+        if self.adc is not None:
             self.stopAnalogModule()
             # self._getSDCardLog()
 
@@ -506,6 +540,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.isPaused = False
         self.flushLeftWaterButton.setEnabled(True)
         self.flushRightWaterButton.setEnabled(True)
+        if self.adc is not None:
+            self.actionConfigureAnalogInSettings.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
         self._experimentCompleteDialog()
@@ -555,19 +591,21 @@ class Window(QMainWindow, Ui_MainWindow):
             logging.info("saveDataThread no longer running")
 
     def _pauseExperiment(self):
-        if self.isPaused:
-            self.myBpod.resume()
-            self.streaming.resumeAnimation()
+        if self.isPaused:  # then resume
             if self.adc is not None:
                 self.startAnalogModule()
+            self.myBpod.resume()
+            self.protocolWorker.discardCurrentTrial()  # The analog data becomes out of sync with the bpod's time and the bpod erroneously detects a threshold crossing event immediately after resuming and thus transitions to the next state, so this stops the current trial and discards the data.
+            self.streaming.resetPlot()
+            self.streaming.resumeAnimation()
             self.isPaused = False
             self.pauseButton.setText('Pause')
             
-        else:
-            self.myBpod.pause()
-            self.streaming.pauseAnimation()
+        else:  # then pause
             if self.adc is not None:
                 self.stopAnalogModule()
+            self.myBpod.pause()
+            self.streaming.pauseAnimation()
             self.isPaused = True
             self.pauseButton.setText('Resume')
     
@@ -921,8 +959,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def _runSaveDataThread(self):
         logging.info(f"from _runSaveDataThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
+        if self.analogInputSettings is None:  # if it wasnt created yet, then create it but only create it once.
+            self.analogInputSettings = AnalogInputSettingsDialog(parent=self)
+            self.analogInputSettings.accepted.connect(self.configureAnalogModule)
+        settingsDict = self.analogInputSettings.getSettings()
         self.saveDataThread = QThread()
-        self.saveDataWorker = SaveDataWorker(self.mouseNumber, self.rigLetter, self.numOdorsPerTrial, self.adc)
+        self.saveDataWorker = SaveDataWorker(
+            self.mouseNumber, self.rigLetter, self.protocolFileName, self.olfaConfigFileName, self.shuffleMultiplierSpinBox.value(), self.itiMin, self.itiMax,
+            self.leftWaterValveDuration, self.rightWaterValveDuration, settingsDict, self.adc
+        )
         self.saveDataWorker.moveToThread(self.saveDataThread)
         self.saveDataThread.started.connect(self.saveDataWorker.run)
         self.saveDataWorker.finished.connect(self.saveDataThread.quit)
@@ -953,7 +998,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
-        self.protocolWorker.resultsCounterListSignal.connect(lambda x: self.saveDataWorker.receiveTotalResultsList(x))
         self.protocolWorker.resultsCounterListSignal.connect(self.resultsPlot.updatePlot)
         self.protocolWorker.resultsCounterListSignal.connect(self.flowUsagePlot.updatePlot)
         self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
@@ -967,7 +1011,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.olfaExceptionSignal.connect(self._olfaExceptionDialog)
         self.protocolWorker.invalidFileSignal.connect(self._invalidFileDialog)
         self.protocolWorker.bpodExceptionSignal.connect(self._bpodExceptionDialog)
-        self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())
+        self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())  # I use lambda because the run_state_machine is a blocking function so the protocolThread will not be able to call stop_trial if the user clicks the stop button mid trial.
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")
 

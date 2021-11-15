@@ -32,9 +32,9 @@ class ProtocolWorker(QObject):
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
 
-    def __init__(
-        self, bpodObject, protocolFileName, olfaConfigFileName, numOdorsPerTrial, shuffleMultiplier, leftSensorPort, leftWaterValvePort, leftWaterValveDuration, 
-        rightSensorPort, rightWaterValvePort, rightWaterValveDuration, finalValvePort, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1
+    def __init__(self,
+            bpodObject, protocolFileName, olfaConfigFileName, numOdorsPerTrial, shuffleMultiplier, leftSensorPort, leftWaterValvePort, leftWaterValveDuration, 
+            rightSensorPort, rightWaterValvePort, rightWaterValveDuration, finalValvePort, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1
         ):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
@@ -46,7 +46,7 @@ class ProtocolWorker(QObject):
         self.numOdorsPerTrial = numOdorsPerTrial
         self.shuffleMultiplier = shuffleMultiplier
         self.correctResponse = ''
-        self.currentTrialNum = 0
+        self.currentTrialNum = 1
         self.totalCorrect = 0
         self.totalWrong = 0
         self.totalNoResponses = 0
@@ -65,6 +65,7 @@ class ProtocolWorker(QObject):
         self.rightWaterDuration = rightWaterValveDuration / 1000  # convert to seconds
         self.finalValvePort = finalValvePort
         self.keepRunning = True
+        self.saveTrial = True
         self.currentStateName = ''
         self.currentResponseResult = ''
         self.previousResponseResult = ''
@@ -123,20 +124,18 @@ class ProtocolWorker(QObject):
         return self.currentTrialNum
 
     def getCurrentTrialInfoDict(self):
-        if self.currentTrialNum > 0:
-            trialDict = {
-                'currentTrialNum': self.currentTrialNum,
-                'nTrials': self.nTrials,
-                'correctResponse': self.correctResponse,
-                'currentITI': self.currentITI,
-                'stimList': self.stimList,
-                'nStates': self.sma.total_states_added
-            }
-            return trialDict
-        return {}
+        trialDict = {
+            'currentTrialNum': self.currentTrialNum,
+            'nTrials': self.nTrials,
+            'correctResponse': self.correctResponse,
+            'currentITI': self.currentITI,
+            'stimList': self.stimList,
+            'nStates': self.sma.total_states_added
+        }
+        return trialDict
 
     def getEndOfTrialInfoDict(self):
-        if self.currentStateName == 'exit':
+        if (self.currentStateName == 'exit'):
             dict1 = self.getCurrentTrialInfoDict()
             dict2 = self.myBpod.session.current_trial.export()
             dict3 = {**dict1, **dict2}  # Merge both dictionaries
@@ -272,7 +271,7 @@ class ProtocolWorker(QObject):
             self.totalsDictSignal.emit(sessionTotals)
 
         elif self.currentStateName == 'NoResponse':
-            self.currentResponseResult = 'No Response'
+            self.currentResponseResult = 'None'
             self.responseResultSignal.emit(self.currentResponseResult)
 
             if self.previousResponseResult == self.currentResponseResult:
@@ -302,7 +301,7 @@ class ProtocolWorker(QObject):
             self.totalsDictSignal.emit(sessionTotals)
         
         elif self.currentStateName == 'NoSniff':
-            self.currentResponseResult = 'No Sniff'
+            self.currentResponseResult = 'None'
             self.responseResultSignal.emit(self.currentResponseResult)
 
             if (self.numOdorsPerTrial == 1):
@@ -343,6 +342,7 @@ class ProtocolWorker(QObject):
         with open(self.olfaConfigFileName, 'r') as configFile:
             self.olfaConfigDict = json.load(configFile)
             self.nOlfas = len(self.olfaConfigDict['Olfactometers'])
+            self.mfc_0_capacity = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['capacity']  # will be used to set 'mfc_0_flow' in every stim dict because the olfactometers have been reconfigured such that the bigger mfc will always push out 1000 sccm.
 
         if (self.numOdorsPerTrial == 1):
             self.stimulusFunction = self.oneOdorRandomizer
@@ -461,7 +461,7 @@ class ProtocolWorker(QObject):
 
             ostim['olfas'][f'olfa_{i}'] = {
                 'dilutors': {},
-                'mfc_0_flow': 1000,
+                'mfc_0_flow': self.mfc_0_capacity,
                 'mfc_1_flow': currentFlow,
                 'odor': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['odor'],
                 'vialconc': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc'],
@@ -495,7 +495,7 @@ class ProtocolWorker(QObject):
             
             ostim['olfas'][f'olfa_{i}'] = {
                 'dilutors': {},
-                'mfc_0_flow': 1000,
+                'mfc_0_flow': self.mfc_0_capacity,
                 'mfc_1_flow': firstOdorFlow,
                 'odor': firstOdorName,
                 'vialconc': firstOdorConc,
@@ -505,7 +505,7 @@ class ProtocolWorker(QObject):
         self.vialIndex += 1
         self.flowIndex += 1
 
-        self.correctResponse = self.correctResponsesList[self.currentTrialNum]  # Get the current trial's correct response from the list of all the correct responses to use for the entire experiment.
+        self.correctResponse = self.correctResponsesList[self.currentTrialNum - 1]  # Get the current trial's correct response from the list of all the correct responses to use for the entire experiment. Subtract one because currentTrialNum starts at one, not zero.
         if (self.correctResponse == 'left'):
             self.stimList.append(ostim)  # Append the first odor again so that the two odors presented are the same.
         
@@ -531,7 +531,7 @@ class ProtocolWorker(QObject):
                     
                     ostim['olfas'][f'olfa_{i}'] = {
                         'dilutors': {},
-                        'mfc_0_flow': 1000,
+                        'mfc_0_flow': self.mfc_0_capacity,
                         'mfc_1_flow': secondOdorFlow,
                         'odor': secondOdorName,
                         'vialconc': secondOdorConc,
@@ -629,8 +629,6 @@ class ProtocolWorker(QObject):
             else:
                 # Since they are different, randomly choose a value for self.currentITI every trial. Add 1 to the randint's upperbound to include itiMax in the range of possible integers (since the upperbound is non-inclusive).
                 self.currentITI = np.random.randint(self.itiMin, self.itiMax + 1)
-            
-            self.currentTrialNum += 1
 
             if self.correctResponse == 'left':
                 leftAction = 'Correct'
@@ -644,7 +642,6 @@ class ProtocolWorker(QObject):
                 rewardDuration = self.rightWaterDuration
 
             self.sma = StateMachine(self.myBpod)
-            stateNum = 1
             listOfTuples = []
 
             for state in self.stateMachine['states']:
@@ -694,22 +691,26 @@ class ProtocolWorker(QObject):
                     state['stateTimer'] = self.currentITI  # - 5  # Subtract 5 seconds because the QTimer.singleShot starts a new trial 5000 msecs after state machine completes.
 
                 for channelName, channelValue in state['outputActions'].items():
-                    # Automatically add the sync byte transmission to the analog module for every state.
-                    if channelName.startswith('Serial') and (channelValue == 'SyncByte'):
-                        # reassign channelValue from 'SyncByte' to stateNum so that when appending it to the listOfTuples, the byte value
-                        # go into the tuple instead of 'SyncByte'. This way the state machine can replace the byte value with the loaded
-                        # serial message. 
-                        channelValue = stateNum
-                        state['outputActions'][channelName] = stateNum
+                    # Add the sync byte transmission to the analog input module to signal to the saveDataWorker when to start and stop saving the voltages to the h5 file.
+                    if channelName.startswith('Serial'):
+                        if (channelValue == 'ADC_start'):
+                            channelValue = 1
+                        elif (channelValue == 'ADC_stop'):
+                            channelValue = 2
+
+                        state['outputActions'][channelName] = channelValue  # update the dictionary to append the tuple below.
+
+                        # This will instruct the bpod to send the 2 byte serial_message instead of channelValue, i.e. instead of sending just 0x01 for a channelValue = 1, it will send 0x23 followed by 0x01,
+                        # where 0x23 is ASCII character '#' which is the sync byte on the bpod.
                         self.myBpod.load_serial_message(
-                            serial_channel=int(channelName[-1]),
-                            message_ID=stateNum,
-                            serial_message=[ord('#'), stateNum]
+                            serial_channel=int(channelName[-1]),  # The last character in the channelName string that starts with 'Serial' is the channel number, e.g. 'Serial1' or 'Serial2'.
+                            message_ID=channelValue,
+                            serial_message=[ord('#'), channelValue]
                         )
                     # Convert output actions from dictionary to list of two-tuples.
                     if isinstance(channelValue, list):
                         for i in channelValue:
-                            listOfTuples.append((channelName, i))
+                            listOfTuples.append((channelName, i))  # i is the port numbers in the list, such as when opening multiple valves or LEDs simultaneously.
                     else:
                         listOfTuples.append((channelName, channelValue))                       
 
@@ -721,7 +722,6 @@ class ProtocolWorker(QObject):
                     output_actions=listOfTuples
                 )
 
-                stateNum += 1  # increment state number for record keeping.
                 listOfTuples = []  # reset to empty list.
 
             self.currentResponseResult = '--'  # reset until bpod gets response result.
@@ -739,11 +739,18 @@ class ProtocolWorker(QObject):
                 return  # This is here to avoid executing the remaining code below.
 
             self.currentStateName = 'exit'
-            endOfTrialDict = self.getEndOfTrialInfoDict()
-            self.saveTrialDataDictSignal.emit(endOfTrialDict)
-            logging.info("saveTrialDataDictSignal emitted")
             self.stimIndex = 0
-            # self.stopSDCardLoggingSignal.emit()
+            
+            if self.saveTrial:
+                endOfTrialDict = self.getEndOfTrialInfoDict()
+                self.saveTrialDataDictSignal.emit(endOfTrialDict)
+                logging.info("saveTrialDataDictSignal emitted")
+                # self.stopSDCardLoggingSignal.emit()
+                self.currentTrialNum += 1  # Only increment if trial gets saved.
+            
+            else:  # Do not send the trial data for this trial to the saveDataWorker.
+                self.saveTrialDataDictSignal.emit({})  # Instead, send an empty dict to indicate that the trial was discarded.
+                self.saveTrial = True  # Reset to True for the next trial.
 
             if (self.consecutiveNoResponses == self.autoWaterCutoff):
                 self.myBpod.manual_override(self.myBpod.ChannelTypes.OUTPUT, self.myBpod.ChannelNames.VALVE, channel_number=self.leftWaterValvePort, value=1)
@@ -776,6 +783,13 @@ class ProtocolWorker(QObject):
         if self.olfas:
             self.olfas.set_dummy_vials()  # Close vials in case experiment stopped while olfactometer was on.
 
+    def discardCurrentTrial(self):
+        self.saveTrial = False
+        self.myBpod.stop_trial()
+        logging.info("current trial aborted")
+        if self.olfas:
+            self.olfas.set_dummy_vials()  # Close vials in case experiment stopped while olfactometer was on.
+    
     # def launchOlfaGUI(self):
     #     if self.olfas is not None:
     #         self.olfas.show()
