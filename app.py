@@ -21,6 +21,7 @@ from resultsPlotWorker import ResultsPlotWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
 from analogInputSettingsDialog import AnalogInputSettingsDialog
+from rfidWorker import RFIDWorker
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -433,6 +434,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushRightWaterButton.setEnabled(False)   
     
     def _runTask(self):
+        if (self.applicationModeComboBox.currentIndex() == 0):  # Standard mode
+            self._runTaskStandardMode()
+        elif (self.applicationModeComboBox.currentIndex() == 1):  # Automatic Mode (RFID)
+            self._runTaskAutomaticMode()
+    
+    def _runTaskStandardMode(self):
         if self.mouseNumber is None:
             QMessageBox.warning(self, "Warning", "Please enter mouse number!")
             return
@@ -445,49 +452,43 @@ class Window(QMainWindow, Ui_MainWindow):
         elif self.protocolFileName is '':
             QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
+        
+        self._startSession()
 
-        # The following three try-except blocks prevent the application from crashing when trying to start the experiment again after already running it once.
-        # The AttributeError always happens upon clicking the start button for the first time because the self.inputEventThread variable was never created yet
-        # so the Window object has not attribute 'inputEventThread', and same goes for the other thread variables. After running an experiment once and trying
-        # to start the experiment a successive time causes a RuntimeError where the 'wrapped C/C++ object of type QThread has been deleted'. So in that case I
-        # delete the thread's variable and continue the remaining code. Actually, I do not even need to delete the thread's variable. The action of catching the
-        # RuntimeError seems to prevent crashing alone.
-        # try:
-        #     if self.inputEventThread.isRunning():
-        #         logging.info('inputEventThread is still running')
-        #         self.inputEventThread.quit()
-        #         self.inputEventThread.deleteLater()
-        # except AttributeError as err:
-        #     logging.info(f"AttributeError: {err}")
-        # except RuntimeError as err:
-        #     logging.info(f"RuntimeError: inputEventThread {err}")
-        #     # del self.inputEventThread
+    def _runTaskAutomaticMode(self):
+        if (self.protocolFileLineEdit.text() == ''):
+            QMessageBox.warning(self, "Warning", "Please load a schedule file. Go to 'File' > 'Open'.")
+            return
+        self._runRFIDThread()
+    
+    def _endTask(self):
+        if (self.applicationModeComboBox.currentIndex() == 0):  # Standard mode
+            self._endTaskStandardMode()
+        elif (self.applicationModeComboBox.currentIndex() == 1):  # Automatic Mode (RFID)
+            self._endTaskAutomaticMode()
+        self._disconnectDevices()
+    
+    def _endTaskStandardMode(self):
+        self._stopSession()
+        self._experimentCompleteDialog()
+    
+    def _endTaskAutomaticMode(self):
+        self._stopSession()
+        self._experimentCompleteDialog()
+        self.rfidWorker.stopRunning()
 
-        # try:    
-        #     if self.saveDataThread.isRunning():
-        #         logging.info('saveDataThread is still running')
-        #         self.saveDataThread.quit()
-        #         self.saveDataThread.deleteLater()
-        # except AttributeError as err:
-        #     logging.info(f"AttributeError: {err}")
-        # except RuntimeError as err:
-        #     logging.info(f"RuntimeError: saveDataThread {err}")
-        #     # del self.saveDataThread
-            
-        # try:  
-        #     if self.protocolThread.isRunning():
-        #         logging.info('protocolThread is still running')
-        #         self.protocolThread.quit()
-        #         self.protocolThread.deleteLater()
-        # except AttributeError as err:
-        #     logging.info(f"AttributeError: {err}")
-        # except RuntimeError as err:
-        #     logging.info(f"RuntimeError: protocolThread {err}")
-        #     # del self.protocolThread
+    def _startSession(self, mouseDict=None):
+        if mouseDict is not None:
+            self.mouseNumber = mouseDict['mouseNum']
+            self.protocolFileName = "protocol_files/" + mouseDict['protocolFile']
+            logging.info(mouseDict['protocolFile'])
+
+        if (self.myBpod is None):
+            self._connectDevices()
 
         # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
         # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
-        if self.olfas:
+        if self.olfas is not None:
             self.olfas.close_serials()
             del self.olfas
             self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
@@ -508,7 +509,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlot.setNumOdorsPerTrial(self.numOdorsPerTrial)
         if (self.numOdorsPerTrial == 2):
             self.flowUsagePlotSubWindow.showShaded()
-
+        
         self.startButton.setEnabled(False)
         self.flushLeftWaterButton.setEnabled(False)
         self.flushRightWaterButton.setEnabled(False)
@@ -518,11 +519,12 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.adc is not None:
             self.actionConfigureAnalogInSettings.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
         if self.olfaCheckBox.isChecked():
-            self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
+            # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
             # the protocolWorker's thread know not to use it. Only one object can access a serial port at any given time.
-
-    def _endTask(self):
+            self.actionLaunchOlfaGUI.setEnabled(False)
+    
+    def _stopSession(self):
         self.streaming.pauseAnimation()
         if self.adc is not None:
             self.stopAnalogModule()
@@ -530,8 +532,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.stopRunningSignal.emit()
         logging.info("stopRunningSignal emitted")
+
+        QTimer.singleShot(2000, self._disconnectDevices)
         
-        # self._checkIfRunning()  # causes unhandled python exception when called twice. Check definition for details.
         self.disconnectDevicesButton.setEnabled(True)
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
@@ -544,52 +547,9 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionConfigureAnalogInSettings.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
-        self._experimentCompleteDialog()
+        # self._experimentCompleteDialog()
         self.currentTrialProgressBar.setValue(0)
-
-    def _checkIfRunning(self):
-        # When this function is called for the first time upon clicking the stop button
-        # to stop the threads, it works without errors or raising exceptions and will
-        # return true for all except 'self.saveDataThread.isRunning()' which will be
-        # false. Not sure why any of the threads would still be running when they should
-        # have quit, but this is another issue to be investigated some other time.
-
-        # However, when this function is called the second time (because the 'protocolWorker.finished'
-        # signal connects to 'self._endTask' function and so the 'self._endTask' function will be 
-        # called twice when the user clicks the stop button) there will be an error when you try to
-        # call 'self.inputEventThread.isRunning()'. My logging.info stops right before that line
-        # so my guess is that it is causing an error, as if the inputEventThread does not have an
-        # method called 'isRunning'. Maybe its because the thread was deleted and thus does not have
-        # that 'isRunning' method anymore, but calling 'self.inputEventThread.isRunning()' even before
-        # starting the thread will still work without error (it will return False). Putting it inside
-        # a try/except clause with 'AttributeError' as the exception does NOT trigger the except clause.
-        # But when I use 'RuntimeError' as the exception, the except clause DOES get triggered.
-        logging.info("Checking if threads are still running...")
-        if self.inputEventThread:
-            logging.info("self.inputEventThread exists. Its type is...")
-            logging.info(type(self.inputEventThread))
-            try:
-                if not self.inputEventThread.isRunning():
-                    logging.info("inputEventThread no longer running")
-                else:
-                    logging.info("ERROR inputEventThread is still running")
-            except RuntimeError:
-                logging.info("AttributeError: no method named 'isRunning'")
-        else:
-            logging.info("self.inputEventThread does not exist")
-        if not self.samplingThread.isRunning():
-            logging.info("samplingThread no longer running")
-        else:
-            logging.info("ERROR SamplingThread is still running")
-        if not self.protocolThread.isRunning():
-            logging.info("protocolThread no longer running")
-        else:
-            logging.info("ERROR protocolThread is still running")
-        if not self.saveDataThread.isRunning():
-            logging.info("ERROR saveDataThread is still runnning")
-        else:
-            logging.info("saveDataThread no longer running")
-
+    
     def _pauseExperiment(self):
         if self.isPaused:  # then resume
             if self.adc is not None:
@@ -990,7 +950,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)
-        self.protocolWorker.finished.connect(self._endTask)  # This serves to stop the other threads when the protocol thread completes all trials.
+        if (self.applicationModeComboBox.currentIndex() == 0):
+            self.protocolWorker.finished.connect(self._endTask)  # This serves to stop the other threads when the protocol thread completes all trials.
         self.protocolWorker.finished.connect(self.protocolWorker.deleteLater)
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
         self.protocolWorker.newStateSignal.connect(self._updateCurrentState)
@@ -1014,6 +975,30 @@ class Window(QMainWindow, Ui_MainWindow):
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())  # I use lambda because the run_state_machine is a blocking function so the protocolThread will not be able to call stop_trial if the user clicks the stop button mid trial.
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")
+
+    def _runRFIDThread(self):
+        self.rfidDialog = QMessageBox(self)
+        self.rfidDialog.setWindowTitle("Automatic Mode")
+        self.rfidDialog.setText("Waiting for RFID signal...")
+        self.rfidDialog.setStandardButtons(QMessageBox.StandardButton.Cancel)
+
+        self.rfidThread = QThread()
+        self.rfidWorker = RFIDWorker(serialPort=f"COM{self.rfidPortSpinBox.value()}", scheduleFile=self.protocolFileName)
+        self.rfidWorker.moveToThread(self.rfidThread)
+        self.rfidThread.started.connect(self.rfidWorker.run)
+        self.rfidWorker.finished.connect(self.rfidThread.quit)
+        self.rfidWorker.finished.connect(self.rfidWorker.deleteLater)
+        self.rfidWorker.finished.connect(self.rfidDialog.deleteLater)
+        self.rfidThread.finished.connect(self.rfidThread.deleteLater)
+
+        self.rfidWorker.mouseEnterSignal.connect(self._startSession)
+        self.rfidWorker.mouseEnterSignal.connect(self.rfidDialog.accept)
+        self.rfidWorker.mouseExitSignal.connect(self._stopSession)
+        self.rfidWorker.mouseExitSignal.connect(self.rfidDialog.exec)
+        self.rfidDialog.rejected.connect(self.rfidWorker.stopRunning)
+        
+        self.rfidThread.start()
+        self.rfidDialog.exec()               
 
 
 if __name__ == "__main__":

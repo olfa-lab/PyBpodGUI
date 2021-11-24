@@ -1,0 +1,12 @@
+[
+    {
+        "filename": "protocolWithOlfactometer.json",
+        "totalTrials": 10,
+        "passingGrade": 10
+    },
+    {
+        "filename": "protocolWithoutSniff.json",
+        "totalTrials": 10,
+        "passingGrade": 10
+    }
+]

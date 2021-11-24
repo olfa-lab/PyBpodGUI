@@ -700,6 +700,7 @@ class ProtocolWorker(QObject):
 
                         state['outputActions'][channelName] = channelValue  # update the dictionary to append the tuple below.
 
+                        self.myBpod.reset_serial_messages()
                         # This will instruct the bpod to send the 2 byte serial_message instead of channelValue, i.e. instead of sending just 0x01 for a channelValue = 1, it will send 0x23 followed by 0x01,
                         # where 0x23 is ASCII character '#' which is the sync byte on the bpod.
                         self.myBpod.load_serial_message(

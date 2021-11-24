@@ -839,80 +839,6 @@
    </attribute>
    <widget class="QWidget" name="experimentSetupDockWidgetContents">
     <layout class="QGridLayout" name="experimentSetupDockWidgetContentsGridLayout">
-     <item row="18" column="0" colspan="2">
-      <widget class="QPushButton" name="startButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Start</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="shuffleMultiplierLabel">
-       <property name="text">
-        <string>Shuffle Multiplier</string>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="1">
-      <widget class="QSpinBox" name="autoWaterCutoffSpinBox">
-       <property name="specialValueText">
-        <string>Never</string>
-       </property>
-       <property name="suffix">
-        <string> trials</string>
-       </property>
-      </widget>
-     </item>
-     <item row="16" column="0" colspan="2">
-      <widget class="QPushButton" name="connectDevicesButton">
-       <property name="text">
-        <string>Connect Devices</string>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="0">
-      <widget class="QLabel" name="autoWaterCutoffLabel">
-       <property name="text">
-        <string>Auto water when no response for</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="0">
-      <widget class="QLabel" name="rigLetterLabel">
-       <property name="text">
-        <string>Rig Letter</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="analogInputModulePortLineEdit"/>
-     </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="noResponseCutoffLabel">
-       <property name="text">
-        <string>Abort when no response for</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="12" column="1">
-      <widget class="QSpinBox" name="itiMaxSpinBox">
-       <property name="suffix">
-        <string> s</string>
-       </property>
-       <property name="minimum">
-        <number>1</number>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="applicationModeLabel">
        <property name="text">
@@ -920,7 +846,7 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
+     <item row="6" column="1">
       <widget class="QCheckBox" name="olfaCheckBox">
        <property name="text">
         <string>Enable Olfactometer</string>
@@ -930,92 +856,34 @@
        </property>
       </widget>
      </item>
-     <item row="13" column="1">
-      <widget class="QSpinBox" name="itiMinSpinBox">
-       <property name="suffix">
-        <string> s</string>
-       </property>
-       <property name="minimum">
-        <number>1</number>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="bpodPortLineEdit"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="bpodPortLabel">
+     <item row="9" column="0">
+      <widget class="QLabel" name="shuffleMultiplierLabel">
        <property name="text">
-        <string>Bpod Port</string>
+        <string>Shuffle Multiplier</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="olfaFileLineEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="1">
-      <widget class="QSpinBox" name="nTrialsSpinBox">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>1000</number>
-       </property>
-       <property name="value">
-        <number>100</number>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QLineEdit" name="protocolFileLineEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="12" column="0">
-      <widget class="QLabel" name="itiMaxLabel">
-       <property name="text">
-        <string>Maximum ITI</string>
-       </property>
-      </widget>
-     </item>
-     <item row="20" column="0" colspan="2">
-      <widget class="QPushButton" name="pauseButton">
+     <item row="18" column="0" colspan="2">
+      <widget class="QPushButton" name="disconnectDevicesButton">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Pause</string>
-       </property>
-      </widget>
-     </item>
-     <item row="13" column="0">
-      <widget class="QLabel" name="itiMinLabel">
-       <property name="text">
-        <string>Minimum ITI</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="protocolFileLabel">
-       <property name="text">
-        <string>Protocol File:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="olfaFileLabel">
-       <property name="text">
-        <string>Olfa Config File:</string>
+        <string>Disconnect Devices</string>
        </property>
       </widget>
      </item>
      <item row="19" column="0" colspan="2">
+      <widget class="QPushButton" name="startButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Start</string>
+       </property>
+      </widget>
+     </item>
+     <item row="20" column="0" colspan="2">
       <widget class="QPushButton" name="stopButton">
        <property name="enabled">
         <bool>false</bool>
@@ -1028,17 +896,225 @@
        </property>
       </widget>
      </item>
-     <item row="9" column="0">
+     <item row="5" column="1">
+      <widget class="QLineEdit" name="olfaFileLineEdit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="1">
+      <widget class="QSpinBox" name="itiMinSpinBox">
+       <property name="suffix">
+        <string> s</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="0" colspan="2">
+      <widget class="QPushButton" name="connectDevicesButton">
+       <property name="text">
+        <string>Connect Devices</string>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="0">
+      <widget class="QLabel" name="itiMinLabel">
+       <property name="text">
+        <string>Minimum ITI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="bpodPortLabel">
+       <property name="text">
+        <string>Bpod Port</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QCheckBox" name="analogInputModuleCheckBox">
+       <property name="text">
+        <string>Enable Analog Input</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
       <widget class="QLabel" name="nTrialsLabel">
        <property name="text">
         <string>Num of trials:</string>
        </property>
       </widget>
      </item>
-     <item row="14" column="0">
+     <item row="13" column="1">
+      <widget class="QSpinBox" name="itiMaxSpinBox">
+       <property name="suffix">
+        <string> s</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLabel" name="itiMaxLabel">
+       <property name="text">
+        <string>Maximum ITI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QSpinBox" name="numOdorsPerTrialSpinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>2</number>
+       </property>
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="1">
+      <widget class="QSpinBox" name="autoWaterCutoffSpinBox">
+       <property name="specialValueText">
+        <string>Never</string>
+       </property>
+       <property name="suffix">
+        <string> trials</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="analogInputModulePortLabel">
+       <property name="text">
+        <string>Analog In Port</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="bpodPortLineEdit"/>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="olfaFileLabel">
+       <property name="text">
+        <string>Olfa Config File:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="0">
       <widget class="QLabel" name="mouseNumberLabel">
        <property name="text">
         <string>Mouse Number:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="0">
+      <widget class="QLabel" name="rigLetterLabel">
+       <property name="text">
+        <string>Rig Letter</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="QSpinBox" name="noResponseCutoffSpinBox">
+       <property name="specialValueText">
+        <string>Never</string>
+       </property>
+       <property name="suffix">
+        <string> trials</string>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="1">
+      <widget class="QLineEdit" name="mouseNumberLineEdit"/>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="noResponseCutoffLabel">
+       <property name="text">
+        <string>Abort when no response for</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="numOdorsPerTrialLabel">
+       <property name="text">
+        <string>Num Odors Per Trial</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0">
+      <widget class="QLabel" name="autoWaterCutoffLabel">
+       <property name="text">
+        <string>Auto water when no response for</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="analogInputModulePortLineEdit"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="protocolFileLabel">
+       <property name="text">
+        <string>Protocol File:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="1">
+      <widget class="QLineEdit" name="rigLetterLineEdit"/>
+     </item>
+     <item row="21" column="0" colspan="2">
+      <widget class="QPushButton" name="pauseButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Pause</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QSpinBox" name="nTrialsSpinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="value">
+        <number>100</number>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="protocolFileLineEdit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QSpinBox" name="shuffleMultiplierSpinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>10</number>
        </property>
       </widget>
      </item>
@@ -1059,79 +1135,20 @@
        </item>
       </widget>
      </item>
-     <item row="15" column="1">
-      <widget class="QLineEdit" name="rigLetterLineEdit"/>
-     </item>
-     <item row="10" column="1">
-      <widget class="QSpinBox" name="noResponseCutoffSpinBox">
-       <property name="specialValueText">
-        <string>Never</string>
-       </property>
-       <property name="suffix">
-        <string> trials</string>
-       </property>
-       <property name="value">
-        <number>0</number>
+     <item row="1" column="0">
+      <widget class="QLabel" name="rfidPortLabel">
+       <property name="text">
+        <string>RFID Port</string>
        </property>
       </widget>
      </item>
-     <item row="8" column="1">
-      <widget class="QSpinBox" name="shuffleMultiplierSpinBox">
-       <property name="minimum">
-        <number>1</number>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="rfidPortSpinBox">
+       <property name="prefix">
+        <string>COM</string>
        </property>
        <property name="maximum">
-        <number>10</number>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="1">
-      <widget class="QSpinBox" name="numOdorsPerTrialSpinBox">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>2</number>
-       </property>
-       <property name="value">
-        <number>1</number>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="1">
-      <widget class="QLineEdit" name="mouseNumberLineEdit"/>
-     </item>
-     <item row="3" column="1">
-      <widget class="QCheckBox" name="analogInputModuleCheckBox">
-       <property name="text">
-        <string>Enable Analog Input</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="analogInputModulePortLabel">
-       <property name="text">
-        <string>Analog In Port</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="numOdorsPerTrialLabel">
-       <property name="text">
-        <string>Num Odors Per Trial</string>
-       </property>
-      </widget>
-     </item>
-     <item row="17" column="0" colspan="2">
-      <widget class="QPushButton" name="disconnectDevicesButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Disconnect Devices</string>
+        <number>999</number>
        </property>
       </widget>
      </item>
