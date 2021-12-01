@@ -108,10 +108,6 @@ Things to do:
             so perhaps I need to ensure some time elapses before the user can start the experiment again so the threads have enough time to finish running and delete themselves,
             or I could check if any of the threads exist and are running at the time the user clicks the start button and if there is one then I could stop it and delete it)
 
-    * _____ modify saveDataWorker to handle KeyErrors and TypeErrors for when different protocols are used or when olfactometer is not used.
-
-    * _____ get rid of variables that hold the value/text in fields like lineEdits, spinBoxes, and comboBoxes because it is redundant. 
-
     * _____ make a slider that changes the probability of the shaping reward.
 
     * _____ make a feature for using probe trials with a slider that adjusts how often the probe trial is used.

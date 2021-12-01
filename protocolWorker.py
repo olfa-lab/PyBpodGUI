@@ -175,7 +175,8 @@ class ProtocolWorker(QObject):
                 # set_stimulus() because inside set_stimulus(), there is a call to check_flows(), which checks the elapsed time since the last time
                 # the mfc were polled. By polling the mfcs right before calling set_stimulus(), the elapsed time will never be long enough to raise
                 # the OlfaException.
-                self.olfas.olfas[0]._poll_mfcs()
+                for i in range(self.nOlfas):
+                    self.olfas.olfas[i]._poll_mfcs()
                 self.olfas.set_stimulus(self.stimList[self.stimIndex])
                 self.stimIndex += 1
 
@@ -194,7 +195,8 @@ class ProtocolWorker(QObject):
             # called a second time for the second odor. Otherwise, the olfactometer will present an error "Cannot open vial. Must wait 1 second
             # after last valve closed to prevent cross=contamination." I assume that 1 second will elapse between the state that called
             # set_dummy_vials() and the state that will call set_stimulus() again for the second odor.
-            self.olfas.olfas[0]._valve_lockout_clear()
+            for i in range(self.nOlfas):
+                self.olfas.olfas[i]._valve_lockout_clear()
 
         # Update trial info for GUI
         self.currentStateName = self.sma.state_names[self.sma.current_state]
