@@ -12,7 +12,7 @@ class InputEventWorker(QObject):
     def __init__(self, bpodObject):
         super(InputEventWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
-        self.myBpod = bpodObject
+        self.bpod = bpodObject
         self.keepRunning = True
         self.currentPort1In = 0
         self.currentPort2In = 0
@@ -25,13 +25,12 @@ class InputEventWorker(QObject):
         self.inputPorts = [0, 0, 0, 0]
 
     def run(self):
-        logging.info("InputEventThread is running")
         self.checkForNewInputEvent()
 
     def checkForNewInputEvent(self):
         if self.keepRunning:
             try:
-                eventsDict = self.myBpod.session.current_trial.get_all_timestamps_by_event()
+                eventsDict = self.bpod.session.current_trial.get_all_timestamps_by_event()
             except AttributeError:
                 eventsDict = {}  # This means the trial has not started yet.
 

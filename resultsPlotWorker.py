@@ -13,7 +13,8 @@ class ResultsPlotWorker(QObject):
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.graphWidget = pg.PlotWidget()
         self.colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
-        self.numOdorsPerTrial = 1
+        self.experimentType = 1
+        self.plottingMode = 0
 
         # styles = {'color':'blue', 'font-size': '10pt'}
         # self.graphWidget.setBackground('w')
@@ -26,7 +27,6 @@ class ResultsPlotWorker(QObject):
         # self.xAxisReady = False
         # self.groupedVials = {}
         # self.resultsList = []
-        # self.plottingMode = 0
 
     def getWidget(self):
         return self.graphWidget
@@ -40,12 +40,12 @@ class ResultsPlotWorker(QObject):
             self.updatePlot(self.resultsList)
 
     def updatePlot(self, resultsList):
-        if (self.numOdorsPerTrial == 1):
-            self.oneOdorPlot(resultsList)
-        elif (self.numOdorsPerTrial == 2):
-            self.twoOdorPlot(resultsList)
+        if (self.experimentType == 1):
+            self.intensityPlot(resultsList)
+        elif (self.experimentType == 2):
+            self.identityPlot(resultsList)
     
-    def oneOdorPlot(self, resultsList):
+    def intensityPlot(self, resultsList):
         # This function currently only plots vials of the first olfactometer (regardless of the plottingMode).
 
         self.resultsList = resultsList
@@ -138,10 +138,8 @@ class ResultsPlotWorker(QObject):
                 self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
                 self.graphWidget.plot(xValues, yValues, name=f'Vial {vialNum}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
                 colorIndex += 1
-
-        logging.info('results plot updated')
     
-    def twoOdorPlot(self, resultsList):
+    def identityPlot(self, resultsList):
         if not self.axisReady:
             self.xAxis = self.graphWidget.getAxis('bottom')
             xticks = list(resultsList[0].keys())
@@ -158,6 +156,8 @@ class ResultsPlotWorker(QObject):
         
             self.axisReady = True
 
+        self.graphWidget.clear()
+        
         odor_A_vials = list(resultsList[0].keys())
         odor_B_vials = list(resultsList[0][odor_A_vials[0]].keys())
         data = np.zeros(shape=(len(odor_A_vials), len(odor_B_vials)), dtype=np.float32)
@@ -171,16 +171,16 @@ class ResultsPlotWorker(QObject):
                 else:
                     data[i][j] = 0.0
         
-        logging.info(data)
         # axes = {'t':None, 'x':0, 'y':1, 'c':None}  # When 'x':0 and 'y':1, then each array inside data will be displayed as a column.
         axes = {'t':None, 'x':1, 'y':0, 'c':None}  # When 'x':1 and 'y':0, then each array inside data will be displayed as a row.
         self.image.setImage(image=data, autoLevels=False, levels=(0.0, 255.0), axes=axes, levelMode='mono')
         # self.image.setImage(data)
 
-    def setNumOdorsPerTrial(self, numOdorsPerTrial):
-        self.numOdorsPerTrial = numOdorsPerTrial
+    def setExperimentType(self, experimentType):
+        self.experimentType = experimentType
+        self.graphWidget.clear()
 
-        if (numOdorsPerTrial == 1):
+        if (experimentType == 1):
             styles = {'color':'blue', 'font-size': '10pt'}
             self.graphWidget.setBackground('w')
             self.graphWidget.setTitle('Percent Left Licks For Each Flow Rate', color='b', size='10pt')
@@ -194,7 +194,7 @@ class ResultsPlotWorker(QObject):
             self.resultsList = []
             self.plottingMode = 0
         
-        elif (numOdorsPerTrial == 2):
+        elif (experimentType == 2):
             self.graphWidget.setBackground('k')
             self.graphWidget.setTitle('Percent Correct For Each Odor', color='w', size='10pt')
             self.image = pg.ImageItem()

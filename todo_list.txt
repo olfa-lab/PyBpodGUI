@@ -97,8 +97,6 @@ Things to do:
     * __X__ fix the issue where the bpod detects analog input threshold crossing events while a trial is paused, and once the trial resumes, the bpod immediately proceeds to the state with the 'AnalogIn...' change condition. Try disabling event reporting.
             Workaround was to discard the trial and repeat it upon resuming.
     
-    * _____ use the newer olfactometer code
-
     * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
     * _____ implement validators for the line edits to restrict input values

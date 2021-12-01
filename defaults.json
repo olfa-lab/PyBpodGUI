@@ -1,0 +1,44 @@
+{
+    "experimentSetup": {
+        "bpodCOMPort": 12,
+        "enableAnalogInput": true,
+        "analogInputModuleCOMPort": 6,
+        "enableOlfactometer": true,
+        "olfaConfigFile": "olfactometry_config_files/olfa_config_with_flow_rates.json",
+        "protocolFile": "protocol_files/protocolWithoutSniff.json",
+        "experimentType": 1,
+        "shuffleMultiplier": 3,
+        "nTrials": 300,
+        "noResponseCutoff": 0,
+        "autoWaterCutoff": 0,
+        "maxITI": 10,
+        "minITI": 6,
+        "mouseNum": 1234,
+        "rig": "e"
+    },
+    "bpodChannels": {
+        "leftSensorPortNum": 1,
+        "leftWaterValvePortNum": 1,
+        "leftWaterValveDuration": 25,
+        "rightSensorPortNum": 3,
+        "rightWaterValvePortNum": 3,
+        "rightWaterValveDuration": 25
+    },
+    "streamingPlot": {
+        "y_max": 2.5,
+        "y_min": -2.5,
+        "max_t": 10,
+        "dt": 0.001,
+        "plotInterval": 1
+    },
+    "analogInput": {
+        "nActiveChannels": 1,
+        "samplingRate": 1000,
+        "inputRanges": ["-2.5V:2.5V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V"],
+        "thresholdVoltages": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "resetVoltages": [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "enableSMEventReporting": [1, 0, 0, 0, 0, 0, 0, 0],
+        "enableUSBStreaming": [1, 0, 0, 0, 0, 0, 0, 0],
+        "enableModuleStreaming": [0, 0, 0, 0, 0, 0, 0, 0]
+    }
+}

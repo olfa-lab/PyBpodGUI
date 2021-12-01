@@ -1,5 +1,7 @@
 import sys
 import logging
+import json
+import os
 from serial.serialutil import SerialException
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow
@@ -54,98 +56,84 @@ class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self._connectSignalsSlots()
+        self.createMdiSubWindows()
+        self.connectSignalsSlots()
         self.olfas = None
         self.adc = None
-        self.myBpod = None
-        self.olfaSerialPort = 'COM5'
-        self.adcSerialPort = 'COM6'
-        self.bpodSerialPort = 'COM7'
-        self.analogInputModulePortLineEdit.setText(self.adcSerialPort)
-        self.bpodPortLineEdit.setText(self.bpodSerialPort)
+        self.bpod = None
         self.saveDataWorker = None
         self.protocolWorker = None
-        self.mouseNumber = None
-        self.rigLetter = None
-        self.numOdorsPerTrial = 1
-        self.numTrials = self.nTrialsSpinBox.value()
-        self.noResponseCutoff = self.noResponseCutoffSpinBox.value()
-        self._recordNoResponseCutoff(self.noResponseCutoff)
-        self.autoWaterCutoff = self.autoWaterCutoffSpinBox.value()
-        self._recordAutoWaterCutoff(self.autoWaterCutoff)
-        self.itiMin = self.itiMinSpinBox.value()
-        self.itiMax = self.itiMaxSpinBox.value()
-        self.itiMinSpinBox.setMaximum(self.itiMax)  # I do not want the itiMinSpinBox to be higher than the itiMaxSpinBox's current value.
-        self.itiMaxSpinBox.setMinimum(self.itiMin)  # I do not want the itiMaxSpinBox to be lower than the itiMinSpinBox's current value.
+        self.itiMinSpinBox.setMaximum(self.itiMaxSpinBox.value())  # I do not want the itiMinSpinBox to be higher than the itiMaxSpinBox's current value.
+        self.itiMaxSpinBox.setMinimum(self.itiMinSpinBox.value())  # I do not want the itiMaxSpinBox to be lower than the itiMinSpinBox's current value.
         self.leftWaterValve = int(self.leftWaterValvePortNumComboBox.currentText())
         self.finalValve = int(self.finalValvePortNumComboBox.currentText())
         self.rightWaterValve = int(self.rightWaterValvePortNumComboBox.currentText())
-        self.leftWaterValveDuration = self.leftWaterValveDurationSpinBox.value()
-        self.rightWaterValveDuration = self.rightWaterValveDurationSpinBox.value()
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
-        self.analogInputSettings = None
+        self.analogInputSettingsDialog = None
         self.isPaused = False
+        self.loadDefaults()
 
+    def createMdiSubWindows(self):
         self.currentTrialSubWindow = MyQMdiSubWindow()
-        self.currentTrialSubWindow.closed.connect(self._updateViewMenu)
+        self.currentTrialSubWindow.closed.connect(self.updateViewMenu)
         self.currentTrialSubWindow.setObjectName("currentTrialSubWindow")
         self.currentTrialSubWindow.setWidget(self.currentTrialSubWindowWidget)
         self.currentTrialSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         # self.currentTrialSubWindow.resize(720, 230)
         self.mdiArea.addSubWindow(self.currentTrialSubWindow)
 
+        self.streaming = StreamingWorker(self.maxtSpinBox.value(), self.dtDoubleSpinBox.value(), self.yMinDoubleSpinBox.value(), self.yMaxDoubleSpinBox.value(), self.plotIntervalSpinBox.value())
+        self.streamingWidget = self.streaming.getFigure()
+        self.streamingWidget.setMinimumSize(500, 250)
+        self.streamingPlotSubWindowWidgetGridLayout.addWidget(self.streamingWidget, 0, 2, 5, 1)
+        self.streamingSubWindow = MyQMdiSubWindow()
+        self.streamingSubWindow.closed.connect(self.updateViewMenu)
+        self.streamingSubWindow.setObjectName("streamingSubWindow")
+        self.streamingSubWindow.setWidget(self.streamingPlotSubWindowWidget)
+        self.streamingSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        # self.streamingSubWindow.resize(1000, 300)
+        self.mdiArea.addSubWindow(self.streamingSubWindow)
+        
         self.bpodControlSubWindow = MyQMdiSubWindow()
-        self.bpodControlSubWindow.closed.connect(self._updateViewMenu)
+        self.bpodControlSubWindow.closed.connect(self.updateViewMenu)
         self.bpodControlSubWindow.setObjectName("bpodControlSubWindow")
         self.bpodControlSubWindow.setWidget(self.bpodControlSubWindowWidget)
         self.bpodControlSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         # self.bpodControlSubWindow.resize(300, 230)
         self.mdiArea.addSubWindow(self.bpodControlSubWindow)
 
-        self.streaming = StreamingWorker(self.maxtSpinBox.value(), self.dtDoubleSpinBox.value(), self.yMinDoubleSpinBox.value(), self.yMaxDoubleSpinBox.value(), self.plotIntervalSpinBox.value())
-        self.streamingWidget = self.streaming.getFigure()
-        self.streamingWidget.setMinimumSize(500, 250)
-        self.streamingPlotSubWindowWidgetGridLayout.addWidget(self.streamingWidget, 0, 2, 5, 1)
-        self.streamingSubWindow = MyQMdiSubWindow()
-        self.streamingSubWindow.closed.connect(self._updateViewMenu)
-        self.streamingSubWindow.setObjectName("streamingSubWindow")
-        self.streamingSubWindow.setWidget(self.streamingPlotSubWindowWidget)
-        self.streamingSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        # self.streamingSubWindow.resize(1000, 300)
-        self.mdiArea.addSubWindow(self.streamingSubWindow)
-
         self.resultsPlot = ResultsPlotWorker()
         self.resultsPlotSubWindowWidgetGridLayout.addWidget(self.resultsPlot.getWidget(), 1, 0, 1, 3)
         self.resultsPlotSubWindow = MyQMdiSubWindow()
-        self.resultsPlotSubWindow.closed.connect(self._updateViewMenu)
+        self.resultsPlotSubWindow.closed.connect(self.updateViewMenu)
         self.resultsPlotSubWindow.setObjectName("resultsPlotSubWindow")
         self.resultsPlotSubWindow.setWidget(self.resultsPlotSubWindowWidget)
         self.resultsPlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        self.resultsPlotSubWindow.resize(300, 300)
+        self.resultsPlotSubWindow.resize(300, 320)
         self.mdiArea.addSubWindow(self.resultsPlotSubWindow)
 
         self.flowUsagePlot = FlowUsagePlotWorker()
         self.flowUsagePlotSubWindowWidgetGridLayout.addWidget(self.flowUsagePlot.getWidget(), 1, 0, 1, 3)
         self.flowUsagePlotSubWindow = MyQMdiSubWindow()
-        self.flowUsagePlotSubWindow.closed.connect(self._updateViewMenu)
+        self.flowUsagePlotSubWindow.closed.connect(self.updateViewMenu)
         self.flowUsagePlotSubWindow.setObjectName("flowUsagePlotSubWindow")
         self.flowUsagePlotSubWindow.setWidget(self.flowUsagePlotSubWindowWidget)
         self.flowUsagePlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
-        self.flowUsagePlotSubWindow.resize(300, 300)
+        self.flowUsagePlotSubWindow.resize(300, 320)
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
 
-    def _connectSignalsSlots(self):
-        self.startButton.clicked.connect(self._runTask)
-        self.stopButton.clicked.connect(self._endTask)
-        self.pauseButton.clicked.connect(self._pauseExperiment)
-        self.finalValveButton.clicked.connect(self._toggleFinalValve)
-        self.leftWaterValveButton.clicked.connect(self._toggleLeftWaterValve)
-        self.rightWaterValveButton.clicked.connect(self._toggleRightWaterValve)
-        self.flushLeftWaterButton.clicked.connect(self._flushLeftWaterValve)
-        self.flushRightWaterButton.clicked.connect(self._flushRightWaterValve)
-        self.connectDevicesButton.clicked.connect(self._connectDevices)
-        self.disconnectDevicesButton.clicked.connect(self._disconnectDevices)
+    def connectSignalsSlots(self):
+        self.startButton.clicked.connect(self.runTask)
+        self.stopButton.clicked.connect(self.endTask)
+        self.pauseButton.clicked.connect(self.pauseExperiment)
+        self.finalValveButton.clicked.connect(self.toggleFinalValve)
+        self.leftWaterValveButton.clicked.connect(self.toggleLeftWaterValve)
+        self.rightWaterValveButton.clicked.connect(self.toggleRightWaterValve)
+        self.flushLeftWaterButton.clicked.connect(self.flushLeftWaterValve)
+        self.flushRightWaterButton.clicked.connect(self.flushRightWaterValve)
+        self.connectDevicesButton.clicked.connect(self.connectDevices)
+        self.disconnectDevicesButton.clicked.connect(self.disconnectDevices)
         self.resultsPlotCombineAllVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(0))
         self.resultsPlotCombineLikeVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(1))
         self.resultsPlotSeparateVialsButton.clicked.connect(lambda: self.resultsPlot.setPlottingMode(2))
@@ -153,44 +141,88 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotCombineLikeVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(1))
         self.flowUsagePlotSeparateVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(2))
         
-        self.actionNew.triggered.connect(self._launchProtocolEditor)
+        self.actionNew.triggered.connect(self.launchProtocolEditor)
         self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
         self.actionSelectOlfaConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
-        self.actionConfigureOlfaSettings.triggered.connect(self._launchOlfaEditor)
-        self.actionConfigureAnalogInSettings.triggered.connect(self._launchAnalogInputSettings)
-        self.actionLaunchOlfaGUI.triggered.connect(self._launchOlfaGUI)
-        self.actionViewStreaming.toggled.connect(self._viewStreamingSubWindow)
-        self.actionViewResultsPlot.toggled.connect(self._viewResultsPlotSubWindow)
-        self.actionViewCurrentTrialInfo.toggled.connect(self._viewCurrentTrialSubWindow)
-        self.actionViewFlowUsagePlot.toggled.connect(self._viewFlowUsagePlotSubWindow)
-        self.actionViewBpodControl.toggled.connect(self._viewBpodControlSubWindow)
+        self.actionConfigureOlfaSettings.triggered.connect(self.launchOlfaEditor)
+        self.actionConfigureAnalogInSettings.triggered.connect(self.launchanalogInputSettingsDialog)
+        self.actionLaunchOlfaGUI.triggered.connect(self.launchOlfaGUI)
+        self.actionViewStreaming.toggled.connect(self.viewStreamingSubWindow)
+        self.actionViewResultsPlot.toggled.connect(self.viewResultsPlotSubWindow)
+        self.actionViewCurrentTrialInfo.toggled.connect(self.viewCurrentTrialSubWindow)
+        self.actionViewFlowUsagePlot.toggled.connect(self.viewFlowUsagePlotSubWindow)
+        self.actionViewBpodControl.toggled.connect(self.viewBpodControlSubWindow)
+        self.actionViewExperimentSetup.toggled.connect(self.viewExperimentSetupDockWindow)
+        self.actionLoadDefaults.triggered.connect(self.loadDefaults)
 
-        self.mouseNumberLineEdit.editingFinished.connect(self._recordMouseNumber)
-        self.rigLetterLineEdit.editingFinished.connect(self._recordRigLetter)
-        self.bpodPortLineEdit.editingFinished.connect(self._recordBpodSerialPort)
-        self.analogInputModulePortLineEdit.editingFinished.connect(self._recordAnalogInputModuleSerialPort)
+        self.applicationModeComboBox.currentIndexChanged.connect(self.switchApplicationMode)
+
+        self.experimentSetupDockWidget.visibilityChanged.connect(lambda x: self.updateViewMenu(self.experimentSetupDockWidget.objectName(), x))
         
-        self.nTrialsSpinBox.valueChanged.connect(self._recordNumTrials)
-        self.itiMinSpinBox.valueChanged.connect(self._recordMinITI)
-        self.itiMaxSpinBox.valueChanged.connect(self._recordMaxITI)
-        self.noResponseCutoffSpinBox.valueChanged.connect(self._recordNoResponseCutoff)
-        self.autoWaterCutoffSpinBox.valueChanged.connect(self._recordAutoWaterCutoff)
+        self.nTrialsSpinBox.valueChanged.connect(self.recordNumTrials)
+        self.itiMinSpinBox.valueChanged.connect(self.recordMinITI)
+        self.itiMaxSpinBox.valueChanged.connect(self.recordMaxITI)
+        self.noResponseCutoffSpinBox.valueChanged.connect(self.recordNoResponseCutoff)
+        self.autoWaterCutoffSpinBox.valueChanged.connect(self.recordAutoWaterCutoff)
         self.yMaxDoubleSpinBox.valueChanged.connect(lambda ymax: self.streaming.setYaxis(self.yMinDoubleSpinBox.value(), ymax))
         self.yMinDoubleSpinBox.valueChanged.connect(lambda ymin: self.streaming.setYaxis(ymin, self.yMaxDoubleSpinBox.value()))
         self.maxtSpinBox.valueChanged.connect(lambda maxt: self.streaming.setXaxis(maxt))
         self.dtDoubleSpinBox.valueChanged.connect(lambda dt: self.streaming.set_dt(dt))
         self.plotIntervalSpinBox.valueChanged.connect(lambda x: self.streaming.setPlotInterval(x))
-        self.numOdorsPerTrialSpinBox.valueChanged.connect(self._recordNumOdorsPerTrial)
 
-        self.leftSensorPortNumComboBox.currentTextChanged.connect(self._recordLeftSensorPort)
-        self.leftWaterValvePortNumComboBox.currentTextChanged.connect(self._recordLeftWaterValvePort)
-        self.leftWaterValveDurationSpinBox.valueChanged.connect(self._recordLeftWaterValveDuration)
-        self.rightSensorPortNumComboBox.currentTextChanged.connect(self._recordRightSensorPort)
-        self.rightWaterValvePortNumComboBox.currentTextChanged.connect(self._recordRightWaterValvePort)
-        self.rightWaterValveDurationSpinBox.valueChanged.connect(self._recordRightWaterValveDuration)
-        self.finalValvePortNumComboBox.currentTextChanged.connect(self._recordFinalValvePort)
+        self.leftSensorPortNumComboBox.currentTextChanged.connect(self.recordLeftSensorPort)
+        self.leftWaterValvePortNumComboBox.currentTextChanged.connect(self.recordLeftWaterValvePort)
+        self.leftWaterValveDurationSpinBox.valueChanged.connect(self.recordLeftWaterValveDuration)
+        self.rightSensorPortNumComboBox.currentTextChanged.connect(self.recordRightSensorPort)
+        self.rightWaterValvePortNumComboBox.currentTextChanged.connect(self.recordRightWaterValvePort)
+        self.rightWaterValveDurationSpinBox.valueChanged.connect(self.recordRightWaterValveDuration)
+        self.finalValvePortNumComboBox.currentTextChanged.connect(self.recordFinalValvePort)
 
-    def _updateViewMenu(self, objectName):
+    def loadDefaults(self):
+        if os.path.exists("defaults.json"):
+            with open("defaults.json", 'r') as defaultSettings:
+                self.defaultSettings = json.load(defaultSettings)
+            
+            self.bpodCOMPortSpinBox.setValue(self.defaultSettings['experimentSetup']['bpodCOMPort'])
+            self.analogInputModuleCheckBox.setChecked(self.defaultSettings['experimentSetup']['enableAnalogInput'])
+            self.analogInputModuleCOMPortSpinBox.setValue(self.defaultSettings['experimentSetup']['analogInputModuleCOMPort'])
+            self.olfaCheckBox.setChecked(self.defaultSettings['experimentSetup']['enableOlfactometer'])
+            self.olfaConfigFileName = self.defaultSettings['experimentSetup']['olfaConfigFile']
+            self.olfaConfigFileLineEdit.setText(self.defaultSettings['experimentSetup']['olfaConfigFile'])
+            self.protocolFileName = self.defaultSettings['experimentSetup']['protocolFile']
+            self.protocolFileLineEdit.setText(self.defaultSettings['experimentSetup']['protocolFile'])
+            self.experimentTypeComboBox.setCurrentIndex(self.defaultSettings['experimentSetup']['experimentType'])
+            self.shuffleMultiplierSpinBox.setValue(self.defaultSettings['experimentSetup']['shuffleMultiplier'])
+            self.nTrialsSpinBox.setValue(self.defaultSettings['experimentSetup']['nTrials'])
+            self.noResponseCutoffSpinBox.setValue(self.defaultSettings['experimentSetup']['noResponseCutoff'])
+            self.autoWaterCutoffSpinBox.setValue(self.defaultSettings['experimentSetup']['autoWaterCutoff'])
+            self.itiMaxSpinBox.setValue(self.defaultSettings['experimentSetup']['maxITI'])
+            self.itiMinSpinBox.setValue(self.defaultSettings['experimentSetup']['minITI'])
+            self.mouseNumberLineEdit.setText(str(self.defaultSettings['experimentSetup']['mouseNum']))
+            self.rigLetterLineEdit.setText(self.defaultSettings['experimentSetup']['rig'])
+
+            self.leftSensorPortNumComboBox.setCurrentIndex(self.defaultSettings['bpodChannels']['leftSensorPortNum'] - 1)  # Subtract 1 to get the index.
+            self.leftWaterValvePortNumComboBox.setCurrentIndex(self.defaultSettings['bpodChannels']['leftWaterValvePortNum'] - 1)  # Subtract 1 to get the index.
+            self.leftWaterValveDurationSpinBox.setValue(self.defaultSettings['bpodChannels']['leftWaterValveDuration'])
+            self.rightSensorPortNumComboBox.setCurrentIndex(self.defaultSettings['bpodChannels']['rightSensorPortNum'] - 1)  # Subtract 1 to get the index.
+            self.rightWaterValvePortNumComboBox.setCurrentIndex(self.defaultSettings['bpodChannels']['rightWaterValvePortNum'] - 1)  # Subtract 1 to get the index.
+            self.rightWaterValveDurationSpinBox.setValue(self.defaultSettings['bpodChannels']['rightWaterValveDuration'])
+
+            self.yMaxDoubleSpinBox.setValue(self.defaultSettings['streamingPlot']['y_max'])
+            self.yMinDoubleSpinBox.setValue(self.defaultSettings['streamingPlot']['y_min'])
+            self.maxtSpinBox.setValue(self.defaultSettings['streamingPlot']['max_t'])
+            self.dtDoubleSpinBox.setValue(self.defaultSettings['streamingPlot']['dt'])
+            self.plotIntervalSpinBox.setValue(self.defaultSettings['streamingPlot']['plotInterval'])
+
+            if self.analogInputSettingsDialog is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings from it.
+                self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
+                self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
+            self.analogInputSettingsDialog.loadSettings(self.defaultSettings['analogInput'])
+        
+        else:
+            QMessageBox.warning(self, 'Not Found', 'The defaults.json file was not found.')
+    
+    def updateViewMenu(self, objectName, visibility=None):
         if (objectName == self.streamingSubWindow.objectName()):
             self.actionViewStreaming.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
         elif (objectName == self.resultsPlotSubWindow.objectName()):
@@ -201,8 +233,10 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionViewCurrentTrialInfo.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
         elif (objectName == self.bpodControlSubWindow.objectName()):
             self.actionViewBpodControl.setChecked(False)  # Un-check it from the View menu since the subWindow was closed.
+        elif (objectName == self.experimentSetupDockWidget.objectName()) and not visibility:
+            self.actionViewExperimentSetup.setChecked(False)  # Un-check it from the View menu since the dock window was closed.
     
-    def _viewStreamingSubWindow(self, checked):
+    def viewStreamingSubWindow(self, checked):
         if checked:
             # I also need to show the subWindow's internal widget because for some reason it does not show automatically
             # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
@@ -213,7 +247,7 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.streamingSubWindow.hide()
 
-    def _viewResultsPlotSubWindow(self, checked):
+    def viewResultsPlotSubWindow(self, checked):
         if checked:
             # I also need to show the subWindow's internal widget because for some reason it does not show automatically
             # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
@@ -224,7 +258,7 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.resultsPlotSubWindow.hide()
 
-    def _viewFlowUsagePlotSubWindow(self, checked):
+    def viewFlowUsagePlotSubWindow(self, checked):
         if checked:
             # I also need to show the subWindow's internal widget because for some reason it does not show automatically
             # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
@@ -235,7 +269,7 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.flowUsagePlotSubWindow.hide()
 
-    def _viewCurrentTrialSubWindow(self, checked):
+    def viewCurrentTrialSubWindow(self, checked):
         if checked:
             # I also need to show the subWindow's internal widget because for some reason it does not show automatically
             # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
@@ -246,7 +280,7 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.currentTrialSubWindow.hide()
 
-    def _viewBpodControlSubWindow(self, checked):
+    def viewBpodControlSubWindow(self, checked):
         if checked:
             # I also need to show the subWindow's internal widget because for some reason it does not show automatically
             # when the subwindow is closed and then you check on the subWindow's View menu action to re-activate the subWindow,
@@ -257,13 +291,19 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.bpodControlSubWindow.hide()
     
-    def _launchAnalogInputSettings(self):
-        if self.analogInputSettings is None:
-            self.analogInputSettings = AnalogInputSettingsDialog(parent=self)
-            self.analogInputSettings.accepted.connect(self.configureAnalogModule)
-        self.analogInputSettings.show()
+    def viewExperimentSetupDockWindow(self, checked):
+        if checked:
+            self.experimentSetupDockWidget.show()
+        else:
+            self.experimentSetupDockWidget.hide()
+    
+    def launchanalogInputSettingsDialog(self):
+        if self.analogInputSettingsDialog is None:
+            self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
+            self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
+        self.analogInputSettingsDialog.show()
 
-    def _launchOlfaGUI(self):
+    def launchOlfaGUI(self):
         if self.olfaConfigFileName:
             try:
                 self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
@@ -277,13 +317,13 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             QMessageBox.warning(self, "Warning", "Please select an olfa config file first! Go to 'Olfactometer' menu > 'Select config file'")
 
-    def _launchOlfaEditor(self):
+    def launchOlfaEditor(self):
         self.olfaEditor = OlfaEditorDialog(self.olfaConfigFileName)
         self.olfaEditor.show()
 
-    def _launchProtocolEditor(self):
-        if self.myBpod is not None:
-            sma = StateMachine(self.myBpod)
+    def launchProtocolEditor(self):
+        if self.bpod is not None:
+            sma = StateMachine(self.bpod)
             events = sma.hardware.channels.event_names
             outputs = sma.hardware.channels.output_channel_names
             self.protocolEditor = ProtocolEditorDialog(events, outputs, self.protocolFileName)
@@ -298,7 +338,6 @@ class Window(QMainWindow, Ui_MainWindow):
         if fileName:
             self.protocolFileName = fileName
             self.protocolFileLineEdit.setText(fileName)
-            logging.info(f"The file {fileName} has been loaded.")
 
     def openOlfaConfigFileNameDialog(self):
         options = QFileDialog.Options()
@@ -307,14 +346,13 @@ class Window(QMainWindow, Ui_MainWindow):
         if fileName:
             self.olfaConfigFileName = fileName
             self.olfaFileLineEdit.setText(fileName)
-            logging.info(f"The file {fileName} has been loaded.")
 
     def configureAnalogModule(self):
         if self.adc is not None:
-            if self.analogInputSettings is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings from it.
-                self.analogInputSettings = AnalogInputSettingsDialog(parent=self)
-                self.analogInputSettings.accepted.connect(self.configureAnalogModule)
-            settings = self.analogInputSettings.getSettings()
+            if self.analogInputSettingsDialog is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings from it.
+                self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
+                self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
+            settings = self.analogInputSettingsDialog.getSettings()
             self.adc.setNactiveChannels(settings['nActiveChannels'])
             self.adc.setSamplingRate(settings['samplingRate'])
             self.adc.setInputRange(settings['inputRanges'])
@@ -329,7 +367,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.adc.startUSBStream()
 
     def stopAnalogModule(self):
-        logging.info("attempting to stop USB streaming")
         self.adc.stopUSBStream()
         # for i in range(5):
         #     # Try to stop it 5 times because usually the first two tries fail.
@@ -356,16 +393,16 @@ class Window(QMainWindow, Ui_MainWindow):
         #         logging.info("Could not stop event reporting. Trying again...")
 
     
-    # def _getSDCardLog(self):
+    # def getSDCardLog(self):
     #     adcSignal = self.adc.getData()
     #     logging.info('got analog data. here is what is got:')
     #     logging.info(adcSignal)
     #     self.saveDataWorker.receiveAnalogData(adcSignal)
     
-    def _connectDevices(self):
+    def connectDevices(self):
         try:
             if self.analogInputModuleCheckBox.isChecked():
-                self.adc = BpodAnalogIn(serial_port=self.adcSerialPort)
+                self.adc = BpodAnalogIn(serial_port=f"COM{self.analogInputModuleCOMPortSpinBox.value()}")
                 self.configureAnalogModule()
         except SerialException:
             if self.adc is not None:
@@ -379,16 +416,16 @@ class Window(QMainWindow, Ui_MainWindow):
             return
 
         try:
-            self.myBpod = Bpod(serial_port=self.bpodSerialPort)
-            for m in self.myBpod.modules:
+            self.bpod = Bpod(serial_port=f"COM{self.bpodCOMPortSpinBox.value()}")
+            for m in self.bpod.modules:
                 if m.name.startswith('AnalogIn'):
                     self.adcBpodChannel = m.serial_port
 
         except (SerialException, UnicodeDecodeError):
-            if self.myBpod is not None:
-                self.myBpod.close()
-                del self.myBpod
-                self.myBpod = None
+            if self.bpod is not None:
+                self.bpod.close()
+                del self.bpod
+                self.bpod = None
             
             # Check if analog input module was already connected and close it to free the serial port because if it is connected, then when user clicks the "Connect Devices" button again,
             # a Serial Exception will be raised for the analog module since the program connects to it first before the bpod.
@@ -410,16 +447,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushLeftWaterButton.setEnabled(True)
         self.flushRightWaterButton.setEnabled(True)
 
-    def _disconnectDevices(self):
+    def disconnectDevices(self):
         if self.adc is not None:
             self.adc.close()
             del self.adc
             self.adc = None
 
-        if self.myBpod is not None:
-            self.myBpod.close()
-            del self.myBpod
-            self.myBpod = None
+        if self.bpod is not None:
+            self.bpod.close()
+            del self.bpod
+            self.bpod = None
 
         self.startButton.setEnabled(False)
         self.connectDevicesButton.setEnabled(True)
@@ -432,58 +469,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushLeftWaterButton.setEnabled(False)
         self.flushRightWaterButton.setEnabled(False)   
     
-    def _runTask(self):
-        if self.mouseNumber is None:
+    def runTask(self):
+        if (self.mouseNumberLineEdit.text() == ''):
             QMessageBox.warning(self, "Warning", "Please enter mouse number!")
             return
-        elif self.rigLetter is None:
+        elif (self.rigLetterLineEdit.text() == ''):
             QMessageBox.warning(self, "Warning", "Please enter rig letter!")
-            return
-        elif self.numTrials is None:
-            QMessageBox.warning(self, "Warning", "Please enter number of trials for this experiment!")
             return
         elif self.protocolFileName is '':
             QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
-
-        # The following three try-except blocks prevent the application from crashing when trying to start the experiment again after already running it once.
-        # The AttributeError always happens upon clicking the start button for the first time because the self.inputEventThread variable was never created yet
-        # so the Window object has not attribute 'inputEventThread', and same goes for the other thread variables. After running an experiment once and trying
-        # to start the experiment a successive time causes a RuntimeError where the 'wrapped C/C++ object of type QThread has been deleted'. So in that case I
-        # delete the thread's variable and continue the remaining code. Actually, I do not even need to delete the thread's variable. The action of catching the
-        # RuntimeError seems to prevent crashing alone.
-        # try:
-        #     if self.inputEventThread.isRunning():
-        #         logging.info('inputEventThread is still running')
-        #         self.inputEventThread.quit()
-        #         self.inputEventThread.deleteLater()
-        # except AttributeError as err:
-        #     logging.info(f"AttributeError: {err}")
-        # except RuntimeError as err:
-        #     logging.info(f"RuntimeError: inputEventThread {err}")
-        #     # del self.inputEventThread
-
-        # try:    
-        #     if self.saveDataThread.isRunning():
-        #         logging.info('saveDataThread is still running')
-        #         self.saveDataThread.quit()
-        #         self.saveDataThread.deleteLater()
-        # except AttributeError as err:
-        #     logging.info(f"AttributeError: {err}")
-        # except RuntimeError as err:
-        #     logging.info(f"RuntimeError: saveDataThread {err}")
-        #     # del self.saveDataThread
-            
-        # try:  
-        #     if self.protocolThread.isRunning():
-        #         logging.info('protocolThread is still running')
-        #         self.protocolThread.quit()
-        #         self.protocolThread.deleteLater()
-        # except AttributeError as err:
-        #     logging.info(f"AttributeError: {err}")
-        # except RuntimeError as err:
-        #     logging.info(f"RuntimeError: protocolThread {err}")
-        #     # del self.protocolThread
 
         # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
         # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
@@ -496,17 +491,17 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.adc is not None:
             self.startAnalogModule()
         
-        self._runSaveDataThread()
-        self._runInputEventThread()
-        self._runProtocolThread()
+        self.runSaveDataThread()
+        self.runInputEventThread()
+        self.runProtocolThread()
 
         if not self.streaming.startAnimation():
             self.streaming.resetPlot()
             self.streaming.resumeAnimation()
 
-        self.resultsPlot.setNumOdorsPerTrial(self.numOdorsPerTrial)
-        self.flowUsagePlot.setNumOdorsPerTrial(self.numOdorsPerTrial)
-        if (self.numOdorsPerTrial == 2):
+        self.resultsPlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
+        self.flowUsagePlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
+        if (self.experimentTypeComboBox.currentIndex() == 2):
             self.flowUsagePlotSubWindow.showShaded()
 
         self.startButton.setEnabled(False)
@@ -522,16 +517,15 @@ class Window(QMainWindow, Ui_MainWindow):
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
             # the protocolWorker's thread know not to use it. Only one object can access a serial port at any given time.
 
-    def _endTask(self):
+    def endTask(self):
         self.streaming.pauseAnimation()
         if self.adc is not None:
             self.stopAnalogModule()
-            # self._getSDCardLog()
+            # self.getSDCardLog()
 
         self.stopRunningSignal.emit()
         logging.info("stopRunningSignal emitted")
         
-        # self._checkIfRunning()  # causes unhandled python exception when called twice. Check definition for details.
         self.disconnectDevicesButton.setEnabled(True)
         self.startButton.setEnabled(True)
         self.stopButton.setEnabled(False)
@@ -544,57 +538,14 @@ class Window(QMainWindow, Ui_MainWindow):
             self.actionConfigureAnalogInSettings.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
-        self._experimentCompleteDialog()
+        self.experimentCompleteDialog()
         self.currentTrialProgressBar.setValue(0)
 
-    def _checkIfRunning(self):
-        # When this function is called for the first time upon clicking the stop button
-        # to stop the threads, it works without errors or raising exceptions and will
-        # return true for all except 'self.saveDataThread.isRunning()' which will be
-        # false. Not sure why any of the threads would still be running when they should
-        # have quit, but this is another issue to be investigated some other time.
-
-        # However, when this function is called the second time (because the 'protocolWorker.finished'
-        # signal connects to 'self._endTask' function and so the 'self._endTask' function will be 
-        # called twice when the user clicks the stop button) there will be an error when you try to
-        # call 'self.inputEventThread.isRunning()'. My logging.info stops right before that line
-        # so my guess is that it is causing an error, as if the inputEventThread does not have an
-        # method called 'isRunning'. Maybe its because the thread was deleted and thus does not have
-        # that 'isRunning' method anymore, but calling 'self.inputEventThread.isRunning()' even before
-        # starting the thread will still work without error (it will return False). Putting it inside
-        # a try/except clause with 'AttributeError' as the exception does NOT trigger the except clause.
-        # But when I use 'RuntimeError' as the exception, the except clause DOES get triggered.
-        logging.info("Checking if threads are still running...")
-        if self.inputEventThread:
-            logging.info("self.inputEventThread exists. Its type is...")
-            logging.info(type(self.inputEventThread))
-            try:
-                if not self.inputEventThread.isRunning():
-                    logging.info("inputEventThread no longer running")
-                else:
-                    logging.info("ERROR inputEventThread is still running")
-            except RuntimeError:
-                logging.info("AttributeError: no method named 'isRunning'")
-        else:
-            logging.info("self.inputEventThread does not exist")
-        if not self.samplingThread.isRunning():
-            logging.info("samplingThread no longer running")
-        else:
-            logging.info("ERROR SamplingThread is still running")
-        if not self.protocolThread.isRunning():
-            logging.info("protocolThread no longer running")
-        else:
-            logging.info("ERROR protocolThread is still running")
-        if not self.saveDataThread.isRunning():
-            logging.info("ERROR saveDataThread is still runnning")
-        else:
-            logging.info("saveDataThread no longer running")
-
-    def _pauseExperiment(self):
+    def pauseExperiment(self):
         if self.isPaused:  # then resume
             if self.adc is not None:
                 self.startAnalogModule()
-            self.myBpod.resume()
+            self.bpod.resume()
             self.protocolWorker.discardCurrentTrial()  # The analog data becomes out of sync with the bpod's time and the bpod erroneously detects a threshold crossing event immediately after resuming and thus transitions to the next state, so this stops the current trial and discards the data.
             self.streaming.resetPlot()
             self.streaming.resumeAnimation()
@@ -604,7 +555,7 @@ class Window(QMainWindow, Ui_MainWindow):
         else:  # then pause
             if self.adc is not None:
                 self.stopAnalogModule()
-            self.myBpod.pause()
+            self.bpod.pause()
             self.streaming.pauseAnimation()
             self.isPaused = True
             self.pauseButton.setText('Resume')
@@ -612,43 +563,39 @@ class Window(QMainWindow, Ui_MainWindow):
     def closeDevices(self):
         if self.adc is not None:
             self.adc.close()
-            logging.info('Analog Input Module closed')
         if self.olfas is not None:
             self.olfas.close_serials()
-            logging.info('olfas close_serials')
             # self.olfas.close()
-            # logging.info('olfas close')
-        if self.myBpod is not None:
-            self.myBpod.close()
-            logging.info('Bpod closed')
+        if self.bpod is not None:
+            self.bpod.close()
 
-    def _toggleFinalValve(self):
-        if self.myBpod is not None:
+    def toggleFinalValve(self):
+        if self.bpod is not None:
             if self.finalValveButton.isChecked():
-                self._openValve(self.finalValve)
+                self.openValve(self.finalValve)
             else:
-                self._closeValve(self.finalValve)
+                self.closeValve(self.finalValve)
 
-    def _toggleLeftWaterValve(self):
-        if self.myBpod is not None:
-            self._openValve(self.leftWaterValve)
-            QTimer.singleShot(self.leftWaterValveDuration, lambda: self._closeValve(self.leftWaterValve))
+    def toggleLeftWaterValve(self):
+        if self.bpod is not None:
+            self.openValve(self.leftWaterValve)
+            QTimer.singleShot(self.leftWaterValveDurationSpinBox.value(), lambda: self.closeValve(self.leftWaterValve))
 
-    def _toggleRightWaterValve(self):
-        if self.myBpod is not None:
-            self._openValve(self.rightWaterValve)
-            QTimer.singleShot(self.rightWaterValveDuration, lambda: self._closeValve(self.rightWaterValve))
+    def toggleRightWaterValve(self):
+        if self.bpod is not None:
+            self.openValve(self.rightWaterValve)
+            QTimer.singleShot(self.rightWaterValveDurationSpinBox.value(), lambda: self.closeValve(self.rightWaterValve))
 
-    def _openValve(self, channelNum):
-        if self.myBpod is not None:
-            self.myBpod.manual_override(Bpod.ChannelTypes.OUTPUT, Bpod.ChannelNames.VALVE, channel_number=channelNum, value=1)
+    def openValve(self, channelNum):
+        if self.bpod is not None:
+            self.bpod.manual_override(Bpod.ChannelTypes.OUTPUT, Bpod.ChannelNames.VALVE, channel_number=channelNum, value=1)
 
-    def _closeValve(self, channelNum):
-        if self.myBpod is not None:
-            self.myBpod.manual_override(Bpod.ChannelTypes.OUTPUT, Bpod.ChannelNames.VALVE, channel_number=channelNum, value=0)
+    def closeValve(self, channelNum):
+        if self.bpod is not None:
+            self.bpod.manual_override(Bpod.ChannelTypes.OUTPUT, Bpod.ChannelNames.VALVE, channel_number=channelNum, value=0)
 
-    def _flushLeftWaterValve(self):
-        if self.myBpod is not None:
+    def flushLeftWaterValve(self):
+        if self.bpod is not None:
             self.leftWaterValveButton.setEnabled(False)
             self.rightWaterValveButton.setEnabled(False)
             self.flushLeftWaterButton.setEnabled(False)
@@ -658,16 +605,16 @@ class Window(QMainWindow, Ui_MainWindow):
             self.timerCounter = 0
             self.isOpen = False
             self.timer = QTimer(self)
-            self.timer.timeout.connect(self._flushLeftWaterValveToggler)
+            self.timer.timeout.connect(self.flushLeftWaterValveToggler)
 
             self.waterFlushProgress = QProgressDialog("Flushing left water valve...", "Cancel", 0, 100, self)
             self.waterFlushProgress.setWindowModality(Qt.WindowModal)
 
-            self.timer.start(self.leftWaterValveDuration)
+            self.timer.start(self.leftWaterValveDurationSpinBox.value())
 
-    def _flushLeftWaterValveToggler(self):
+    def flushLeftWaterValveToggler(self):
         if self.waterFlushProgress.wasCanceled():  # first check if user cancelled.
-            self._closeValve(self.leftWaterValve)
+            self.closeValve(self.leftWaterValve)
             self.timer.stop()
 
             self.leftWaterValveButton.setEnabled(True)
@@ -679,15 +626,15 @@ class Window(QMainWindow, Ui_MainWindow):
         elif (self.timerCounter < 100):
             self.waterFlushProgress.setValue(self.timerCounter)  # update the progress bar.
             if self.isOpen:
-                self._closeValve(self.leftWaterValve)
+                self.closeValve(self.leftWaterValve)
                 self.isOpen = False
             else:
-                self._openValve(self.leftWaterValve)
+                self.openValve(self.leftWaterValve)
                 self.isOpen = True
                 self.timerCounter += 1  # increment inside if-else statement so that the valve opens 100 times.
         else:
             self.waterFlushProgress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
-            self._closeValve(self.leftWaterValve)
+            self.closeValve(self.leftWaterValve)
             self.timer.stop()
 
             self.leftWaterValveButton.setEnabled(True)
@@ -696,8 +643,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.flushRightWaterButton.setEnabled(True)
             self.startButton.setEnabled(True)
 
-    def _flushRightWaterValve(self):
-        if self.myBpod is not None:
+    def flushRightWaterValve(self):
+        if self.bpod is not None:
             self.leftWaterValveButton.setEnabled(False)
             self.rightWaterValveButton.setEnabled(False)
             self.flushLeftWaterButton.setEnabled(False)
@@ -707,16 +654,16 @@ class Window(QMainWindow, Ui_MainWindow):
             self.timerCounter = 0
             self.isOpen = False
             self.timer = QTimer(self)
-            self.timer.timeout.connect(self._flushRightWaterValveToggler)
+            self.timer.timeout.connect(self.flushRightWaterValveToggler)
 
             self.waterFlushProgress = QProgressDialog("Flushing right water valve...", "Cancel", 0, 100, self)
             self.waterFlushProgress.setWindowModality(Qt.WindowModal)
 
-            self.timer.start(self.rightWaterValveDuration)
+            self.timer.start(self.rightWaterValveDurationSpinBox.value())
 
-    def _flushRightWaterValveToggler(self):
+    def flushRightWaterValveToggler(self):
         if self.waterFlushProgress.wasCanceled():  # first check if user cancelled.
-            self._closeValve(self.rightWaterValve)
+            self.closeValve(self.rightWaterValve)
             self.timer.stop()
 
             self.leftWaterValveButton.setEnabled(True)
@@ -728,15 +675,15 @@ class Window(QMainWindow, Ui_MainWindow):
         elif (self.timerCounter < 100):
             self.waterFlushProgress.setValue(self.timerCounter)  # update the progress bar.
             if self.isOpen:
-                self._closeValve(self.rightWaterValve)
+                self.closeValve(self.rightWaterValve)
                 self.isOpen = False
             else:
-                self._openValve(self.rightWaterValve)
+                self.openValve(self.rightWaterValve)
                 self.isOpen = True
                 self.timerCounter += 1  # increment inside if-else statement so that the valve opens 100 times.
         else:
             self.waterFlushProgress.setValue(self.timerCounter)  # At this point, self.timerCounter should be 100 so update the progress bar with final value.
-            self._closeValve(self.rightWaterValve)
+            self.closeValve(self.rightWaterValve)
             self.timer.stop()
 
             self.leftWaterValveButton.setEnabled(True)
@@ -745,111 +692,101 @@ class Window(QMainWindow, Ui_MainWindow):
             self.flushRightWaterButton.setEnabled(True)
             self.startButton.setEnabled(True)
 
-    def _recordMouseNumber(self):
-        self.mouseNumber = self.mouseNumberLineEdit.text()
-
-    def _recordRigLetter(self):
-        self.rigLetter = self.rigLetterLineEdit.text()
-
-    def _recordNumOdorsPerTrial(self, value):
-        self.numOdorsPerTrial = value
-
-    def _recordNumTrials(self, value):
-        self.numTrials = value
+    def recordNumTrials(self, value):
         if self.protocolWorker is not None:
-            self.protocolWorker.setNumTrials(self.numTrials)
+            self.protocolWorker.setNumTrials(self.nTrialsSpinBox.value())
 
-    def _recordNoResponseCutoff(self, value):
-        if not (value == 0):
-            self.noResponseCutoff = value
-            self.autoWaterCutoffSpinBox.setMaximum(value - 1)
+    def recordNoResponseCutoff(self, value):
+        if self.protocolWorker is not None:
+            self.protocolWorker.setNoResponseCutoff(value)
+        if (value > 0):
+            self.autoWaterCutoffSpinBox.setMaximum(value - 1)  # Make it 1 less than noResponseCutoff so that it happens before the experiment is aborted.
         else:
-            # When value equals 0, the spinBox displays 'Never'
-            self.noResponseCutoff = self.numTrials + 1  # Set it equal to 1 more than the number of trials to guarantee that it will never happen.
-            self.autoWaterCutoffSpinBox.setMaximum(value)
+            self.autoWaterCutoffSpinBox.setMaximum(value)  # When value equals 0, the spinBox displays 'Never'. So set the maximum to zero to prevent it from happening.
+        
+    def recordAutoWaterCutoff(self, value):
         if self.protocolWorker is not None:
-            self.protocolWorker.setNoResponseCutoff(self.noResponseCutoff)
+            self.protocolWorker.setAutoWaterCutoff(value)
 
-    def _recordAutoWaterCutoff(self, value):
-        if not (value == 0):
-            self.autoWaterCutoff = value
-        else:
-            # When value equals 0, the spinBox displays 'Never'
-            self.autoWaterCutoff = self.numTrials + 1  # Set it equal to 1 more than the number of trials to guarantee that it will never happen.
-        if self.protocolWorker is not None:
-            self.protocolWorker.setAutoWaterCutoff(self.autoWaterCutoff)
-
-    def _recordMinITI(self, value):
-        self.itiMin = value
+    def recordMinITI(self, value):
         self.itiMaxSpinBox.setMinimum(value)  # Do not allow itiMaxSpinBox to hold a value less than itiMinSpinBox's current value.
         if self.protocolWorker is not None:
             self.protocolWorker.setMinITI(value)
 
-    def _recordMaxITI(self, value):
-        self.itiMax = value
+    def recordMaxITI(self, value):
         self.itiMinSpinBox.setMaximum(value)  # Do not allow itiMinSpinBox to hold a value greater than itiMaxSpinBox's current value.
         if self.protocolWorker is not None:
             self.protocolWorker.setMaxITI(value)
 
-    def _recordLeftSensorPort(self, text):
+    def recordLeftSensorPort(self, text):
         if self.protocolWorker is not None:
             self.protocolWorker.setLeftSensorPort(int(text))
 
-    def _recordLeftWaterValvePort(self, text):
+    def recordLeftWaterValvePort(self, text):
         self.leftWaterValve = int(text)
         if self.protocolWorker is not None:
             self.protocolWorker.setLeftWaterValvePort(int(text))
     
-    def _recordLeftWaterValveDuration(self, value):
-        self.leftWaterValveDuration = value
+    def recordLeftWaterValveDuration(self, value):
         if self.protocolWorker is not None:
             self.protocolWorker.setLeftWaterDuration(value)
 
-    def _recordRightSensorPort(self, text):
+    def recordRightSensorPort(self, text):
         if self.protocolWorker is not None:
             self.protocolWorker.setRightSensorPort(int(text))
 
-    def _recordRightWaterValvePort(self, text):
+    def recordRightWaterValvePort(self, text):
         self.rightWaterValve = int(text)
         if self.protocolWorker is not None:
             self.protocolWorker.setRightWaterValvePort(int(text))
     
-    def _recordRightWaterValveDuration(self, value):
-        self.rightWaterValveDuration = value
+    def recordRightWaterValveDuration(self, value):
         if self.protocolWorker is not None:
             self.protocolWorker.setRightWaterDuration(value)
 
-    def _recordFinalValvePort(self, text):
+    def recordFinalValvePort(self, text):
         self.finalValve = int(text)
         if self.protocolWorker is not None:
             self.protocolWorker.setFinalValvePort(int(text))
-
-    def _recordBpodSerialPort(self):
-        self.bpodSerialPort = self.bpodPortLineEdit.text()
-
-    def _recordOlfaSerialPort(self):
-        self.olfaSerialPort = self.olfaPortLineEdit.text()
-
-    def _recordAnalogInputModuleSerialPort(self):
-        self.adcSerialPort = self.analogInputModulePortLineEdit.text()
     
-    def _updateCurrentState(self, stateName):
+    def switchApplicationMode(self, currentIndex):
+        if (currentIndex == 0):
+            self.rfidReaderCOMPortSpinBox.setEnabled(False)
+            self.protocolFileLabel.setText("Protocol File:")
+            self.nTrialsSpinBox.setEnabled(True)
+            self.noResponseCutoffSpinBox.setEnabled(True)
+            self.autoWaterCutoffSpinBox.setEnabled(True)
+            self.itiMaxSpinBox.setEnabled(True)
+            self.itiMinSpinBox.setEnabled(True)
+            self.mouseNumberLineEdit.setEnabled(True)
+            self.rigLetterLineEdit.setEnabled(True)
+        elif (currentIndex == 1):
+            self.rfidReaderCOMPortSpinBox.setEnabled(True)
+            self.protocolFileLabel.setText("Schedule File:")
+            self.nTrialsSpinBox.setEnabled(False)
+            self.noResponseCutoffSpinBox.setEnabled(False)
+            self.autoWaterCutoffSpinBox.setEnabled(False)
+            self.itiMaxSpinBox.setEnabled(False)
+            self.itiMinSpinBox.setEnabled(False)
+            self.mouseNumberLineEdit.setEnabled(False)
+            self.rigLetterLineEdit.setEnabled(False)
+    
+    def updateCurrentState(self, stateName):
         self.currentStateLineEdit.setText(stateName)
         
-    def _updateCurrentTrialProgressBar(self, value):
+    def updateCurrentTrialProgressBar(self, value):
         self.currentTrialProgressBar.setValue(value + 1)
 
-    def _updateResponseResult(self, result):
+    def updateResponseResult(self, result):
         self.responseResultLineEdit.setText(result)
 
-    def _updateSessionTotals(self, totalsDict):
-        logging.info('attempting to update session totals')
+    def updateSessionTotals(self, totalsDict):
         self.totalCorrectLineEdit.setText(str(totalsDict['totalCorrect']))
         self.totalWrongLineEdit.setText(str(totalsDict['totalWrong']))
         self.totalNoResponsesLineEdit.setText(str(totalsDict['totalNoResponses']))
         self.totalPercentCorrectLineEdit.setText(str(totalsDict['totalPercentCorrect']))
 
-    def _updateCurrentTrialInfo(self, trialInfoDict):
+    def updateCurrentTrialInfo(self, trialInfoDict):
         # Check if not empty.
         if trialInfoDict:
             self.trialNumLineEdit.setText(str(trialInfoDict['currentTrialNum']))
@@ -918,13 +855,13 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.odorA_flowLineEdit.setText('N/A')
             
 
-    def _noResponseAbortDialog(self):
+    def noResponseAbortDialog(self):
         QMessageBox.information(self, "Notice", "Session aborted due to too many consecutive no responses.")
 
-    def _experimentCompleteDialog(self):
+    def experimentCompleteDialog(self):
         QMessageBox.information(self, "Success", "Experiment finished!")
 
-    def _cannotConnectOlfaDialog(self):
+    def cannotConnectOlfaDialog(self):
         # Since the ProtocolWorker's self.olfas object cannot access the serial port, maybe it is current in use by the main thread.
         # So check if main thread's self.olfas exists and if so, close the serial port and delete the object.
         if self.olfas:
@@ -932,21 +869,21 @@ class Window(QMainWindow, Ui_MainWindow):
             del self.olfas
         QMessageBox.warning(self, "Warning", "Cannot connect to olfactometer! Check that serial port is correct and try again.")
 
-    def _invalidFileDialog(self, error):
+    def invalidFileDialog(self, error):
         QMessageBox.warning(self, "Warning", f"Invalid protocol file or olfa config file selected. Experiment aborted.\
             \nThe following key was not found in its respective .json file and thus caused a KeyError:\
             \n{error}")
 
-    def _olfaExceptionDialog(self, error):
+    def olfaExceptionDialog(self, error):
         QMessageBox.warning(self, "Warning", f"Experiment aborted because the olfactometer raised the following exception:\n{error}")
 
-    def _bpodExceptionDialog(self, error):
+    def bpodExceptionDialog(self, error):
         QMessageBox.warning(self, "Warning", f"Experiment aborted because the bpod raised the following exception:\n{error}")
 
-    def _runInputEventThread(self):
+    def runInputEventThread(self):
         logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.inputEventThread = QThread()
-        self.inputEventWorker = InputEventWorker(self.myBpod)
+        self.inputEventWorker = InputEventWorker(self.bpod)
         self.inputEventWorker.moveToThread(self.inputEventThread)
         self.inputEventThread.started.connect(self.inputEventWorker.run)
         self.inputEventWorker.finished.connect(self.inputEventThread.quit)
@@ -957,16 +894,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.inputEventThread.start()
         logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
 
-    def _runSaveDataThread(self):
+    def runSaveDataThread(self):
         logging.info(f"from _runSaveDataThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
-        if self.analogInputSettings is None:  # if it wasnt created yet, then create it but only create it once.
-            self.analogInputSettings = AnalogInputSettingsDialog(parent=self)
-            self.analogInputSettings.accepted.connect(self.configureAnalogModule)
-        settingsDict = self.analogInputSettings.getSettings()
+        if self.analogInputSettingsDialog is None:  # if it wasnt created yet, then create it but only create it once.
+            self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
+            self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
+        settingsDict = self.analogInputSettingsDialog.getSettings()
         self.saveDataThread = QThread()
         self.saveDataWorker = SaveDataWorker(
-            self.mouseNumber, self.rigLetter, self.protocolFileName, self.olfaConfigFileName, self.shuffleMultiplierSpinBox.value(), self.itiMin, self.itiMax,
-            self.leftWaterValveDuration, self.rightWaterValveDuration, settingsDict, self.adc
+            self.mouseNumberLineEdit.text(), self.rigLetterLineEdit.text(), self.protocolFileName, self.olfaConfigFileName, self.shuffleMultiplierSpinBox.value(), self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(),
+            self.leftWaterValveDurationSpinBox.value(), self.rightWaterValveDurationSpinBox.value(), settingsDict, self.adc
         )
         self.saveDataWorker.moveToThread(self.saveDataThread)
         self.saveDataThread.started.connect(self.saveDataWorker.run)
@@ -978,39 +915,39 @@ class Window(QMainWindow, Ui_MainWindow):
         self.saveDataThread.start()
         logging.info(f"saveDataThread running? {self.saveDataThread.isRunning()}")
   
-    def _runProtocolThread(self):
+    def runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.protocolThread = QThread()
         self.protocolWorker = ProtocolWorker(
-            self.myBpod, self.protocolFileName, self.olfaConfigFileName, self.numOdorsPerTrial, self.shuffleMultiplierSpinBox.value(), 
-            int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDuration,
-            int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDuration,
-            self.finalValve, self.itiMin, self.itiMax, self.noResponseCutoff, self.autoWaterCutoff, self.olfaCheckBox.isChecked(), self.numTrials
+            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentIndex(), self.shuffleMultiplierSpinBox.value(), 
+            int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
+            int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
+            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
         )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
         self.protocolWorker.finished.connect(self.protocolThread.quit)
-        self.protocolWorker.finished.connect(self._endTask)  # This serves to stop the other threads when the protocol thread completes all trials.
+        self.protocolWorker.finished.connect(self.endTask)  # This serves to stop the other threads when the protocol thread completes all trials.
         self.protocolWorker.finished.connect(self.protocolWorker.deleteLater)
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
-        self.protocolWorker.newStateSignal.connect(self._updateCurrentState)
+        self.protocolWorker.newStateSignal.connect(self.updateCurrentState)
         self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
-        self.protocolWorker.stateNumSignal.connect(self._updateCurrentTrialProgressBar)
-        self.protocolWorker.responseResultSignal.connect(self._updateResponseResult)
-        self.protocolWorker.newTrialInfoSignal.connect(self._updateCurrentTrialInfo)  # This works without lambda because 'self._updateCurrentTrialInfo' is in the main thread.
+        self.protocolWorker.stateNumSignal.connect(self.updateCurrentTrialProgressBar)
+        self.protocolWorker.responseResultSignal.connect(self.updateResponseResult)
+        self.protocolWorker.newTrialInfoSignal.connect(self.updateCurrentTrialInfo)  # This works without lambda because 'self.updateCurrentTrialInfo' is in the main thread.
         self.protocolWorker.resultsCounterListSignal.connect(self.resultsPlot.updatePlot)
         self.protocolWorker.resultsCounterListSignal.connect(self.flowUsagePlot.updatePlot)
         self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
         self.protocolWorker.duplicateVialsSignal.connect(self.flowUsagePlot.receiveDuplicatesDict)
-        self.protocolWorker.totalsDictSignal.connect(self._updateSessionTotals)
+        self.protocolWorker.totalsDictSignal.connect(self.updateSessionTotals)
         self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
-        # self.protocolWorker.startSDCardLoggingSignal.connect(self._startSDCardLogging)
-        # self.protocolWorker.stopSDCardLoggingSignal.connect(self._stopSDCardLogging)
-        self.protocolWorker.noResponseAbortSignal.connect(self._noResponseAbortDialog)
-        self.protocolWorker.olfaNotConnectedSignal.connect(self._cannotConnectOlfaDialog)
-        self.protocolWorker.olfaExceptionSignal.connect(self._olfaExceptionDialog)
-        self.protocolWorker.invalidFileSignal.connect(self._invalidFileDialog)
-        self.protocolWorker.bpodExceptionSignal.connect(self._bpodExceptionDialog)
+        # self.protocolWorker.startSDCardLoggingSignal.connect(self.startSDCardLogging)
+        # self.protocolWorker.stopSDCardLoggingSignal.connect(self.stopSDCardLogging)
+        self.protocolWorker.noResponseAbortSignal.connect(self.noResponseAbortDialog)
+        self.protocolWorker.olfaNotConnectedSignal.connect(self.cannotConnectOlfaDialog)
+        self.protocolWorker.olfaExceptionSignal.connect(self.olfaExceptionDialog)
+        self.protocolWorker.invalidFileSignal.connect(self.invalidFileDialog)
+        self.protocolWorker.bpodExceptionSignal.connect(self.bpodExceptionDialog)
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())  # I use lambda because the run_state_machine is a blocking function so the protocolThread will not be able to call stop_trial if the user clicks the stop button mid trial.
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")

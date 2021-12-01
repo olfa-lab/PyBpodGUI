@@ -181,7 +181,6 @@ class SaveDataWorker(QObject):
 
     def receiveInfoDict(self, infoDict):
         self.newData = True
-        logging.info("incoming infoDict")
         self.infoDict = infoDict
 
     def saveStatesTimestamps(self):
@@ -351,7 +350,6 @@ class SaveDataWorker(QObject):
         while self.keepRunning:
             if self.newData:
                 self.newData = False  # reset
-                logging.info("attempting to save data")
 
                 if not (self.infoDict == {}):
                     self.saveTrialData()
@@ -394,7 +392,6 @@ class SaveDataWorker(QObject):
         if self.adc is not None:
             self.voltsTable.flush()
 
-        logging.info("session data has been written to disk")
         self.h5file.close()
         logging.info("h5 file closed")
         self.finished.emit()

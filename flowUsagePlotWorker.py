@@ -39,12 +39,12 @@ class FlowUsagePlotWorker(QObject):
             self.updatePlot(self.resultsList)
     
     def updatePlot(self, resultsList):
-        if (self.numOdorsPerTrial == 1):
-            self.oneOdorPlot(resultsList)
-        # elif (self.numOdorsPerTrial == 2):
-        #     self.twoOdorPlot(resultsList)
+        if (self.experimentType == 1):
+            self.intensityPlot(resultsList)
+        # elif (self.experimentType == 2):
+        #     self.identityPlot(resultsList)
 
-    def oneOdorPlot(self, resultsList):
+    def intensityPlot(self, resultsList):
         # This function currently only plots vials of the first olfactometer (regardless of the plottingMode).
 
         self.resultsList = resultsList
@@ -134,7 +134,5 @@ class FlowUsagePlotWorker(QObject):
                 self.graphWidget.plot(xValues, yValues, name=f'Vial {vialNum}', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
                 colorIndex += 1
         
-        logging.info('flow usage plot updated')
-
-    def setNumOdorsPerTrial(self, numOdorsPerTrial):
-        self.numOdorsPerTrial = numOdorsPerTrial     
+    def setExperimentType(self, experimentType):
+        self.experimentType = experimentType     

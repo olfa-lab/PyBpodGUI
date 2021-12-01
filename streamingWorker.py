@@ -220,23 +220,18 @@ class StreamingWorker(QObject):
 
     def pauseAnimation(self):
         if not self.paused:
-            logging.info("attempting to pause animation")
             self.anim.event_source.stop()
             self.paused = True
-            logging.info("animation paused")
 
     def resumeAnimation(self):
         if self.paused:
-            logging.info("attempting to start animation")
             self.anim.event_source.start()
             self.paused = False
-            logging.info("animation resumed")
 
     def startAnimation(self):
         if self.isSetup and not self.isRun:
             self.animate()
             self.t_start = time.perf_counter()
-            logging.info("canvas drawn")
             self.isRun = True
             return True
         return False

@@ -32,13 +32,6 @@ class AnalogInputSettingsDialog(QDialog, Ui_Dialog):
             'enableUSBStreaming': [0, 0, 0, 0, 0, 0, 0, 0],
             'enableModuleStreaming': [0, 0, 0, 0, 0, 0, 0, 0]
         }
-        self.inputVoltageRangeComboBox_1.setCurrentIndex(1)  # Set to '-5V:5V'
-        self.resetVoltageDoubleSpinBox_1.setValue(2.0)
-        self.enableSMEventReportingCheckBox_1.setChecked(True)
-        self.enableUSBStreamingCheckBox_1.setChecked(True)
-
-    def getSettings(self):
-        return self.settingsDict
 
     def connectSignalsSlots(self):
         self.nActiveChannelsSpinBox.valueChanged.connect(self.enableActiveChannels)
@@ -91,6 +84,62 @@ class AnalogInputSettingsDialog(QDialog, Ui_Dialog):
         self.enableModuleStreamingCheckBox_6.stateChanged.connect(self.recordEnableModuleStreamingChannel_6)
         self.enableModuleStreamingCheckBox_7.stateChanged.connect(self.recordEnableModuleStreamingChannel_7)
         self.enableModuleStreamingCheckBox_8.stateChanged.connect(self.recordEnableModuleStreamingChannel_8)
+
+    def loadSettings(self, settingsDict):
+        self.settingsDict = settingsDict
+        self.nActiveChannelsSpinBox.setValue(settingsDict['nActiveChannels'])
+        self.samplingRateSpinBox.setValue(settingsDict['samplingRate'])
+        self.inputVoltageRangeComboBox_1.setCurrentText(settingsDict['inputRanges'][0])
+        self.inputVoltageRangeComboBox_2.setCurrentText(settingsDict['inputRanges'][1])
+        self.inputVoltageRangeComboBox_3.setCurrentText(settingsDict['inputRanges'][2])
+        self.inputVoltageRangeComboBox_4.setCurrentText(settingsDict['inputRanges'][3])
+        self.inputVoltageRangeComboBox_5.setCurrentText(settingsDict['inputRanges'][4])
+        self.inputVoltageRangeComboBox_6.setCurrentText(settingsDict['inputRanges'][5])
+        self.inputVoltageRangeComboBox_7.setCurrentText(settingsDict['inputRanges'][6])
+        self.inputVoltageRangeComboBox_8.setCurrentText(settingsDict['inputRanges'][7])
+        self.thresholdVoltageDoubleSpinBox_1.setValue(settingsDict['thresholdVoltages'][0])
+        self.thresholdVoltageDoubleSpinBox_2.setValue(settingsDict['thresholdVoltages'][1])
+        self.thresholdVoltageDoubleSpinBox_3.setValue(settingsDict['thresholdVoltages'][2])
+        self.thresholdVoltageDoubleSpinBox_4.setValue(settingsDict['thresholdVoltages'][3])
+        self.thresholdVoltageDoubleSpinBox_5.setValue(settingsDict['thresholdVoltages'][4])
+        self.thresholdVoltageDoubleSpinBox_6.setValue(settingsDict['thresholdVoltages'][5])
+        self.thresholdVoltageDoubleSpinBox_7.setValue(settingsDict['thresholdVoltages'][6])
+        self.thresholdVoltageDoubleSpinBox_8.setValue(settingsDict['thresholdVoltages'][7])
+        self.resetVoltageDoubleSpinBox_1.setValue(settingsDict['resetVoltages'][0])
+        self.resetVoltageDoubleSpinBox_2.setValue(settingsDict['resetVoltages'][1])
+        self.resetVoltageDoubleSpinBox_3.setValue(settingsDict['resetVoltages'][2])
+        self.resetVoltageDoubleSpinBox_4.setValue(settingsDict['resetVoltages'][3])
+        self.resetVoltageDoubleSpinBox_5.setValue(settingsDict['resetVoltages'][4])
+        self.resetVoltageDoubleSpinBox_6.setValue(settingsDict['resetVoltages'][5])
+        self.resetVoltageDoubleSpinBox_7.setValue(settingsDict['resetVoltages'][6])
+        self.resetVoltageDoubleSpinBox_8.setValue(settingsDict['resetVoltages'][7])
+        self.enableSMEventReportingCheckBox_1.setChecked(settingsDict['enableSMEventReporting'][0])
+        self.enableSMEventReportingCheckBox_2.setChecked(settingsDict['enableSMEventReporting'][1])
+        self.enableSMEventReportingCheckBox_3.setChecked(settingsDict['enableSMEventReporting'][2])
+        self.enableSMEventReportingCheckBox_4.setChecked(settingsDict['enableSMEventReporting'][3])
+        self.enableSMEventReportingCheckBox_5.setChecked(settingsDict['enableSMEventReporting'][4])
+        self.enableSMEventReportingCheckBox_6.setChecked(settingsDict['enableSMEventReporting'][5])
+        self.enableSMEventReportingCheckBox_7.setChecked(settingsDict['enableSMEventReporting'][6])
+        self.enableSMEventReportingCheckBox_8.setChecked(settingsDict['enableSMEventReporting'][7])
+        self.enableUSBStreamingCheckBox_1.setChecked(settingsDict['enableUSBStreaming'][0])
+        self.enableUSBStreamingCheckBox_2.setChecked(settingsDict['enableUSBStreaming'][1])
+        self.enableUSBStreamingCheckBox_3.setChecked(settingsDict['enableUSBStreaming'][2])
+        self.enableUSBStreamingCheckBox_4.setChecked(settingsDict['enableUSBStreaming'][3])
+        self.enableUSBStreamingCheckBox_5.setChecked(settingsDict['enableUSBStreaming'][4])
+        self.enableUSBStreamingCheckBox_6.setChecked(settingsDict['enableUSBStreaming'][5])
+        self.enableUSBStreamingCheckBox_7.setChecked(settingsDict['enableUSBStreaming'][6])
+        self.enableUSBStreamingCheckBox_8.setChecked(settingsDict['enableUSBStreaming'][7])
+        self.enableModuleStreamingCheckBox_1.setChecked(settingsDict['enableModuleStreaming'][0])
+        self.enableModuleStreamingCheckBox_2.setChecked(settingsDict['enableModuleStreaming'][1])
+        self.enableModuleStreamingCheckBox_3.setChecked(settingsDict['enableModuleStreaming'][2])
+        self.enableModuleStreamingCheckBox_4.setChecked(settingsDict['enableModuleStreaming'][3])
+        self.enableModuleStreamingCheckBox_5.setChecked(settingsDict['enableModuleStreaming'][4])
+        self.enableModuleStreamingCheckBox_6.setChecked(settingsDict['enableModuleStreaming'][5])
+        self.enableModuleStreamingCheckBox_7.setChecked(settingsDict['enableModuleStreaming'][6])
+        self.enableModuleStreamingCheckBox_8.setChecked(settingsDict['enableModuleStreaming'][7])
+
+    def getSettings(self):
+        return self.settingsDict
 
     def recordSamplingRate(self, value):
         self.settingsDict['samplingRate'] = value
