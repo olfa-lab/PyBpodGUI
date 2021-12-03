@@ -143,6 +143,8 @@ class Window(QMainWindow, Ui_MainWindow):
         
         self.actionNew.triggered.connect(self.launchProtocolEditor)
         self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
+        self.actionLoadDefaults.triggered.connect(self.loadDefaults)
+        self.actionIdentifyCOMPorts.triggered.connect(self.identifyCOMPorts)
         self.actionSelectOlfaConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
         self.actionConfigureOlfaSettings.triggered.connect(self.launchOlfaEditor)
         self.actionConfigureAnalogInSettings.triggered.connect(self.launchanalogInputSettingsDialog)
@@ -153,7 +155,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionViewFlowUsagePlot.toggled.connect(self.viewFlowUsagePlotSubWindow)
         self.actionViewBpodControl.toggled.connect(self.viewBpodControlSubWindow)
         self.actionViewExperimentSetup.toggled.connect(self.viewExperimentSetupDockWindow)
-        self.actionLoadDefaults.triggered.connect(self.loadDefaults)
 
         self.applicationModeComboBox.currentIndexChanged.connect(self.switchApplicationMode)
 
@@ -398,6 +399,9 @@ class Window(QMainWindow, Ui_MainWindow):
     #     logging.info('got analog data. here is what is got:')
     #     logging.info(adcSignal)
     #     self.saveDataWorker.receiveAnalogData(adcSignal)
+    
+    def identifyCOMPorts(self):
+        pass
     
     def connectDevices(self):
         try:
