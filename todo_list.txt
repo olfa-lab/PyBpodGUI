@@ -120,6 +120,10 @@ Things to do:
 
     * _____ make a plot of the number of left and right trials and a plot of the number of left and right licks and overlay them to inform the user if mouse if biased towards one side.
 
+    * _____ fix issue where state timer lineEdit(combobox) in the protocolEditorDialog saves a float value as a string instead of float.
+
+    * _____ make an editor window to configure flex channels and analog input settings for the new bpod.
+    
 
 Questions to research:
 

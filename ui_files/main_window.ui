@@ -801,7 +801,6 @@
     <addaction name="actionOpen"/>
     <addaction name="actionLoadDefaults"/>
     <addaction name="actionEditDefaults"/>
-    <addaction name="actionIdentifyCOMPorts"/>
    </widget>
    <widget class="QMenu" name="menuOlfactometer">
     <property name="title">
@@ -813,7 +812,7 @@
    </widget>
    <widget class="QMenu" name="menuAnalogIn">
     <property name="title">
-     <string>AnalogIn</string>
+     <string>AnalogInputModule</string>
     </property>
     <addaction name="actionConfigureAnalogInSettings"/>
    </widget>
@@ -828,8 +827,15 @@
     <addaction name="actionViewBpodControl"/>
     <addaction name="actionViewExperimentSetup"/>
    </widget>
+   <widget class="QMenu" name="menuBpod">
+    <property name="title">
+     <string>Bpod</string>
+    </property>
+    <addaction name="actionConfigureFlexChannels"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOlfactometer"/>
+   <addaction name="menuBpod"/>
    <addaction name="menuAnalogIn"/>
    <addaction name="menuView"/>
   </widget>
@@ -1050,6 +1056,9 @@
      </item>
      <item row="2" column="1">
       <widget class="QSpinBox" name="bpodCOMPortSpinBox">
+       <property name="specialValueText">
+        <string>Auto-detect</string>
+       </property>
        <property name="prefix">
         <string>COM</string>
        </property>
@@ -1115,7 +1124,10 @@
      <item row="3" column="0">
       <widget class="QLabel" name="analogInputModuleCOMPortLabel">
        <property name="text">
-        <string>Analog In Port</string>
+        <string>Analog Input Module Port</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -1300,6 +1312,11 @@
   <action name="actionIdentifyCOMPorts">
    <property name="text">
     <string>Identify COM Ports</string>
+   </property>
+  </action>
+  <action name="actionConfigureFlexChannels">
+   <property name="text">
+    <string>Configure Flex Channels</string>
    </property>
   </action>
  </widget>

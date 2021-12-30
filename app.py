@@ -3,6 +3,8 @@ import logging
 import json
 import os
 from serial.serialutil import SerialException
+import serial.tools.list_ports
+import serial
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt
@@ -144,7 +146,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionNew.triggered.connect(self.launchProtocolEditor)
         self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
         self.actionLoadDefaults.triggered.connect(self.loadDefaults)
-        self.actionIdentifyCOMPorts.triggered.connect(self.identifyCOMPorts)
         self.actionSelectOlfaConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
         self.actionConfigureOlfaSettings.triggered.connect(self.launchOlfaEditor)
         self.actionConfigureAnalogInSettings.triggered.connect(self.launchanalogInputSettingsDialog)
@@ -400,8 +401,57 @@ class Window(QMainWindow, Ui_MainWindow):
     #     logging.info(adcSignal)
     #     self.saveDataWorker.receiveAnalogData(adcSignal)
     
-    def identifyCOMPorts(self):
-        pass
+    # def identifyCOMPorts(self):
+    #     availablePorts = [comport.device for comport in serial.tools.list_ports.comports()]
+    #     logging.info(availablePorts)
+
+    #     bpodPrimaryPort = ''
+    #     bpodSecondaryPort = ''
+    #     bpodAnalogPort = ''
+    #     for port in availablePorts:
+    #         try:
+    #             connection = serial.Serial(port=port, baudrate=1312500, timeout=2)
+    #             res = connection.read(size=1)
+    #             if (res == b'\xDE'):  # Bpod writes 0xDE every 100ms on its primary COM port. 0xDE in decimal is 222 which refers to firmware version 22.
+    #                 logging.info(port)
+    #                 bpodPrimaryPort = port
+    #                 self.bpodCOMPortSpinBox.setValue(int(port.strip("COM")))
+    #                 connection.close()
+    #                 break
+    #             else:
+    #                 logging.info("Nothing in input buffer")
+    #                 connection.close()
+
+    #         except SerialException as err:
+    #             logging.info(err)
+
+    #     if not (bpodPrimaryPort == ''):
+    #         availablePorts.remove(bpodPrimaryPort)
+    #         logging.info(availablePorts)
+    #         bpodPrimaryConnection = serial.Serial(port=bpodPrimaryPort, baudrate=1312500, timeout=2)
+    #         for port in availablePorts:
+    #             try: 
+    #                 connection = serial.Serial(port=port, baudrate=1312500, timeout=2)
+    #                 bpodPrimaryConnection.write(b'{}')  # Send '{' and '}' to the primary port. The '{' is sent to identify the bpod secondary port and the '}' is sent to identify the bpod analog port.
+    #                 res = connection.read(size=1)
+    #                 if (res == b'\xDE'):  # response to '{' should be 0xDE or 222 in decimal for firmware v22.
+    #                     logging.info(f"bpod secondary port is {port}")
+    #                     bpodSecondaryPort = port
+    #                     connection.close()
+    #                 elif (res == b'\xDF'):  # response to '}' should be 0xDF or 223 in decimal for firmware v23.
+    #                     logging.info(f"bpod analog port is {port}")
+    #                     bpodAnalogPort = port
+    #                     self.analogInputModuleCOMPortSpinBox.setValue(int(port.strip("COM")))
+    #                     connection.close()
+    #                 else:
+    #                     logging.info("Nothing in input buffer")
+    #                     connection.close()
+                
+    #             except SerialException as err:
+    #                 logging.info(err)
+            
+    #         bpodPrimaryConnection.close()
+    #         QMessageBox.information(self, "Bpod COM Port Identification", "Complete")
     
     def connectDevices(self):
         try:
@@ -420,12 +470,12 @@ class Window(QMainWindow, Ui_MainWindow):
             return
 
         try:
-            self.bpod = Bpod(serial_port=f"COM{self.bpodCOMPortSpinBox.value()}")
+            self.bpod = Bpod(serial_port=f"COM{self.bpodCOMPortSpinBox.value()}" if self.bpodCOMPortSpinBox.value() > 0 else None)            
             for m in self.bpod.modules:
                 if m.name.startswith('AnalogIn'):
                     self.adcBpodChannel = m.serial_port
 
-        except (SerialException, UnicodeDecodeError):
+        except (BpodErrorException, SerialException, UnicodeDecodeError):
             if self.bpod is not None:
                 self.bpod.close()
                 del self.bpod
@@ -480,10 +530,17 @@ class Window(QMainWindow, Ui_MainWindow):
         elif (self.rigLetterLineEdit.text() == ''):
             QMessageBox.warning(self, "Warning", "Please enter rig letter!")
             return
-        elif self.protocolFileName is '':
+        elif (self.protocolFileName == ''):
             QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
 
+        if self.bpod.hardware.machine_type > 3:
+            self.bpod.set_flex_channel_types([2, 3, 3, 3])
+            self.bpod.set_analog_input_sampling_interval(10)
+            self.bpod.set_analog_input_thresholds([2000, 0, 0, 0], [4000, 0, 0, 0])
+            self.bpod.set_analog_input_threshold_polarity([0, 0, 0, 0], [0, 0, 0, 0])
+            self.bpod.set_analog_input_threshold_mode([0, 0, 0, 0])
+        
         # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
         # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
         if self.olfas:
@@ -907,7 +964,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.saveDataThread = QThread()
         self.saveDataWorker = SaveDataWorker(
             self.mouseNumberLineEdit.text(), self.rigLetterLineEdit.text(), self.protocolFileName, self.olfaConfigFileName, self.shuffleMultiplierSpinBox.value(), self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(),
-            self.leftWaterValveDurationSpinBox.value(), self.rightWaterValveDurationSpinBox.value(), settingsDict, self.adc
+            self.leftWaterValveDurationSpinBox.value(), self.rightWaterValveDurationSpinBox.value(), settingsDict, self.adc, self.bpod
         )
         self.saveDataWorker.moveToThread(self.saveDataThread)
         self.saveDataThread.started.connect(self.saveDataWorker.run)

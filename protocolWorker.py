@@ -642,6 +642,11 @@ class ProtocolWorker(QObject):
                 # Since they are different, randomly choose a value for self.currentITI every trial. Add 1 to the randint's upperbound to include itiMax in the range of possible integers (since the upperbound is non-inclusive).
                 self.currentITI = np.random.randint(self.itiMin, self.itiMax + 1)
 
+            # Do this when olfactometer is not used to avoid "referenced before assignment" error because self.correctResponse will not get a value.
+            leftAction = None
+            rightAction = None
+            rewardValve = None
+            rewardDuration = None
             if self.correctResponse == 'left':
                 leftAction = 'Correct'
                 rightAction = 'Wrong'
