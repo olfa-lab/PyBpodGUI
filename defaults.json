@@ -1,13 +1,12 @@
 {
     "experimentSetup": {
-        "bpodCOMPort": 12,
-        "enableAnalogInput": true,
-        "analogInputModuleCOMPort": 6,
+        "bpodCOMPort": 0,
+        "analogInputModuleCOMPort": 0,
         "enableOlfactometer": true,
         "olfaConfigFile": "olfactometry_config_files/olfa_config_with_flow_rates.json",
         "protocolFile": "protocol_files/protocolWithoutSniff.json",
-        "experimentType": 1,
-        "shuffleMultiplier": 3,
+        "experimentType": 0,
+        "shuffleMultiplier": 0,
         "nTrials": 300,
         "noResponseCutoff": 0,
         "autoWaterCutoff": 0,
@@ -25,13 +24,22 @@
         "rightWaterValveDuration": 25
     },
     "streamingPlot": {
-        "y_max": 2.5,
-        "y_min": -2.5,
+        "y_max": 5.0,
+        "y_min": 0.0,
         "max_t": 10,
         "dt": 0.001,
         "plotInterval": 1
     },
-    "analogInput": {
+    "bpodFlexChannels": {
+        "channelTypes": [0, 0, 0, 0],
+        "thresholds_1": [0, 0, 0, 0],
+        "thresholds_2": [0, 0, 0, 0],
+        "polarities_1": [0, 0, 0, 0],
+        "polarities_2": [0, 0, 0, 0],
+        "modes": [0, 0, 0, 0],
+        "samplingPeriod": 10
+    },
+    "analogInputModule": {
         "nActiveChannels": 1,
         "samplingRate": 1000,
         "inputRanges": ["-2.5V:2.5V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V", "-10V:10V"],

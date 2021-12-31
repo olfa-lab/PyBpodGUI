@@ -149,7 +149,7 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
 
     def recordStateTimer(self):
         try:
-            self.stateDict['stateTimer'] = int(self.stateTimerComboBox.currentText())
+            self.stateDict['stateTimer'] = float(self.stateTimerComboBox.currentText())
         except ValueError:
             self.stateDict['stateTimer'] = self.stateTimerComboBox.currentText()
 
@@ -246,6 +246,15 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             self.outputChannelValueComboBox.addItem("Value...")
             self.outputChannelValueComboBox.addItems([str(x) for x in range(4, 256)])  # Softcode allow output values from 1 to 255 inclusive. But I reserve 1 for use by GUI, 2 and 3 for use by olfactometer.
         
+        elif channelName.startswith('Flex'):
+            if channelName.endswith('DO'):  # digital output
+                self.outputChannelValueComboBox.clear()
+                self.outputChannelValueComboBox.addItems(['Value...', '0', '1'])
+            elif channelName.endswith('AO'):  # analog output
+                self.outputChannelValueComboBox.clear()
+                self.outputChannelValueComboBox.addItem("Voltage...")
+                self.outputChannelValueComboBox.addItems([str(x) for x in range(0, 6)])  # Should using DoubleSpinBox instead of ComboBox to allow for float values e.g 2.5 V
+        
         elif channelName.startswith('BNC') or channelName.startswith('Valve'):
             self.outputChannelValueComboBox.clear()
             self.outputChannelValueComboBox.addItems(['Value...', '0', '1'])
@@ -264,6 +273,12 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
             self.outputChannelValueComboBox.clear()
             self.outputChannelValueComboBox.addItem("Counter number...")
             self.outputChannelValueComboBox.addItems([str(x) for x in range(1, 9)])  # GlobalCounter can have id number from 1 to 8 inclusive.
+
+        elif channelName.startswith('AnalogThresh'):
+            self.outputChannelValueComboBox.clear()
+            self.outputChannelValueComboBox.addItem("Flex Channels...")
+            self.outputChannelValueComboBox.addItems(["{0:04b}".format(x) for x in range(0, 16)])  # Value is a binary string from 0 to 15 where the rightmost bit is flex channel number 1.
+
 
     def recordOutputChannelValue(self, channelValue):
         # Check that user made a valid selection for both outputChannelName and outputChannelValue first.

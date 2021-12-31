@@ -97,6 +97,10 @@ Things to do:
     * __X__ fix the issue where the bpod detects analog input threshold crossing events while a trial is paused, and once the trial resumes, the bpod immediately proceeds to the state with the 'AnalogIn...' change condition. Try disabling event reporting.
             Workaround was to discard the trial and repeat it upon resuming.
     
+    * __X__ fix issue where state timer lineEdit(combobox) in the protocolEditorDialog saves a float value as a string instead of float.
+
+    * __X__ make an editor window to configure flex channels and analog input settings for the new bpod.
+    
     * _____ implement serial port selection for each device with combobox that list available serial ports for user to pick
 
     * _____ implement validators for the line edits to restrict input values
@@ -119,10 +123,6 @@ Things to do:
     * _____ make a counter for how many times the water valves are opened manually by the user and their durations and save it in the h5 file.
 
     * _____ make a plot of the number of left and right trials and a plot of the number of left and right licks and overlay them to inform the user if mouse if biased towards one side.
-
-    * _____ fix issue where state timer lineEdit(combobox) in the protocolEditorDialog saves a float value as a string instead of float.
-
-    * _____ make an editor window to configure flex channels and analog input settings for the new bpod.
     
 
 Questions to research:

@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>559</width>
+    <height>242</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="3">
+    <widget class="QLabel" name="channelLabel_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 3</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QDoubleSpinBox" name="threshold_2_doubleSpinBox_3">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="ActivationModeLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Activation Mode</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="3">
+    <widget class="QComboBox" name="modeComboBox_3">
+     <item>
+      <property name="text">
+       <string>Manual</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Automatic</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QDoubleSpinBox" name="threshold_1_doubleSpinBox_2">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QDoubleSpinBox" name="threshold_2_doubleSpinBox_2">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QComboBox" name="polarity_1_comboBox_2">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QComboBox" name="modeComboBox_1">
+     <item>
+      <property name="text">
+       <string>Manual</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Automatic</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QLabel" name="channelLabel_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="channelTypeLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel Type</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QComboBox" name="channelTypeComboBox_2">
+     <item>
+      <property name="text">
+       <string>Digital Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Digital Output</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Output</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="3">
+    <widget class="QDoubleSpinBox" name="threshold_1_doubleSpinBox_3">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="2">
+    <widget class="QComboBox" name="modeComboBox_2">
+     <item>
+      <property name="text">
+       <string>Manual</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Automatic</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="channelLabel_1">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4">
+    <widget class="QDoubleSpinBox" name="threshold_1_doubleSpinBox_4">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="4">
+    <widget class="QComboBox" name="polarity_1_comboBox_4">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="threshold_1_label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Threshold 1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="4">
+    <widget class="QComboBox" name="modeComboBox_4">
+     <item>
+      <property name="text">
+       <string>Manual</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Automatic</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="channelTypeComboBox_1">
+     <item>
+      <property name="text">
+       <string>Digital Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Digital Output</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Output</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="threshold_2_label">
+     <property name="text">
+      <string>Threshold 2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="3">
+    <widget class="QComboBox" name="polarity_1_comboBox_3">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QSpinBox" name="samplingPeriodSpinBox">
+     <property name="suffix">
+      <string>00 μs</string>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>10000</number>
+     </property>
+     <property name="value">
+      <number>10</number>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="5">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4">
+    <widget class="QLabel" name="channelLabel_4">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Channel 4</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4">
+    <widget class="QComboBox" name="channelTypeComboBox_4">
+     <item>
+      <property name="text">
+       <string>Digital Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Digital Output</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Output</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDoubleSpinBox" name="threshold_2_doubleSpinBox_1">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="4">
+    <widget class="QDoubleSpinBox" name="threshold_2_doubleSpinBox_4">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QDoubleSpinBox" name="threshold_1_doubleSpinBox_1">
+     <property name="suffix">
+      <string> V</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>5.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="polarity_1_comboBox_1">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="polarity_1_label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Polarity 1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="samplingPeriodLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Sampling Period</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <widget class="QComboBox" name="channelTypeComboBox_3">
+     <item>
+      <property name="text">
+       <string>Digital Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Digital Output</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Input</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Analog Output</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="polarity_2_label">
+     <property name="text">
+      <string>Polarity 2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QComboBox" name="polarity_2_comboBox_1">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="2">
+    <widget class="QComboBox" name="polarity_2_comboBox_2">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="3">
+    <widget class="QComboBox" name="polarity_2_comboBox_3">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="4">
+    <widget class="QComboBox" name="polarity_2_comboBox_4">
+     <item>
+      <property name="text">
+       <string>Positive (Rising)</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Negative (Falling)</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>channelTypeComboBox_1</tabstop>
+  <tabstop>channelTypeComboBox_2</tabstop>
+  <tabstop>channelTypeComboBox_3</tabstop>
+  <tabstop>channelTypeComboBox_4</tabstop>
+  <tabstop>threshold_1_doubleSpinBox_1</tabstop>
+  <tabstop>threshold_1_doubleSpinBox_2</tabstop>
+  <tabstop>threshold_1_doubleSpinBox_3</tabstop>
+  <tabstop>threshold_1_doubleSpinBox_4</tabstop>
+  <tabstop>threshold_2_doubleSpinBox_1</tabstop>
+  <tabstop>threshold_2_doubleSpinBox_2</tabstop>
+  <tabstop>threshold_2_doubleSpinBox_3</tabstop>
+  <tabstop>threshold_2_doubleSpinBox_4</tabstop>
+  <tabstop>polarity_1_comboBox_1</tabstop>
+  <tabstop>polarity_1_comboBox_2</tabstop>
+  <tabstop>polarity_1_comboBox_3</tabstop>
+  <tabstop>polarity_1_comboBox_4</tabstop>
+  <tabstop>polarity_2_comboBox_1</tabstop>
+  <tabstop>polarity_2_comboBox_2</tabstop>
+  <tabstop>polarity_2_comboBox_3</tabstop>
+  <tabstop>polarity_2_comboBox_4</tabstop>
+  <tabstop>modeComboBox_1</tabstop>
+  <tabstop>modeComboBox_2</tabstop>
+  <tabstop>modeComboBox_3</tabstop>
+  <tabstop>modeComboBox_4</tabstop>
+  <tabstop>samplingPeriodSpinBox</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

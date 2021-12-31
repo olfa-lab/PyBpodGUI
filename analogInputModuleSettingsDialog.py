@@ -1,12 +1,12 @@
 import logging
 from PyQt5.QtWidgets import QDialog
-from ui_files.analog_input_settings_ui import Ui_Dialog
+from ui_files.analog_input_module_settings_ui import Ui_Dialog
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
-class AnalogInputSettingsDialog(QDialog, Ui_Dialog):
+class AnalogInputModuleSettingsDialog(QDialog, Ui_Dialog):
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)

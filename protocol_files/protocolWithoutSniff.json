@@ -7,8 +7,7 @@
                 "Tup": "PresentOdor"
             },
             "outputActions": {
-                "Olfactometer": "set_stimulus",
-                "Serial1": "ADC_start"
+                "Olfactometer": "set_stimulus"
             }
         },
         {
@@ -70,7 +69,6 @@
                 "Tup": "exit"
             },
             "outputActions": {
-                "Serial1": "ADC_stop"
             }
         }
     ]

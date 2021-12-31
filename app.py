@@ -24,7 +24,8 @@ from flowUsagePlotWorker import FlowUsagePlotWorker
 from resultsPlotWorker import ResultsPlotWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
-from analogInputSettingsDialog import AnalogInputSettingsDialog
+from analogInputModuleSettingsDialog import AnalogInputModuleSettingsDialog
+from bpodFlexChannelSettingsDialog import BpodFlexChannelSettingsDialog
 
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -72,7 +73,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValve = int(self.rightWaterValvePortNumComboBox.currentText())
         self.protocolFileName = ''
         self.olfaConfigFileName = ''
-        self.analogInputSettingsDialog = None
+        self.analogInputModuleSettingsDialog = None
+        self.bpodFlexChannelSettingsDialog = None
         self.isPaused = False
         self.loadDefaults()
 
@@ -143,13 +145,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotCombineLikeVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(1))
         self.flowUsagePlotSeparateVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(2))
         
-        self.actionNew.triggered.connect(self.launchProtocolEditor)
-        self.actionOpen.triggered.connect(self.openProtocolFileNameDialog)
+        self.actionNewProtocol.triggered.connect(self.launchProtocolEditor)
+        self.actionOpenProtocol.triggered.connect(self.openProtocolFileNameDialog)
         self.actionLoadDefaults.triggered.connect(self.loadDefaults)
         self.actionSelectOlfaConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
         self.actionConfigureOlfaSettings.triggered.connect(self.launchOlfaEditor)
-        self.actionConfigureAnalogInSettings.triggered.connect(self.launchanalogInputSettingsDialog)
         self.actionLaunchOlfaGUI.triggered.connect(self.launchOlfaGUI)
+        self.actionConfigureBpodFlexChannels.triggered.connect(self.launchBpodFlexChannelSettingsDialog)
+        self.actionConfigureAnalogInputModuleSettings.triggered.connect(self.launchAnalogInputModuleSettingsDialog)
         self.actionViewStreaming.toggled.connect(self.viewStreamingSubWindow)
         self.actionViewResultsPlot.toggled.connect(self.viewResultsPlotSubWindow)
         self.actionViewCurrentTrialInfo.toggled.connect(self.viewCurrentTrialSubWindow)
@@ -186,7 +189,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.defaultSettings = json.load(defaultSettings)
             
             self.bpodCOMPortSpinBox.setValue(self.defaultSettings['experimentSetup']['bpodCOMPort'])
-            self.analogInputModuleCheckBox.setChecked(self.defaultSettings['experimentSetup']['enableAnalogInput'])
             self.analogInputModuleCOMPortSpinBox.setValue(self.defaultSettings['experimentSetup']['analogInputModuleCOMPort'])
             self.olfaCheckBox.setChecked(self.defaultSettings['experimentSetup']['enableOlfactometer'])
             self.olfaConfigFileName = self.defaultSettings['experimentSetup']['olfaConfigFile']
@@ -216,10 +218,15 @@ class Window(QMainWindow, Ui_MainWindow):
             self.dtDoubleSpinBox.setValue(self.defaultSettings['streamingPlot']['dt'])
             self.plotIntervalSpinBox.setValue(self.defaultSettings['streamingPlot']['plotInterval'])
 
-            if self.analogInputSettingsDialog is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings from it.
-                self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
-                self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
-            self.analogInputSettingsDialog.loadSettings(self.defaultSettings['analogInput'])
+            if self.bpodFlexChannelSettingsDialog is None:  # In case the user starts experiment without configuring the bpod flex channel settings from the dialog window, create the dialog window object once here. There get the default settings for it.
+                self.bpodFlexChannelSettingsDialog = BpodFlexChannelSettingsDialog(parent=self)
+                self.bpodFlexChannelSettingsDialog.accepted.connect(self.configureBpodFlexChannels)
+            self.bpodFlexChannelSettingsDialog.loadSettings(self.defaultSettings['bpodFlexChannels'])
+            
+            if self.analogInputModuleSettingsDialog is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings for it.
+                self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
+                self.analogInputModuleSettingsDialog.accepted.connect(self.configureAnalogInputModule)
+            self.analogInputModuleSettingsDialog.loadSettings(self.defaultSettings['analogInputModule'])
         
         else:
             QMessageBox.warning(self, 'Not Found', 'The defaults.json file was not found.')
@@ -299,11 +306,17 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.experimentSetupDockWidget.hide()
     
-    def launchanalogInputSettingsDialog(self):
-        if self.analogInputSettingsDialog is None:
-            self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
-            self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
-        self.analogInputSettingsDialog.show()
+    def launchBpodFlexChannelSettingsDialog(self):
+        if self.bpodFlexChannelSettingsDialog is None:
+            self.bpodFlexChannelSettingsDialog = BpodFlexChannelSettingsDialog(parent=self)
+            self.bpodFlexChannelSettingsDialog.accepted.connect(self.configureBpodFlexChannels)
+        self.bpodFlexChannelSettingsDialog.show()
+    
+    def launchAnalogInputModuleSettingsDialog(self):
+        if self.analogInputModuleSettingsDialog is None:
+            self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
+            self.analogInputModuleSettingsDialog.accepted.connect(self.configureAnalogInputModule)
+        self.analogInputModuleSettingsDialog.show()
 
     def launchOlfaGUI(self):
         if self.olfaConfigFileName:
@@ -325,9 +338,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def launchProtocolEditor(self):
         if self.bpod is not None:
-            sma = StateMachine(self.bpod)
-            events = sma.hardware.channels.event_names
-            outputs = sma.hardware.channels.output_channel_names
+            events = self.bpod.hardware.channels.event_names
+            outputs = self.bpod.hardware.channels.output_channel_names
             self.protocolEditor = ProtocolEditorDialog(events, outputs, self.protocolFileName)
             self.protocolEditor.show()
         else:
@@ -349,12 +361,25 @@ class Window(QMainWindow, Ui_MainWindow):
             self.olfaConfigFileName = fileName
             self.olfaFileLineEdit.setText(fileName)
 
-    def configureAnalogModule(self):
+    def configureBpodFlexChannels(self):
+        if self.bpod is not None:
+            if self.bpod.hardware.machine_type > 3:
+                if self.bpodFlexChannelSettingsDialog is None:
+                    self.bpodFlexChannelSettingsDialog = BpodFlexChannelSettingsDialog(parent=self)
+                    self.bpodFlexChannelSettingsDialog.accepted.connect(self.configureBpodFlexChannels)
+                settings = self.bpodFlexChannelSettingsDialog.getSettings()
+                self.bpod.set_flex_channel_types(settings['channelTypes'])
+                self.bpod.set_analog_input_sampling_interval(settings['samplingPeriod'])
+                self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
+                self.bpod.set_analog_input_threshold_polarity(settings['polarities_1'], settings['polarities_2'])
+                self.bpod.set_analog_input_threshold_mode(settings['modes'])
+    
+    def configureAnalogInputModule(self):
         if self.adc is not None:
-            if self.analogInputSettingsDialog is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings from it.
-                self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
-                self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
-            settings = self.analogInputSettingsDialog.getSettings()
+            if self.analogInputModuleSettingsDialog is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings from it.
+                self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
+                self.analogInputModuleSettingsDialog.accepted.connect(self.configureAnalogInputModule)
+            settings = self.analogInputModuleSettingsDialog.getSettings()
             self.adc.setNactiveChannels(settings['nActiveChannels'])
             self.adc.setSamplingRate(settings['samplingRate'])
             self.adc.setInputRange(settings['inputRanges'])
@@ -365,99 +390,16 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def startAnalogModule(self):
         self.adc.startReportingEvents()
-        # self.adc.startLogging()
         self.adc.startUSBStream()
 
     def stopAnalogModule(self):
         self.adc.stopUSBStream()
-        # for i in range(5):
-        #     # Try to stop it 5 times because usually the first two tries fail.
-        #     logging.info(f'trying to stop logging: trial {i + 1}')
-        #     try:
-        #         self.adc.stopLogging()
-        #         logging.info("analog module stopped logging to SD card")
-        #         break
-        #     except BpodErrorException:
-        #         logging.info("could not stop logging")
-
-        # For some reason, the stopReportingEvents() function raises an exception the first two tries (sometimes more).
-        # So this while loop keeps attempting to call the function until it is successful. It is important
-        # to stop event reporting while a trial is paused. Otherwise, the bpod will continue to receive
-        # threshold crossing events that occur while paused, which will lead to the transition to the next
-        # state given by that analog input event immediately after the trial resumes. This also happens
-        # just by clicking the resume button even if the voltage does not cross the threshold.
-        # while True:
-        #     try:
-        #         self.adc.stopReportingEvents()
-        #         logging.info("Event reporting stopped.")
-        #         break
-        #     except AnalogInException:
-        #         logging.info("Could not stop event reporting. Trying again...")
-
-    
-    # def getSDCardLog(self):
-    #     adcSignal = self.adc.getData()
-    #     logging.info('got analog data. here is what is got:')
-    #     logging.info(adcSignal)
-    #     self.saveDataWorker.receiveAnalogData(adcSignal)
-    
-    # def identifyCOMPorts(self):
-    #     availablePorts = [comport.device for comport in serial.tools.list_ports.comports()]
-    #     logging.info(availablePorts)
-
-    #     bpodPrimaryPort = ''
-    #     bpodSecondaryPort = ''
-    #     bpodAnalogPort = ''
-    #     for port in availablePorts:
-    #         try:
-    #             connection = serial.Serial(port=port, baudrate=1312500, timeout=2)
-    #             res = connection.read(size=1)
-    #             if (res == b'\xDE'):  # Bpod writes 0xDE every 100ms on its primary COM port. 0xDE in decimal is 222 which refers to firmware version 22.
-    #                 logging.info(port)
-    #                 bpodPrimaryPort = port
-    #                 self.bpodCOMPortSpinBox.setValue(int(port.strip("COM")))
-    #                 connection.close()
-    #                 break
-    #             else:
-    #                 logging.info("Nothing in input buffer")
-    #                 connection.close()
-
-    #         except SerialException as err:
-    #             logging.info(err)
-
-    #     if not (bpodPrimaryPort == ''):
-    #         availablePorts.remove(bpodPrimaryPort)
-    #         logging.info(availablePorts)
-    #         bpodPrimaryConnection = serial.Serial(port=bpodPrimaryPort, baudrate=1312500, timeout=2)
-    #         for port in availablePorts:
-    #             try: 
-    #                 connection = serial.Serial(port=port, baudrate=1312500, timeout=2)
-    #                 bpodPrimaryConnection.write(b'{}')  # Send '{' and '}' to the primary port. The '{' is sent to identify the bpod secondary port and the '}' is sent to identify the bpod analog port.
-    #                 res = connection.read(size=1)
-    #                 if (res == b'\xDE'):  # response to '{' should be 0xDE or 222 in decimal for firmware v22.
-    #                     logging.info(f"bpod secondary port is {port}")
-    #                     bpodSecondaryPort = port
-    #                     connection.close()
-    #                 elif (res == b'\xDF'):  # response to '}' should be 0xDF or 223 in decimal for firmware v23.
-    #                     logging.info(f"bpod analog port is {port}")
-    #                     bpodAnalogPort = port
-    #                     self.analogInputModuleCOMPortSpinBox.setValue(int(port.strip("COM")))
-    #                     connection.close()
-    #                 else:
-    #                     logging.info("Nothing in input buffer")
-    #                     connection.close()
-                
-    #             except SerialException as err:
-    #                 logging.info(err)
-            
-    #         bpodPrimaryConnection.close()
-    #         QMessageBox.information(self, "Bpod COM Port Identification", "Complete")
     
     def connectDevices(self):
         try:
-            if self.analogInputModuleCheckBox.isChecked():
+            if self.analogInputModuleCOMPortSpinBox.value() > 0:
                 self.adc = BpodAnalogIn(serial_port=f"COM{self.analogInputModuleCOMPortSpinBox.value()}")
-                self.configureAnalogModule()
+                self.configureAnalogInputModule()
         except SerialException:
             if self.adc is not None:
                 self.adc.close()
@@ -470,10 +412,8 @@ class Window(QMainWindow, Ui_MainWindow):
             return
 
         try:
-            self.bpod = Bpod(serial_port=f"COM{self.bpodCOMPortSpinBox.value()}" if self.bpodCOMPortSpinBox.value() > 0 else None)            
-            for m in self.bpod.modules:
-                if m.name.startswith('AnalogIn'):
-                    self.adcBpodChannel = m.serial_port
+            self.bpod = Bpod(serial_port=f"COM{self.bpodCOMPortSpinBox.value()}" if self.bpodCOMPortSpinBox.value() > 0 else None)
+            self.configureBpodFlexChannels()
 
         except (BpodErrorException, SerialException, UnicodeDecodeError):
             if self.bpod is not None:
@@ -533,13 +473,6 @@ class Window(QMainWindow, Ui_MainWindow):
         elif (self.protocolFileName == ''):
             QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
-
-        if self.bpod.hardware.machine_type > 3:
-            self.bpod.set_flex_channel_types([2, 3, 3, 3])
-            self.bpod.set_analog_input_sampling_interval(10)
-            self.bpod.set_analog_input_thresholds([2000, 0, 0, 0], [4000, 0, 0, 0])
-            self.bpod.set_analog_input_threshold_polarity([0, 0, 0, 0], [0, 0, 0, 0])
-            self.bpod.set_analog_input_threshold_mode([0, 0, 0, 0])
         
         # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
         # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
@@ -548,7 +481,7 @@ class Window(QMainWindow, Ui_MainWindow):
             del self.olfas
             self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
 
-        # Check if adc was created which would mean the user enabled the checkbox and the analog input module was connected.
+        # Check if adc was created which would mean the user provided a COM port and the analog input module was connected.
         if self.adc is not None:
             self.startAnalogModule()
         
@@ -571,6 +504,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.stopButton.setEnabled(True)
         self.pauseButton.setEnabled(True)
         self.disconnectDevicesButton.setEnabled(False)  # Do not let user disconnect devices while experiment is running.
+        self.actionConfigureBpodFlexChannels.setEnabled(False)  # Prevent user from configuring flex channels while experiment is running.
         if self.adc is not None:
             self.actionConfigureAnalogInSettings.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
         if self.olfaCheckBox.isChecked():
@@ -595,6 +529,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.isPaused = False
         self.flushLeftWaterButton.setEnabled(True)
         self.flushRightWaterButton.setEnabled(True)
+        self.actionConfigureBpodFlexChannels.setEnabled(True)  # re-enable the ability to configure flex channels since an experiment is not running.
         if self.adc is not None:
             self.actionConfigureAnalogInSettings.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
         if self.olfaCheckBox.isChecked():
@@ -957,10 +892,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def runSaveDataThread(self):
         logging.info(f"from _runSaveDataThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
-        if self.analogInputSettingsDialog is None:  # if it wasnt created yet, then create it but only create it once.
-            self.analogInputSettingsDialog = AnalogInputSettingsDialog(parent=self)
-            self.analogInputSettingsDialog.accepted.connect(self.configureAnalogModule)
-        settingsDict = self.analogInputSettingsDialog.getSettings()
+        if self.analogInputModuleSettingsDialog is None:  # if it wasnt created yet, then create it but only create it once.
+            self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
+            self.analogInputModuleSettingsDialog.accepted.connect(self.configureAnalogInputModule)
+        settingsDict = self.analogInputModuleSettingsDialog.getSettings()
         self.saveDataThread = QThread()
         self.saveDataWorker = SaveDataWorker(
             self.mouseNumberLineEdit.text(), self.rigLetterLineEdit.text(), self.protocolFileName, self.olfaConfigFileName, self.shuffleMultiplierSpinBox.value(), self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(),
@@ -1002,8 +937,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.duplicateVialsSignal.connect(self.flowUsagePlot.receiveDuplicatesDict)
         self.protocolWorker.totalsDictSignal.connect(self.updateSessionTotals)
         self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
-        # self.protocolWorker.startSDCardLoggingSignal.connect(self.startSDCardLogging)
-        # self.protocolWorker.stopSDCardLoggingSignal.connect(self.stopSDCardLogging)
         self.protocolWorker.noResponseAbortSignal.connect(self.noResponseAbortDialog)
         self.protocolWorker.olfaNotConnectedSignal.connect(self.cannotConnectOlfaDialog)
         self.protocolWorker.olfaExceptionSignal.connect(self.olfaExceptionDialog)
