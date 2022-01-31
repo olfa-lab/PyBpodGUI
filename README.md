@@ -51,35 +51,183 @@ In the PyBpodGUI folder, launch the GUI with:
 python app.py
 ```
 
-![Main Window](images/main_window.png)
+### Main Window Overview
 
-### Window Overview
+![Main Window](images/main_window_labeled.png)
 
-On the top of the window there is a menu bar for several tasks and actions.
-On the left-hand side there is the _Experiment Setup_ dock widget with the parameters to be set before performing an
+1. On the top of the window there is a menu bar for several tasks and actions. 
+
+
+2. On the left-hand side there is the _Experiment Setup_ dock widget with the parameters to be set before performing an
 experiment.
-On the right-hand side there is the MDI area which contains several sub-windows. They can be moved, resized, or closed,
+
+
+3. On the right-hand side there is the MDI area which contains several sub-windows. They can be moved, resized, or closed,
 and can be re-opened from the _View_ menu in the top menu bar.
 
-The _Current Trial Info_ sub-window contains several fields that update every trial to show useful information.
 
-The _Streaming Plot_ sub-window contains an animated scope-like plotter to show digital input events (like snout pokes
+4. The _Current Trial Info_ sub-window contains several fields that update every trial to show useful information.
+
+
+5. The _Streaming Plot_ sub-window contains an animated scope-like plotter to show digital input events (like snout pokes
 or licks) on each behavior port on the Bpod and analog input signals (like a sniff signal) sampled by an Analog Input
 Module or the built-in ADC on the Bpod r2 Plus. It also highlights the start and end of the response window and
 indicates the response result by color. There are several parameters on the left of the plot to adjust properties of the
 animation and axis.
 
-The _Bpod Control_ sub-window contains several parameters to specify the behavior port number of the left and right
+
+6. The _Bpod Control_ sub-window contains several parameters to specify the behavior port number of the left and right
 input sensors and valves, the duration to open the left and right valves, and buttons to open and close the valves
 manually.
 
-The _Results Plot_ sub-window contains a line plot of the total percentage of trials which the mouse licked left
+
+7. The _Results Plot_ sub-window contains a line plot of the total percentage of trials which the mouse licked left
 correctly for each flow rate in order to produce a sigmoid curve for odor intensity experiments. There are buttons that
 combine or separate the lines of the plot based on the odor vials. For odor identity experiments, the plot becomes a
 two-dimensional matrix that maps each pair of odors as a greyscale pixel on an image where the brightness represents the
 percentage of trials for which the mouse licked correctly for that odor pair. The _Results Plot_ is dependent on the
 _Experiment Type_ parameter in the _Experiment Setup_ dock widget on the left-hand side.
 
-The _Flow Usage Plot_ sub-window contains a line plot of the number of trials that each flow rate was used. There are
+
+8. The _Flow Usage Plot_ sub-window contains a line plot of the number of trials that each flow rate was used. There are
 buttons that combine or separate the lines of the plot based on the odor vials.
 
+### Running a Session
+
+1. Connect the Bpod to the PC with the USB cable and connect all the sensors, valves, or modules to their appropriate
+ports on the Bpod. If using the Analog Input Module, connect it to the PC with the USB cable as well.
+
+
+2. In the _Experiment Setup_ dock widget, select the application mode from the _Application Mode_ combo box. The two
+options are:
+   1. **Standard** -- used when performing a single session for the specified number of trials
+   2. **Automatic (RFID)** -- used for autonomous 24/7 operation of RFID tagged mice where a session begins
+   automatically when a mouse enters the behavioral space and continues until the mouse leaves
+
+   Select _Standard_ for this tutorial.
+
+
+3. Enter the Bpod's COM port in the _Bpod Port_ spin box. The COM port can be found in Device Manager, which can be
+opened by searching for _Device Manager_ in the Start Menu. If using the Bpod r2 Plus, click the spin box down arrow 
+until `Auto-detect` appears, or enter `0` as the value. This will instruct the PC to scan the available COM ports to
+identify the Bpod r2 Plus because it creates three separate COM ports: a primary port for the main connection, a
+secondary port for an auxiliary application, and a third port for streaming analog input data to the PC.
+
+
+4. Enter the Analog Input Module's COM port in the _Analog Input Module Port_ spin box if it will be used. If not, click
+the spin box down arrow until `Do Not Use` appears, or enter `0` as the value.
+
+
+5. Specify an olfactometer configuration file by going to the top menu bar and clicking on **Olfactometer** > **Select
+config file**. A file explorer dialog window will appear. Browse for the desired olfactometer configuration file to use
+for the current session. An olfactometer configuration file is needed if an olfactometer will be used during the
+session to instruct the PC how to operate the olfactometer. If the olfactometer will not be used, uncheck the
+_Enable Olfactometer_ check box. Once the olfactometer configuration file is selected, its path will appear in the
+_Olfa Config File_ line edit box.
+
+   Note that the olfactometer configuration file
+   must be a JSON file. There is a folder in this repository's root location called _olfactometry_config_files_ that the
+   file explorer dialog window browses by default. Refer to the olfactometer configuration file that is included in this
+   repository for the JSON structure. This folder can be used to hold all olfactometer configuration files and is where
+   the built-in editor saves new files to. It is recommended to use the built-in editor to modify or create new
+   olfactometer configuration files. Instructions can be found below.
+
+
+6. Specify a protocol file by going to the top menu bar and clicking on **File** > **Open Protocol**. A file explorer
+dialog window will appear. Browse for the desired protocol file to use for the current session. A protocol file is
+needed to instruct the Bpod how to build the state machine. Once the protocol file is selected, its path will appear in
+the _Protocol File_ line edit box.
+
+   Note that the protocol file must be a JSON file. There is a
+   folder in this repository's root location called _protocol_files_ that the file explorer dialog windows browses by
+   default. Refer to the protocol files that are included in this repository for the JSON structure. This folder can be
+   used to hold all protocol files and is where the built-in editor saves new files to. It is recommended to use the
+   built-in editor to modify or create new protocol files. Instructions can be found below.
+
+
+7. Select the experiment type in the _Experiment Type_ combo box. This instructs the PC on how to generate the
+olfactometer stimulus/stimuli for each trial which will determine the correct response (left or right). It also
+instructs the PC on how to display results. The three options are:
+   1. **None** -- for experiments that do not need to generate a new stimulus/stimuli each trial, such as with lick training
+   2. **Intensity** -- for experiments where odor intensity determines the correct response (depending on MFC flowrate value)
+   3. **Identity** -- for experiments where odor equality determines the correct response (depending on odor name)
+
+
+8. Enter a value in the _Shuffle Multiplier_ spin box. This value is used when parsing the olfactometer configuration
+file to determine how many times to copy and extend the lists of vial numbers and flowrates before shuffling them. The
+greater the value, the more random the vials and flowrates will be presented. For example, if the _Shuffle Multiplier_
+is set to `3` and the olfactometer configuration file contains four vials resulting in the vial numbers list
+`['5', '6', '7', '8']`, the list will be copied and extended `3` times resulting in
+   ```
+   ['5', '6', '7', '8', '5', '6', '7', '8', '5', '6', '7', '8']
+   ```
+   and then shuffled
+   ```
+   ['6', '7', '5', '6', '5', '5', '6', '8', '7', '7', '8', '8']
+   ```
+   which will then be iterated through with each trial. Once the iteration through the entire list is complete, it will
+   be re-shuffled and the iteration resets from the beginning. This processes of copying and extending and then
+   shuffling also applies to the list of flowrates obtained when parsing the olfactometer configuration file. Note that
+   increasing the _Shuffle Multiplier_ also increases the probability of consecutive repetitions.
+
+   Set the _Shuffle Multiplier_ value to `1` to avoid consecutive repetitions. This will not copy and extend the lists
+   of vial numbers and flowrates but instead will only shuffle and iterate through them and re-shuffle when iteration is
+   complete to start from the beginning.
+
+   Set the _Shuffle Multiplier_ value to `0` to prevent shuffling, or click the spin box down arrow until
+   `Do Not Shuffle` appears. This will neither copy and extend the lists of vial numbers and flowrates nor shuffle them,
+   but instead will only iterate through them with each trial in the order they are written in the olfactometer
+   configuration file and repeat from the beginning when iteration completes.
+
+
+9. Enter the number of trials to run during the session in the _Number of Trials_ spin box.
+
+
+10. Enter the number of consecutive "No Response" trials after which the PC should abort the session in the _Abort when
+no response for_ spin box. To disable aborting, click the spin box down arrow until `Never` appears or enter `0` as the
+value.
+
+
+11. Enter the number of consecutive "No Response" trials after which the Bpod should automatically open the water valves
+to "re-motivate" the mouse in the _Auto water when no response for_ spin box. The left and right water valves will open
+for one second. To disable automatic watering, click the spin box down arrow until `Never` appears or enter `0` as the
+value.
+
+
+12. Enter the upper bound for the Inter-Trial Interval (ITI) range in the _Maximum ITI_ spin box. The ITI is the
+duration in between the end of a trial and the start of the next trial in seconds (and there is actually one additional
+second used by the PC always). The PC randomly selects an ITI with each trial from the given range. To disable random
+selection and set a fixed ITI to use every trial, enter the same ITI value for the upper and lower bounds, i.e. the
+_Maximum ITI_ and _Minimum ITI_ spin boxes.
+
+
+13. Enter the lower bound for the Inter-Trial Interval (ITI) range in the _Minimum ITI_ spin box. The ITI is the
+duration in between the end of a trial and the start of the next trial in seconds (and there is actually one additional
+second used by the PC always). The PC randomly selects an ITI with each trial from the given range. To disable random
+selection and set a fixed ITI to use every trial, enter the same ITI value for the lower and upper bounds, i.e. the
+_Minimum ITI_ and _Maximum ITI_ spin boxes.
+
+
+14. Enter a mouse identifier in the _Mouse ID_ line edit box. This identifier is used when saving the session data file.
+
+
+15. Enter a rig identifier in the _Rig ID_ line edit box. This identifier is used when saving the session data file.
+
+
+16. Click the _Connect Devices_ push button to connect to the Bpod and, if applicable, the Analog Input Module. It may
+take a few seconds for the PC to auto-detect the Bpod r2 Plus. Once connected, the _Connect Devices_ push button will
+say `Connected` and become greyed-out and disabled, while the _Disconnect Devices_ and _Start_ push buttons will become
+enabled (not greyed-out). The push buttons in the _Bpod Control_ subwindow will also become enabled.
+
+
+17. In the _Bpod Control_ subwindow, select the port numbers (on the Bpod) and valve open durations for the left and
+right sensors and water valves, and the port number for the final valve. Flush out the air from the left and right water
+lines if necessary by clicking on the _Flush Left Water_ and _Flush Right Water_ push buttons. This will open a small
+dialog window with a progress bar until the operation completes. The operation opens and closes the respective water
+valve 100 times, where the open and close durations are each equal to the durations given in the _Left Water Valve
+Duration_ and _Right Water Valve Duration_ spin boxes, in milliseconds.
+
+
+18. Click the _Start_ push button to start the session. The _Current Trial Info_ subwindow should become populated and
+the _Streaming Plot_ subwindow should animate the input signals (e.g. sniff signal, lick detections). After the first
+trial completes, the _Results Plot_ subwindow should update, as well as the _Flow Usage Plot_ if applicable.

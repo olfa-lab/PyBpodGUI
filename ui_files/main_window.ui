@@ -904,7 +904,7 @@
      <item row="12" column="0">
       <widget class="QLabel" name="itiMaxLabel">
        <property name="text">
-        <string>Maximum ITI</string>
+        <string>Maximum ITI:</string>
        </property>
       </widget>
      </item>
@@ -921,7 +921,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="applicationModeLabel">
        <property name="text">
-        <string>Application Mode</string>
+        <string>Application Mode:</string>
        </property>
       </widget>
      </item>
@@ -961,7 +961,7 @@
      <item row="15" column="0">
       <widget class="QLabel" name="rigLetterLabel">
        <property name="text">
-        <string>Rig Letter</string>
+        <string>Rig ID:</string>
        </property>
       </widget>
      </item>
@@ -1014,14 +1014,14 @@
      <item row="9" column="0">
       <widget class="QLabel" name="nTrialsLabel">
        <property name="text">
-        <string>Num of trials:</string>
+        <string>Number of Trials:</string>
        </property>
       </widget>
      </item>
      <item row="7" column="0">
       <widget class="QLabel" name="experimentTypeLabel">
        <property name="text">
-        <string>Experiment Type</string>
+        <string>Experiment Type:</string>
        </property>
       </widget>
      </item>
@@ -1078,14 +1078,14 @@
      <item row="2" column="0">
       <widget class="QLabel" name="bpodCOMPortLabel">
        <property name="text">
-        <string>Bpod Port</string>
+        <string>Bpod Port:</string>
        </property>
       </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="rfidReaderCOMPortLabel">
        <property name="text">
-        <string>RFID Reader Port</string>
+        <string>RFID Reader Port:</string>
        </property>
       </widget>
      </item>
@@ -1102,7 +1102,7 @@
      <item row="3" column="0">
       <widget class="QLabel" name="analogInputModuleCOMPortLabel">
        <property name="text">
-        <string>Analog Input Module Port</string>
+        <string>Analog Input Module Port:</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -1112,7 +1112,7 @@
      <item row="14" column="0">
       <widget class="QLabel" name="mouseNumberLabel">
        <property name="text">
-        <string>Mouse Number:</string>
+        <string>Mouse ID:</string>
        </property>
       </widget>
      </item>
@@ -1139,7 +1139,7 @@
      <item row="13" column="0">
       <widget class="QLabel" name="itiMinLabel">
        <property name="text">
-        <string>Minimum ITI</string>
+        <string>Minimum ITI:</string>
        </property>
       </widget>
      </item>
@@ -1189,7 +1189,7 @@
      <item row="8" column="0">
       <widget class="QLabel" name="shuffleMultiplierLabel">
        <property name="text">
-        <string>Shuffle Multiplier</string>
+        <string>Shuffle Multiplier:</string>
        </property>
       </widget>
      </item>
