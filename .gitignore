@@ -1,5 +1,7 @@
 __pycache__/ 
 .vscode/
 .idea/
-results/ 
+results/
+protocol_files/
+olfactometry_config_files/
 *.log

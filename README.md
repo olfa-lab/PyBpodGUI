@@ -231,3 +231,113 @@ Duration_ and _Right Water Valve Duration_ spin boxes, in milliseconds.
 18. Click the _Start_ push button to start the session. The _Current Trial Info_ subwindow should become populated and
 the _Streaming Plot_ subwindow should animate the input signals (e.g. sniff signal, lick detections). After the first
 trial completes, the _Results Plot_ subwindow should update, as well as the _Flow Usage Plot_ if applicable.
+
+### Creating a New Protocol
+
+A protocol file defines the state machine that will be sent to the Bpod to instruct it on what to do. The state machine
+can be thought of being like a flowchart that checks for different conditions but the "flow" of operation takes only
+one path from start to end. A state contains four attributes: a name, a timer duration, another state to transition to
+after a condition is met, and an optional output action. The protocol file is saved in the JSON file format for easy
+readability and gets parsed when running a session. It can be written with a text editor by following the required
+structure as can be found in one of the example protocol files, or it can be created by the GUI's built-in protocol
+editor. To use the built-in protocol editor:
+
+1. Connect a Bpod to the PC first and enter its COM port (or select `Auto-detect` if it is a Bpod r2 Plus) in the
+_Experiment Setup_ dock widget on the left side of the main window. This is so that the PC can read all the available
+input and output channels from the Bpod and display them in the built-in protocol editor. Click the **Connect Devices**
+push button.
+
+
+2. From the top menu bar, click **File** > **New Protocol**. The protocol editor will open in a new window. Note that if
+a protocol file was already selected before launching the protocol editor, the protocol editor will read the selected
+protocol file and display the states and contents in the diagram area.
+![Protocol Editor](images/protocol_editor_window.png)
+
+
+3. It may be helpful to draw the state machine as a flowchart before creating it in the protocol editor. Beginning with
+the first state, enter the state name in the _State Name_ combo box. The combo box is editable and will hold the state
+names used for previous states for convenience.
+
+
+4. Enter the state timer value in the _State Timer_ combo box. The combo box is editable and will hold keywords that the
+PC will use as variables for when the state timer value changes every trial. Those keywords are:
+
+   - **rewardDuration** -- used for the "reward" state to reward the mouse with water after responding correctly in a
+      trial. It is a variable whose value represents the duration of the reward state, which is just the duration to
+      keep the water valve open and is set by the _Left Water Valve Duration_ and _Right Water Valve Duration_ spin
+      boxes from the _Bpod Control_ subwindow. This variable is needed because the left and right water valve durations
+      may not be equal, and because the correct response changes every trial so this variable is updated at the start of
+      every trial depending on the correct response.
+   
+   - **itiDuration** -- used for the ITI state at the end of every trial. It is a variable whose value represents the
+   ITI duration and is set by the range of the _Min ITI_ and _Max ITI_ spin boxes in the _Experiment Setup_ dock 
+   widget. This variable is needed for when the ITI duration changes every trial and is updated at the start of every
+   trial.
+   
+   Use the keywords for the applicable states. Otherwise, enter a numeric value for the desired state timer or enter `0`
+   for infinite duration. Note that the state timer will only take effect (i.e. transition to the next state after the
+   elapsed duration) if the "Tup" condition is used in the state's change conditions, as explained below.
+
+
+5. Add the state change conditions by selecting an event from the _State Change Event_ combo box and then enter the
+   name of the state to transition to when the event occurs in the _State Change Name_ combo box, or select one of the
+   reserved names. The reserved names are used as variables by the PC for transitions that change every trial and for
+   indicating response results. They are:
+   - **WaitForResponse** -- used for the state that checks for the response after presenting the stimulus and 
+      transitions to the response state (e.g. reward, punish, etc.) depending on the event occurrence. The PC uses this
+      state to indicate the start of the response window, which is animated in the _Streaming Plot_ subwindow.
+   
+   - **leftAction** -- used as a variable by the PC and gets replaced by the name of the response state depending on
+      the correct response of the trial. It is used in conjunction with the "WaitForResponse" state as the name of the
+      transition state in the state change conditions. For example, if the correct response for a trial is left, then
+      the PC will replace "leftAction" with "Correct" and "rightAction" with "Wrong" before sending the state machine
+      to the Bpod. The opposite applies if the correct response for a trial is right.
+   
+   - **rightAction** -- used as a variable by the PC and gets replaced by the name of the response state depending on
+      the correct response of the trial. It is used in conjunction with the "WaitForResponse" state as the name of the
+      transition state in the state change conditions. For example, if the correct response for a trial is right, then
+      the PC will replace "rightAction" with "Correct" and "leftAction" with "Wrong" before sending the state machine
+      to the Bpod. The opposite applies if the correct response for a trial is left.
+   
+   - **Correct** -- used to indicate when the mouse responds correctly, and signals to the _Streaming Plot_ to end the
+      response window animation and change its color to green.
+   
+   - **Wrong** -- used to indicate when the mouse responds incorrectly, and signals to the _Streaming Plot_ to end the
+      response window animation and change its color to red.
+   
+   - **NoResponse** -- used to indicate when the mouse does not respond within the response window, and signals to the
+      _Streaming Plot_ to end the response window animation.
+   
+   - **NoSniff** -- used to indicate when the sniff sensor does not detect a threshold crossing and can be used as a
+      cutoff for ending the trial instead of waiting forever for the sniff.
+   
+   - **ITI** -- used to indicate the ITI state in conjunction with the "itiDuration" variable.
+   
+   - **exit** -- used to signal the Bpod to exit the state machine, which signals the end of a trial.
+
+   After selecting the state change event and entering the associated state change name, click the _Add state change
+   condition_ push button. The state change condition will be listed in the _State Change Conditions_ list widget box.
+   Continue adding all of the desired state change conditions for the current state. If an error was made, click on the
+   _Clear all entries_ push button to remove all the added state change conditions for the current state and start over.
+
+
+6. Add an output action for the current state by selecting an output channel from the _Output Channel Name_ combo box.
+Then select the output value from the _Output Channel Value_ combo box. Then click on the _Add output action_ push
+button. The output action will be listed in the _Output Actions_ list widget box. Continue adding all of the desired
+output actions for the current state. If an error was made, click on the _Clear all entries_ push button to remove all
+the added output actions for the current state and start over. Note that an output action is not required.
+
+
+7. After verifying all parameters, click the _Add State_ push button on the bottom. The state will appear as a graphic
+item in the flowchart diagram area and will show the defined parameters. If an error was made, click on the _Remove
+State_ push button on the bottom to remove the last state added.
+
+
+8. Repeat the process for defining and adding the next state(s), which will be in the state change conditions of the
+previous state.
+
+
+9. When all states have been added, click the _Save As_ button to save the protocol as a new file. The _Save_ button is
+used to save an existing file. The _Save As New Protocol File_ explorer window will appear. Select the location to save
+the file to, which is in the _protocol_files_ folder in the root of this repository by default. Name the file and click
+the _Save_ button to close the windows.

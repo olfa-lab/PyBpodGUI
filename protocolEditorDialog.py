@@ -1,6 +1,7 @@
 import json
 import logging
-from PyQt5.QtWidgets import QDialog, QGraphicsScene, QGraphicsItem, QFileDialog
+import os
+from PyQt5.QtWidgets import QDialog, QGraphicsScene, QGraphicsItem, QFileDialog, QMessageBox
 from PyQt5.QtCore import QRectF, Qt
 from ui_files.protocol_editor_dialog_ui import Ui_Dialog
 
@@ -42,10 +43,15 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
     def __init__(self, eventNamesList, outputChannelsList, protocolFileName=None, parent=None):
         super().__init__()
         self.setupUi(self)
+        self.setWindowTitle("Protocol Editor")
         self.protocolFileName = protocolFileName
         if self.protocolFileName:
-            with open(self.protocolFileName, 'r') as protocolFile:
-                self.allStatesDict = json.load(protocolFile)
+            try:
+                with open(self.protocolFileName, 'r') as protocolFile:
+                    self.allStatesDict = json.load(protocolFile)
+            except FileNotFoundError:
+                QMessageBox.warning(self, "Warning", f"File not found: {self.protocolFileName}")
+                self.allStatesDict = {'states': []}
         else:
             self.allStatesDict = {'states': []}
         self.stateDict = {
@@ -429,6 +435,8 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
     
     def saveAsNewFileDialog(self):
         if (len(self.allStatesDict['states']) > 0):
+            if not os.path.isdir('protocol_files'):
+                os.mkdir('protocol_files')
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
             fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Protocol File", directory="protocol_files", filter="JSON Files (*.json)", options=options)

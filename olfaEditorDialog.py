@@ -1,4 +1,5 @@
 import json
+import os
 import logging
 from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog, QDialogButtonBox
 from ui_files.olfa_editor_dialog_ui import Ui_Dialog
@@ -12,23 +13,32 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
     def __init__(self, olfaConfigFileName=None, parent=None):
         super().__init__()
         self.setupUi(self)
+        self.setWindowTitle("Olfactometer Configuration Editor")
         self.olfaConfigFile = olfaConfigFileName
 
         if self.olfaConfigFile:
-            with open(self.olfaConfigFile, 'r') as olfa_config:
-                self.olfaConfigDict = json.load(olfa_config)
+            try:
+                with open(self.olfaConfigFile, 'r') as olfa_config:
+                    self.olfaConfigDict = json.load(olfa_config)
 
-            if 'Olfactometers' not in self.olfaConfigDict:
-                QMessageBox.warning(self, "Warning", "Invalid olfactometer configuration json file. Use this window to create a new one or click cancel and select a different file.")
+                if 'Olfactometers' not in self.olfaConfigDict:
+                    QMessageBox.warning(self, "Warning", "Invalid olfactometer configuration json file. Use this window to create a new one or click cancel and select a different file.")
+                    self.buttonBox.button(QDialogButtonBox.Save).setEnabled(False)  # Disable Save button so that the user can only Save As a new file.
+                    self.populateFields()
+                    self.connectSignalsSlots()
+                    del self.olfaConfigDict  # Delete the invalid dictionary with its contents and create a new empty dictionary below.
+                    self.olfaConfigDict = {'Olfactometers': [{'MFCs':[{}, {}], 'Vials':{}}]}
+                else:
+                    self.populateFields()
+                    self.displayCurrentValues()
+                    self.connectSignalsSlots()  # Connect signals and slots last so that signals do not get fired when populating the fields.
+
+            except FileNotFoundError:
+                QMessageBox.warning(self, "Warning", f"File not found: {self.olfaConfigFile}")
                 self.buttonBox.button(QDialogButtonBox.Save).setEnabled(False)  # Disable Save button so that the user can only Save As a new file.
                 self.populateFields()
                 self.connectSignalsSlots()
-                del self.olfaConfigDict  # Delete the invalid dictionary with its contents and create a new empty dictionary below.
-                self.olfaConfigDict = {'Olfactometers': [{'MFCs':[{}, {}], 'Vials':{}}]}
-            else:
-                self.populateFields()
-                self.displayCurrentValues()
-                self.connectSignalsSlots()  # Connect signals and slots last so that signals do not get fired when populating the fields.
+                self.olfaConfigDict = {'Olfactometers': [{'MFCs': [{}, {}], 'Vials': {}}]}
         else:
             # No file given so let the user create new one from scratch using the dialog window as a template.
             self.olfaConfigDict = {'Olfactometers': [{'MFCs':[{}, {}], 'Vials':{}}]}
@@ -793,7 +803,9 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
                     elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose a gas for MFC {i}!")
                         return
-        
+
+        if not os.path.isdir('olfactometry_config_files'):
+            os.mkdir('olfactometry_config_files')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Config File", directory="olfactometry_config_files", filter="JSON Files (*.json)", options=options)

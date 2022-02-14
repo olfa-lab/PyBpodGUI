@@ -346,6 +346,8 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", "Please connect to Bpod first. Click the 'Connect Devices' button.")
 
     def openProtocolFileNameDialog(self):
+        if not os.path.isdir('protocol_files'):
+            os.mkdir('protocol_files')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Open Protocol File", directory="protocol_files", filter="JSON Files (*.json)", options=options)
@@ -354,6 +356,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.protocolFileLineEdit.setText(fileName)
 
     def openOlfaConfigFileNameDialog(self):
+        if not os.path.isdir('olfactometry_config_files'):
+            os.mkdir('olfactometry_config_files')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Open Olfactometer Configuration File", directory="olfactometry_config_files", filter="JSON Files (*.json)", options=options)
