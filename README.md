@@ -341,3 +341,149 @@ previous state.
 used to save an existing file. The _Save As New Protocol File_ explorer window will appear. Select the location to save
 the file to, which is in the _protocol_files_ folder in the root of this repository by default. Name the file and click
 the _Save_ button to close the windows.
+
+
+### Creating a New Olfactometer Configuration
+
+An olfactometer configuration file defines the settings and contents of the olfactometer, such as the MFC parameters,
+odor vials to use, and their flowrates. The file is JSON format for easy readability. The PC chooses the odor and
+flowrate for each trial based on the vials and flowrates information contained in this file. An olfactometer 
+configuration file must only define the settings and odor vials that will be used when it is loaded during a session.
+To create or edit an olfactometer configuration file using the GUI's built-in editor:
+
+1. From the top menu bar, click on **Olfactometer** > **Configure settings**. The editor window will appear.
+
+   ![Olfactometer Configuration Editor](images/olfa_config_editor.png)
+
+
+2. Enter the olfactometer's COM port in the the _COM Port_ line edit box.
+
+
+3. Select the interface in the _Interface_ combo box. Currently, the only interface is `teensy`.
+
+
+4. Enter the serial number for Cassette 1 in the _Cassette 1 SN_ line edit box.
+
+
+5. Enter the serial number for Cassette 2 in the _Cassette 2 SN_ line edit box.
+
+
+6. Enter the master serial number in the _Master SN_ line edit box.
+
+
+7. Enter the slave index number in the _Slave Index_ line edit box.
+
+
+8. Select the MFC type of MFC 0 and MFC 1 from the respective _MFC Type_ combo box.
+
+
+9. Select the MFC address of MFC 0 and MFC 1 from the respective _Address_ combo box.
+
+
+10. Select the Arduino port number of MFC 0 and MFC 1 from the respective _Arduino Port Num_ combo box.
+
+
+11. Enter the MFC capacity of MFC 0 and MFC 1 in the respective _Capacity_ spin box.
+
+
+12. Select the MFC gas type of MFC 0 and MFC 1 from the respective _Gas_ combo box.
+
+
+13. Enter the details of each odor vial in the _Vials_ section. Ensure that the vial number matches the physical
+position in the olfactometer. Only enter details of odor vials that will be used in the olfactometer during the session
+with which this olfactometer configuration file will be loaded. Unused positions in the olfactometer must be left blank
+and zeroed in the file.
+    - Odor vials cannot have the same name in the _Odor name_ line edit box. To use more than one odor vial containing
+    the same odor name, differentiate between them by appending the vial number to the name.
+    
+    - Multiple flowrates can be listed for each odor vial by separating them with commas. They do not need to be sorted,
+    but keep in mind that if shuffling is disabled, the PC will iterate through them in the oder they are listed. Vials
+    can each have different flowrates listed and of different lengths. The flowrate represents the value for MFC 1 and
+    can range from 1 to the capacity of MFC 1.
+
+
+14. Enter the details of the dilutor if applicable.
+
+
+15. Click the _Save_ pushbutton to save to the existing file, or the _Save As_ pushbutton to create a new file. A file
+explorer dialog window will appear. Enter a name for the file and click _Save_ to finish.
+
+
+### Configuring Bpod Flex Channels
+
+The Bpod r2 Plus features four _Flex Channels_ that can each be configured independently as digital input, digital
+output, analog input, or analog output. The Flex Channels must be configured before running a session. To configure the
+Flex Channels:
+
+1. From the top menu bar, click on **Bpod** > **Configure Flex Channels**. The configuration window will appear.
+   ![Bpod_Flex_Channel_Settings](images/bpod_flex_channel_settings.png)
+   
+
+2. Select the desired channel type of each flex channel from the _Channel Type_ combo box of the respective channel
+column.
+
+3. Enter the threshold voltage that will trigger an event upon crossing in the _Threshold 1_ double spin box of the
+respective channel column.
+
+4. (Optional) Enter a second threshold voltage that will trigger another separate event upon crossing in the
+_Threshold 2_ double spin box of the respective channel column.
+
+5. Select the crossing polarity of the first threshold from the _Polarity 1_ combo box of the respective channel column.
+This defines the slope direction of the first threshold crossing.
+
+6. (Optional) Select a crossing polarity of the second threshold from the _Polarity 2_ combo box of the respective
+channel column. This defines the slope direction of the second threshold crossing.
+
+7. Select the threshold activation mode from the _Activation Mode_ combo box of the respective channel column. The
+options are:
+   - **Manual** -- thresholds inactivate when crossed and must be re-enabled by the state machine.
+   
+   - **Automatic** -- the two thresholds inactivate, but activate each other (so crossing 1 disables 1 and activates 2,
+   while crossing 2 disables 2 and activates 1). This mode can be used to generate a pair of events for each sniff.
+
+8. Enter the sampling period to use for all analog input channels in the _Sampling Period_ spin box.
+
+9. Click the _OK_ button to finish. The Bpod flex channels will be changed to the new settings.
+
+
+### Configuring Analog Input Module Settings
+
+If using the separate Analog Input Module with the Bpod, the settings must be configured before running a session. To
+configure the Analog Input Module Settings:
+
+1. From the top menu bar, click on **AnalogInputModule** > **Configure settings**. The configuration window will appear.
+   ![Analog Input Module Settings](images/analog_input_module_settings.png)
+
+
+2. Enter the number of channels on the Analog Input Module that will be used in the _Num Of Active Channels_ spin box.
+
+
+3. Enter the sampling rate to use for all channels in the _Sampling Rate (Hz)_ spin box.
+
+
+4. Select the input voltage range from the _Input Voltage Range_ combo box of the respective channel column.
+
+
+5. Enter the threshold voltage that will trigger an event upon crossing in the _Threshold Voltage_ double spin box of
+the respective channel column.
+
+
+6. Enter the reset voltage to be crossed before triggering an event again for the threshold voltage crossing in the
+_Reset Voltage_ double spin box of the respective channel column.
+
+
+7. Enable or disable event reporting to the state machine using the _Enable SM Event Reporting_ check box of the
+respective channel column. This must be enabled in order for the Analog Input Module to send a signal to the Bpod of the
+threshold crossing event.
+
+
+8. Enable or disable analog data streaming to the PC using the _Enable USB Streaming_ check box of the respective
+channel column. This must be enabled to view the analog data in the _Streaming Plot_ subwindow and to save the analog
+data to the .h5 file created with every session.
+
+
+9. Enable or disable analog data streaming to another module connected to the Analog Input Module using the _Enable
+Module Streaming_ check box of the respective channel column.
+
+
+10. Click the _OK_ button to finish. The Analog Input Module's settings will be updated to the new settings.

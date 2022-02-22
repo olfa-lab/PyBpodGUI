@@ -439,7 +439,7 @@ class ProtocolEditorDialog(QDialog, Ui_Dialog):
                 os.mkdir('protocol_files')
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Protocol File", directory="protocol_files", filter="JSON Files (*.json)", options=options)
+            fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Protocol File", directory="protocol_files/protocol_file_1.json", filter="JSON Files (*.json)", options=options)
             if fileName:
                 with open(fileName, 'w') as fname:
                     json.dump(self.allStatesDict, fname, indent=4)

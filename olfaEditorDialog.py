@@ -808,7 +808,7 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             os.mkdir('olfactometry_config_files')
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Config File", directory="olfactometry_config_files", filter="JSON Files (*.json)", options=options)
+        fileName, _ = QFileDialog.getSaveFileName(parent=self, caption="Save As New Config File", directory="olfactometry_config_files/olfa_config_file_1.json", filter="JSON Files (*.json)", options=options)
         if fileName:
             with open(fileName, 'w') as olfa_config:
                 json.dump(self.olfaConfigDict, olfa_config, indent=4)

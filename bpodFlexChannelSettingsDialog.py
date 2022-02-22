@@ -11,6 +11,7 @@ class BpodFlexChannelSettingsDialog(QDialog, Ui_Dialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.setWindowTitle("Bpod Flex Channel Settings")
         self.connectSignalsSlots()
         self.maxFlexVoltage = 5
         self.settingsDict = {

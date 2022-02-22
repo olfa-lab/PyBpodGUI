@@ -11,6 +11,7 @@ class AnalogInputModuleSettingsDialog(QDialog, Ui_Dialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.setWindowTitle("Analog Input Module Settings")
         self.connectSignalsSlots()
         self._rangeLimits = {'-10V:10V': [-10.0, 10.0], '-5V:5V': [-5.0, 5.0], '-2.5V:2.5V': [-2.5, 2.5],'0V:10V': [0.0, 10.0]}
         self.settingsDict = {

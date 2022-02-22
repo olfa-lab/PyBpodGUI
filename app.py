@@ -59,6 +59,7 @@ class Window(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle("PyBpod GUI")
         self.createMdiSubWindows()
         self.connectSignalsSlots()
         self.olfas = None
@@ -323,7 +324,8 @@ class Window(QMainWindow, Ui_MainWindow):
             try:
                 self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
                 self.olfas.show()
-            except SerialException:
+            except SerialException as err:
+                QMessageBox.critical(self, "Error", f"Cannot connect to olfactometer.\n{err}")
                 if self.olfas:
                     self.olfas.close_serials()  # close serial ports and let the user try again.
                     del self.olfas
