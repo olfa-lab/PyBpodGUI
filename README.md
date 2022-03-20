@@ -1,6 +1,6 @@
 # PyBpodGUI
 
-PyBpodGUI is a GUI utility to run neuroscience experiments with the _Bpod_ system by [Sanworks](https://sanworks.io/).
+PyBpodGUI is a multi-threaded GUI utility to run neuroscience experiments with the _Bpod_ system by [Sanworks](https://sanworks.io/).
 The GUI is written in Python using PyQt5 and connectivity to the _Bpod_ system is made possible thanks to the
 [PyBpod API](https://pybpod.readthedocs.io/en/v1.8.1/) by the [Champalimaud Foundation](https://fchampalimaud.org/champalimaud-research/).
 The PyBpod API is based on the _Bpod_ system's [MATLAB API](https://github.com/sanworks) by Josh Sanders of Sanworks.
@@ -9,38 +9,42 @@ The PyBpod API is based on the _Bpod_ system's [MATLAB API](https://github.com/s
 
 1. Download and install Anaconda or Miniconda from the [conda website](https://docs.conda.io/projects/conda/en/latest/user-guide/install/download.html).
 2. Open Anaconda Prompt or Anaconda Powershell Prompt (they can be found in a new Start Menu folder called _Anaconda3_).
-3. Create a conda environment named _pybpodenv_ and install Git and Python v3.6 with:
+3. Create a conda environment named _pybpodenv_ and install Python v3.6 with:
     ```
-    conda create -n pybpodenv git python=3.6
+    conda create -n pybpodenv python=3.6
     ```
 4. Activate the newly created conda environment with:
     ```
     conda activate pybpodenv
     ```
-5. Navigate to a desired directory in which the repositories will be cloned (e.g. create a new folder called _pybpod_):
+5. (Optional) Install Git if not already installed on the local system.
+   ```
+   conda install -c conda-forge git
+   ```
+6. Navigate to a desired directory in which the repositories will be cloned (e.g. create a new folder called _pybpod_):
     ```
     mkdir pybpod
     cd pybpod
     ```
-6. Clone the [PyBpod API repository](https://github.com/olfa-lab/pybpod-api) into a new folder called _pybpod-api_ with:
+7. Clone the [PyBpod API repository](https://github.com/olfa-lab/pybpod-api) into a new folder called _pybpod-api_ with:
     ```
     git clone https://github.com/olfa-lab/pybpod-api.git pybpod-api
     ```
-7. Navigate into the new folder and install the PyBpod API in developer mode with (note the period at the end):
+8. Navigate into the new folder and install the PyBpod API in developer mode with (note the period at the end):
     ```
     cd pybpod-api
     pip install -e .
     ```
-8. Navigate out of the _pybpod-api_ folder and clone the PyBpodGUI (this) repository into a new folder called _PyBpodGUI_ with:
+9. Navigate out of the _pybpod-api_ folder and clone the PyBpodGUI (this) repository into a new folder called _PyBpodGUI_ with:
     ```
     cd ..
     git clone https://github.com/olfa-lab/PyBpodGUI.git PyBpodGUI
     ```
-9. Navigate into the new folder and install the following required packages with:
-   ```
-   cd PyBpodGUI
-   pip install pyqt5-tools pyqtgraph matplotlib tables
-   ```
+10. Navigate into the new folder and install the following required packages with:
+    ```
+    cd PyBpodGUI
+    pip install pyqt5-tools pyqtgraph matplotlib tables
+    ```
 
 ## How to Use
 
@@ -487,3 +491,14 @@ Module Streaming_ check box of the respective channel column.
 
 
 10. Click the _OK_ button to finish. The Analog Input Module's settings will be updated to the new settings.
+
+
+### Viewing Saved Data
+
+Results of every session are saved in an HDF5 file (.h5 extension) in the `results/` folder within location where the
+repository was cloned to on the local system. It is automatically created when running a session for the first time.
+The results files can be viewed with the [HDF5View](https://www.hdfgroup.org/downloads/hdfview) application. Data is
+saved using [PyTables](https://www.pytables.org/) and is organized in tables, and similar tables are organized in
+groups.
+
+![Viewing_Results](images/viewing_results.png)
