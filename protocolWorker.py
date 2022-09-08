@@ -657,7 +657,6 @@ class ProtocolWorker(QObject):
                 rightAction = 'Correct'
                 rewardValve = self.rightWaterValvePort
                 rewardDuration = self.rightWaterDuration
-
             self.sma = StateMachine(self.bpod)
             listOfTuples = []
 
@@ -740,7 +739,7 @@ class ProtocolWorker(QObject):
                 )
 
                 listOfTuples = []  # reset to empty list.
-
+            print(type(self.sma))
             self.currentResponseResult = '--'  # reset until bpod gets response result.
             self.responseResultSignal.emit(self.currentResponseResult)
             currentTrialInfo = self.getCurrentTrialInfoDict()

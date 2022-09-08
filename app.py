@@ -480,6 +480,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushRightWaterButton.setEnabled(False)
 
     def runTask(self):
+
         if (self.mouseNumberLineEdit.text() == ''):
             QMessageBox.warning(self, "Warning", "Please enter mouse number!")
             return

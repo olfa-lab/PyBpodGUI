@@ -87,7 +87,7 @@
             "cassette_1_sn": 1222,
             "cassette_2_sn": 1234,
             "cleandate": 20140101,
-            "com_port": 5,
+            "com_port": 7,
             "interface": "teensy",
             "master_sn": 212,
             "slave_index": 1
