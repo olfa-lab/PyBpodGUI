@@ -13,7 +13,7 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 class StreamingWorker(QObject):  
-    def __init__(self, maxt=2, dt=0.02, ymin=-1.0, ymax=1.0, plotInterval=5):
+    def __init__(self, maxt=2, dt=0.02, ymin=-1.0, ymax=1.0, plotInterval=5, sniffth = 1):
         super().__init__()
         self.dynamic_canvas = FigureCanvas(Figure(figsize=(10, 3)))
 
@@ -31,14 +31,19 @@ class StreamingWorker(QObject):
         self.port_2_Data = [np.nan]
         self.port_3_Data = [np.nan]
         self.port_4_Data = [np.nan]
+        self.sniffth = sniffth
 
+        self.attemptime = [ 0, maxt]
+        self.sniffthdata = [ self.sniffth, self.sniffth]
         self.line = Line2D(self.tdata, self.ydata, animated=True)
+        self.sniffthline = Line2D(self.attemptime, self.sniffthdata,  color='k', dashes=(1, 1), animated=False)
         self.port_1_Line = Line2D(self.tdata, self.port_1_Data, color='b', marker='.', animated=True)
         self.port_2_Line = Line2D(self.tdata, self.port_2_Data, color='b', marker='.', animated=True)
         self.port_3_Line = Line2D(self.tdata, self.port_3_Data, color='b', marker='.', animated=True)
         self.port_4_Line = Line2D(self.tdata, self.port_4_Data, color='b', marker='.', animated=True)
         
         self.ax.add_line(self.line)
+        self.ax.add_line(self.sniffthline)
         self.ax.add_line(self.port_1_Line)
         self.ax.add_line(self.port_2_Line)
         self.ax.add_line(self.port_3_Line)
@@ -97,6 +102,14 @@ class StreamingWorker(QObject):
         del self.anim  # Then I delete the object.
         self.animate()  # Then I call animate() again to re-create the FuncAnimation with the new interval.
     
+    def setSniffLine(self, value):
+        self.sniffth = value/1000
+        self.attemptime = [ 0, self.maxt]
+        self.sniffthdata = [ self.sniffth, self.sniffth]
+
+        self.sniffthline.set_data(self.attemptime,self.sniffthdata )
+        self.ax.figure.canvas.draw()
+
     def update(self, y):
         currentTimer = time.perf_counter()
         self.plotTimer = round(((currentTimer - self.previousTimer) * 1000), 3)     # the first reading will be erroneous

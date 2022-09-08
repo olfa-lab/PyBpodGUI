@@ -98,7 +98,7 @@ class Window(QMainWindow, Ui_MainWindow):
         # self.currentTrialSubWindow.resize(720, 230)
         self.mdiArea.addSubWindow(self.currentTrialSubWindow)
 
-        self.streaming = StreamingWorker(self.maxtSpinBox.value(), self.dtDoubleSpinBox.value(), self.yMinDoubleSpinBox.value(), self.yMaxDoubleSpinBox.value(), self.plotIntervalSpinBox.value())
+        self.streaming = StreamingWorker(self.maxtSpinBox.value(), self.dtDoubleSpinBox.value(), self.yMinDoubleSpinBox.value(), self.yMaxDoubleSpinBox.value(), self.plotIntervalSpinBox.value(),  self.sniffThresholdSpinBox.value())
         self.streamingWidget = self.streaming.getFigure()
         self.streamingWidget.setMinimumSize(500, 250)
         self.streamingPlotSubWindowWidgetGridLayout.addWidget(self.streamingWidget, 0, 2, 5, 1)
@@ -185,7 +185,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.maxtSpinBox.valueChanged.connect(lambda maxt: self.streaming.setXaxis(maxt))
         self.dtDoubleSpinBox.valueChanged.connect(lambda dt: self.streaming.set_dt(dt))
         self.plotIntervalSpinBox.valueChanged.connect(lambda x: self.streaming.setPlotInterval(x))
-
+        self.sniffThresholdSpinBox.valueChanged.connect(lambda sniffth: self.streaming.setSniffLine(self.sniffThresholdSpinBox.value()))
+        
         self.leftSensorPortNumComboBox.currentTextChanged.connect(self.recordLeftSensorPort)
         self.leftWaterValvePortNumComboBox.currentTextChanged.connect(self.recordLeftWaterValvePort)
         self.leftWaterValveDurationSpinBox.valueChanged.connect(self.recordLeftWaterValveDuration)
