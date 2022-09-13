@@ -26,7 +26,7 @@ from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
 from analogInputModuleSettingsDialog import AnalogInputModuleSettingsDialog
 from bpodFlexChannelSettingsDialog import BpodFlexChannelSettingsDialog
-
+from PyQt5.QtGui import QPixmap
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
@@ -128,6 +128,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.resultsPlotSubWindow.resize(300, 320)
         self.mdiArea.addSubWindow(self.resultsPlotSubWindow)
 
+
+
         self.flowUsagePlot = FlowUsagePlotWorker()
         self.flowUsagePlotSubWindowWidgetGridLayout.addWidget(self.flowUsagePlot.getWidget(), 1, 0, 1, 3)
         self.flowUsagePlotSubWindow = MyQMdiSubWindow()
@@ -137,6 +139,18 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         self.flowUsagePlotSubWindow.resize(300, 320)
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
+
+
+        
+        #self.resultsPlot = ResultsPlotWorker()
+        #self.trialPlaybackSubWindowWidgetGridLayout.addWidget(self.resultsPlot.getWidget(), 1, 0, 1, 3)
+        self.trialPlaybackSubWindow = MyQMdiSubWindow()
+        #self.trialPlaybackSubWindow.closed.connect(self.updateViewMenu)
+        self.trialPlaybackSubWindow.setObjectName("trialPlaybackSubWindow")
+        self.trialPlaybackSubWindow.setWidget(self.trialPlaybackSubWindowWidget)
+        self.trialPlaybackSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
+        self.trialPlaybackSubWindow.resize(300, 320)
+        self.mdiArea.addSubWindow(self.trialPlaybackSubWindow)
 
     def connectSignalsSlots(self):
         self.startButton.clicked.connect(self.runTask)
@@ -155,6 +169,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotCombineAllVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(0))
         self.flowUsagePlotCombineLikeVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(1))
         self.flowUsagePlotSeparateVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(2))
+        self.playLastTrial_Button.clicked.connect(self.playLastTrial)
+
+
 
         self.actionNewProtocol.triggered.connect(self.launchProtocolEditor)
         self.actionOpenProtocol.triggered.connect(self.openProtocolFileNameDialog)
@@ -194,6 +211,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValvePortNumComboBox.currentTextChanged.connect(self.recordRightWaterValvePort)
         self.rightWaterValveDurationSpinBox.valueChanged.connect(self.recordRightWaterValveDuration)
         self.finalValvePortNumComboBox.currentTextChanged.connect(self.recordFinalValvePort)
+    
+
+    def playLastTrial(self):
+        fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
+        self.pixmap = QPixmap(fname[0])
+        self.videoLabel.setPixmap(self.pixmap) 
+        self.videoLabel.setScaledContents(True)
 
     def loadDefaults(self):
         if os.path.exists("defaults.json"):

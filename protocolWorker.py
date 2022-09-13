@@ -729,7 +729,11 @@ class ProtocolWorker(QObject):
                             listOfTuples.append((channelName, i))  # i is the port numbers in the list, such as when opening multiple valves or LEDs simultaneously.
                     else:
                         listOfTuples.append((channelName, channelValue))                       
-
+                
+                print(self.bpod._hardware.outputs)
+                print(self.bpod._hardware.inputs)
+                print(self.bpod._hardware.channels)
+                
                 # Now add the updated state to the state machine.
                 self.sma.add_state(
                     state_name=state['stateName'],
@@ -737,13 +741,22 @@ class ProtocolWorker(QObject):
                     state_change_conditions=state['stateChangeConditions'],
                     output_actions=listOfTuples
                 )
+                print(self.sma.manifest)
 
                 listOfTuples = []  # reset to empty list.
+            
+            for timer in self.stateMachine['timers']:
+                self.sma.set_global_timer(**timer) # Camera
+
+
+            # Add the timers from whatever you read from json file
+            #
             print(type(self.sma))
             self.currentResponseResult = '--'  # reset until bpod gets response result.
             self.responseResultSignal.emit(self.currentResponseResult)
             currentTrialInfo = self.getCurrentTrialInfoDict()
             self.newTrialInfoSignal.emit(currentTrialInfo)
+            
 
             try:
                 self.bpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
