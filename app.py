@@ -6,9 +6,10 @@ from serial.serialutil import SerialException
 import serial.tools.list_ports
 import serial
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow
-from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDialog, QFileDialog, QMdiSubWindow, QSlider, QStyle
+from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt, QUrl, QDir
 from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 
 from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
@@ -27,7 +28,10 @@ from olfaEditorDialog import OlfaEditorDialog
 from analogInputModuleSettingsDialog import AnalogInputModuleSettingsDialog
 from bpodFlexChannelSettingsDialog import BpodFlexChannelSettingsDialog
 from PyQt5.QtGui import QPixmap
-
+import numpy as np
+import skimage.io as skio
+import cv2
+#from tiffutils import *
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
@@ -169,8 +173,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotCombineAllVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(0))
         self.flowUsagePlotCombineLikeVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(1))
         self.flowUsagePlotSeparateVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(2))
-        self.playLastTrial_Button.clicked.connect(self.playLastTrial)
-
+        
 
 
         self.actionNewProtocol.triggered.connect(self.launchProtocolEditor)
@@ -211,13 +214,92 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValvePortNumComboBox.currentTextChanged.connect(self.recordRightWaterValvePort)
         self.rightWaterValveDurationSpinBox.valueChanged.connect(self.recordRightWaterValveDuration)
         self.finalValvePortNumComboBox.currentTextChanged.connect(self.recordFinalValvePort)
+
+        self.positionSlider.sliderMoved.connect(self.setPosition)
+        self.playLastTrial_Button.clicked.connect(self.playLastTrial)
+        self.videoLabel.stateChanged.connect(self.mediaStateChanged)
+        self.videoLabel.positionChanged.connect(self.positionChanged)
+        self.videoLabel.durationChanged.connect(self.durationChanged)
+        self.videoLabel.error.connect(self.handleError)
+        
     
+    def openFile(self):
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open Movie",
+                QDir.homePath())
+ 
+        if fileName != '':
+            self.mediaPlayer.setMedia(
+                    QMediaContent(QUrl.fromLocalFile(fileName)))
+            self.playLastTrial_Button.setEnabled(True)
+
+    def play(self):
+        if self.videoLabel.state() == QMediaPlayer.PlayingState:
+            self.videoLabel.pause()
+        else:
+            self.videoLabel.play()
+
+    def setPosition(self, position):
+        self.videoLabel.setPosition(position)
+
+    def mediaStateChanged(self, state):
+        if self.videoLabel.state() == QMediaPlayer.PlayingState:
+            self.playLastTrial_Button.setIcon(
+                    self.style().standardIcon(QStyle.SP_MediaPause))
+        else:
+            self.playLastTrial_Button.setIcon(
+                    self.style().standardIcon(QStyle.SP_MediaPlay))
+
+    def positionChanged(self, position):
+        self.positionSlider.setValue(position)
+
+    def durationChanged(self, duration):
+        self.positionSlider.setRange(0, duration)
+
+    def handleError(self):
+        self.playLastTrial_Button.setEnabled(False)
+        #self.errorLabel.setText("Error: " + self.videoLabel.errorString())
 
     def playLastTrial(self):
         fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
-        self.pixmap = QPixmap(fname[0])
-        self.videoLabel.setPixmap(self.pixmap) 
-        self.videoLabel.setScaledContents(True)
+        
+        
+        imstack1    = skio.imread(fname[0])
+        meanframe = np.mean(imstack1[:100,:,:], axis = 0)
+        normstack = imstack1 - meanframe
+        print(type(imstack1), imstack1.shape)
+        video_name = 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        fps = 30
+        vidshape = np.shape(normstack)
+        perc20 = np.percentile(normstack, 1)
+        perc95 = np.percentile(normstack, 99.99)
+        normstack[normstack < perc20] = perc20
+        normstack[normstack > perc95] = perc95
+        normstackn = normstack - np.amin(normstack)
+        normstackn = normstackn / np.amax(normstackn)
+        print(type(normstackn), normstackn.shape)
+        vidin = 255 * normstackn
+        vidint = vidin.astype('uint8')
+
+        writer = cv2.VideoWriter(video_name, fourcc, fps, (vidshape[1], vidshape[2]), False)
+        for i in range(vidshape[0]):
+            x = vidint[i,:,:]
+            writer.write(x)
+        
+        writer.release()
+        print('done')
+
+        self.videoLabel.setMedia(
+                    QMediaContent(QUrl.fromLocalFile(video_name)))
+        self.playLastTrial_Button.setEnabled(True)
+        
+
+        # self.videoLabel.setMedia(
+        #             QMediaContent(QUrl.fromLocalFile(fname[0])))
+        # self.playLastTrial_Button.setEnabled(True)
+  
+        self.play()
+        
 
     def loadDefaults(self):
         if os.path.exists("defaults.json"):
