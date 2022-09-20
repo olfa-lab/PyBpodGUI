@@ -20,6 +20,7 @@ class ProtocolWorker(QObject):
     responseResultSignal = pyqtSignal(str)  # sends the response result of the current trial with it to update the GUI.
     totalsDictSignal = pyqtSignal(dict)  # sends the session totals with it to update the GUI.
     resultsCounterListSignal = pyqtSignal(list) # sends the results for each flow rate with it to update the GUI's results plot.
+    saveVideoSignal = pyqtSignal(int)
     saveTrialDataDictSignal = pyqtSignal(dict)  # 'dict' is interpreted as 'QVariantMap' by PyQt5 and thus can only have strings as keys. Use 'object' instead if you want to use non-strings as keys. 
     saveTotalResultsSignal = pyqtSignal(dict)
     noResponseAbortSignal = pyqtSignal()
@@ -769,7 +770,7 @@ class ProtocolWorker(QObject):
 
             self.currentStateName = 'exit'
             self.stimIndex = 0
-            
+            self.saveVideoSignal.emit(1)
             if self.saveTrial:
                 endOfTrialDict = self.getEndOfTrialInfoDict()
                 self.saveTrialDataDictSignal.emit(endOfTrialDict)

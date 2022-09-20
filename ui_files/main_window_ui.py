@@ -385,9 +385,9 @@ class Ui_MainWindow(object):
         self.trialPlaybackSubWindowWidget = QtWidgets.QWidget()
         self.trialPlaybackSubWindowWidget.setObjectName("trialPlaybackSubWindowWidget")
 
-        self.videoLabel =  QMediaPlayer(None, QMediaPlayer.VideoSurface)    
+        self.mediaplayer =  QMediaPlayer(None, QMediaPlayer.VideoSurface)    
         videoWidget = QVideoWidget() # JH
-        self.videoLabel.setVideoOutput(videoWidget)
+        self.mediaplayer.setVideoOutput(videoWidget)
         self.playLastTrial_Button = QtWidgets.QPushButton(self.trialPlaybackSubWindowWidget)
         self.playLastTrial_Button.setGeometry(QtCore.QRect(90, 180, 75, 23))
         self.playLastTrial_Button.setObjectName("playLastTrial_Button")

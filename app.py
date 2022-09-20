@@ -20,6 +20,7 @@ from ui_files.main_window_ui import Ui_MainWindow
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
 from protocolWorker import ProtocolWorker
+from playbackWorker import PlaybackWorker
 from streamingWorker import StreamingWorker
 from flowUsagePlotWorker import FlowUsagePlotWorker
 from resultsPlotWorker import ResultsPlotWorker
@@ -146,7 +147,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
         
-        #self.resultsPlot = ResultsPlotWorker()
+        self.mediaPlayer = PlaybackWorker(self.mediaplayer, self.playLastTrial_Button, self.positionSlider)
         #self.trialPlaybackSubWindowWidgetGridLayout.addWidget(self.resultsPlot.getWidget(), 1, 0, 1, 3)
         self.trialPlaybackSubWindow = MyQMdiSubWindow()
         #self.trialPlaybackSubWindow.closed.connect(self.updateViewMenu)
@@ -215,91 +216,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveDurationSpinBox.valueChanged.connect(self.recordRightWaterValveDuration)
         self.finalValvePortNumComboBox.currentTextChanged.connect(self.recordFinalValvePort)
 
-        self.positionSlider.sliderMoved.connect(self.setPosition)
-        self.playLastTrial_Button.clicked.connect(self.playLastTrial)
-        self.videoLabel.stateChanged.connect(self.mediaStateChanged)
-        self.videoLabel.positionChanged.connect(self.positionChanged)
-        self.videoLabel.durationChanged.connect(self.durationChanged)
-        self.videoLabel.error.connect(self.handleError)
-        
-    
-    def openFile(self):
-        fileName, _ = QFileDialog.getOpenFileName(self, "Open Movie",
-                QDir.homePath())
- 
-        if fileName != '':
-            self.mediaPlayer.setMedia(
-                    QMediaContent(QUrl.fromLocalFile(fileName)))
-            self.playLastTrial_Button.setEnabled(True)
-
-    def play(self):
-        if self.videoLabel.state() == QMediaPlayer.PlayingState:
-            self.videoLabel.pause()
-        else:
-            self.videoLabel.play()
-
-    def setPosition(self, position):
-        self.videoLabel.setPosition(position)
-
-    def mediaStateChanged(self, state):
-        if self.videoLabel.state() == QMediaPlayer.PlayingState:
-            self.playLastTrial_Button.setIcon(
-                    self.style().standardIcon(QStyle.SP_MediaPause))
-        else:
-            self.playLastTrial_Button.setIcon(
-                    self.style().standardIcon(QStyle.SP_MediaPlay))
-
-    def positionChanged(self, position):
-        self.positionSlider.setValue(position)
-
-    def durationChanged(self, duration):
-        self.positionSlider.setRange(0, duration)
-
-    def handleError(self):
-        self.playLastTrial_Button.setEnabled(False)
-        #self.errorLabel.setText("Error: " + self.videoLabel.errorString())
-
-    def playLastTrial(self):
-        fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
-        
-        
-        imstack1    = skio.imread(fname[0])
-        meanframe = np.mean(imstack1[:100,:,:], axis = 0)
-        normstack = imstack1 - meanframe
-        print(type(imstack1), imstack1.shape)
-        video_name = 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        fps = 30
-        vidshape = np.shape(normstack)
-        perc20 = np.percentile(normstack, 1)
-        perc95 = np.percentile(normstack, 99.99)
-        normstack[normstack < perc20] = perc20
-        normstack[normstack > perc95] = perc95
-        normstackn = normstack - np.amin(normstack)
-        normstackn = normstackn / np.amax(normstackn)
-        print(type(normstackn), normstackn.shape)
-        vidin = 255 * normstackn
-        vidint = vidin.astype('uint8')
-
-        writer = cv2.VideoWriter(video_name, fourcc, fps, (vidshape[1], vidshape[2]), False)
-        for i in range(vidshape[0]):
-            x = vidint[i,:,:]
-            writer.write(x)
-        
-        writer.release()
-        print('done')
-
-        self.videoLabel.setMedia(
-                    QMediaContent(QUrl.fromLocalFile(video_name)))
-        self.playLastTrial_Button.setEnabled(True)
+        self.positionSlider.sliderMoved.connect(self.mediaPlayer.setPosition)
+        self.playLastTrial_Button.clicked.connect(self.mediaPlayer.playLastTrial)
+        self.mediaplayer.stateChanged.connect(self.mediaPlayer.mediaStateChanged)
+        self.mediaplayer.positionChanged.connect(self.mediaPlayer.positionChanged)
+        self.mediaplayer.durationChanged.connect(self.mediaPlayer.durationChanged)
+        self.mediaplayer.error.connect(self.mediaPlayer.handleError)
         
 
-        # self.videoLabel.setMedia(
-        #             QMediaContent(QUrl.fromLocalFile(fname[0])))
-        # self.playLastTrial_Button.setEnabled(True)
-  
-        self.play()
-        
 
     def loadDefaults(self):
         if os.path.exists("defaults.json"):
@@ -612,6 +536,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.runSaveDataThread()
         self.runInputEventThread()
         self.runProtocolThread()
+        self.runPlaybackThread()
 
         if not self.streaming.startAnimation():
             self.streaming.resetPlot()
@@ -1082,7 +1007,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")
 
-
+    def runPlaybackThread(self):
+        self.playbackThread = QThread(parent=self)
+        self.mediaPlayer.moveToThread(self.playbackThread)
+        self.protocolWorker.saveVideoSignal.connect(self.mediaPlayer.playLastTrial)
+        self.protocolWorker.finished.connect(self.playbackThread.quit)
+        self.playbackThread.start()
 if __name__ == "__main__":
     # Check whether there is already a running QApplication (e.g., if running
     # from an IDE).
