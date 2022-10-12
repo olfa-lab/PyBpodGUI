@@ -29,12 +29,15 @@ from olfaEditorDialog import OlfaEditorDialog
 from analogInputModuleSettingsDialog import AnalogInputModuleSettingsDialog
 from bpodFlexChannelSettingsDialog import BpodFlexChannelSettingsDialog
 from PyQt5.QtGui import QPixmap
+from imageAcquisition import MicroManagerPrime95B
 import numpy as np
 import skimage.io as skio
 import cv2
 #from tiffutils import *
 logging.basicConfig(format="%(message)s", level=logging.INFO)
+from time import sleep
 
+ACQ_CONFIG_FILE = os.path.abspath(r'.default_acq')
 
 class MyQMdiSubWindow(QMdiSubWindow):
     '''
@@ -65,6 +68,7 @@ class Window(QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowTitle("PyBpod GUI")
+        self.camera = None
         self.createMdiSubWindows()
         self.connectSignalsSlots()
         self.olfas = None
@@ -84,6 +88,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.isPaused = False
         self.loadDefaults()
 
+        
         ## fix for QThread deleted error:
         ## I think that the error is caused when you run a new experiment because it sets the thread variable to a new thread leaving the previous thread open for garbage collection. I think that when the thread object is destroyed Qt throws an error because the underlying os thread is still running.
         ## instead of figuring out how to fix that, I'm using a hack wher I simply add the old thread to a list to prevent garbage collection
@@ -147,7 +152,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
         
-        self.mediaPlayer = PlaybackWorker(self.mediaplayer, self.playLastTrial_Button, self.positionSlider)
+        self.mediaPlayer = PlaybackWorker(self.mediaplayer, self.playLastTrial_Button, self.positionSlider, self.camera)
         #self.trialPlaybackSubWindowWidgetGridLayout.addWidget(self.resultsPlot.getWidget(), 1, 0, 1, 3)
         self.trialPlaybackSubWindow = MyQMdiSubWindow()
         #self.trialPlaybackSubWindow.closed.connect(self.updateViewMenu)
@@ -223,7 +228,16 @@ class Window(QMainWindow, Ui_MainWindow):
         self.mediaplayer.durationChanged.connect(self.mediaPlayer.durationChanged)
         self.mediaplayer.error.connect(self.mediaPlayer.handleError)
         
+        self.experimentTypeComboBox.currentTextChanged.connect(self.setExperimentType)
 
+    def setExperimentType(self):
+        if self.experimentTypeComboBox.currentIndex() == 1:
+            self.experimentType = 'Imaging'
+            self.imaging = 1
+        else:
+            self.experimentType = 'Behavior'
+            self.imaging = 0
+        print(self.experimentType)
 
     def loadDefaults(self):
         if os.path.exists("defaults.json"):
@@ -404,7 +418,9 @@ class Window(QMainWindow, Ui_MainWindow):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Open Olfactometer Configuration File", directory="olfactometry_config_files", filter="JSON Files (*.json)", options=options)
+        print(fileName)
         if fileName:
+            print(fileName)
             self.olfaConfigFileName = fileName
             self.olfaFileLineEdit.setText(fileName)
 
@@ -521,6 +537,11 @@ class Window(QMainWindow, Ui_MainWindow):
         elif (self.protocolFileName == ''):
             QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
             return
+
+        if self.imaging:
+                self.camera = MicroManagerPrime95B(ACQ_CONFIG_FILE)                
+                self.camera.set_camera_data_dir('H:\\repos\\PyBpodGUI\\camera_data')
+
 
         # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
         # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
@@ -976,7 +997,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.oldProtocolThreads.append(self.protocolThread)
 
         self.protocolWorker = ProtocolWorker(
-            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentIndex(), self.shuffleMultiplierSpinBox.value(),
+            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentIndex(), self.camera, self.shuffleMultiplierSpinBox.value(),
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
             int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
             self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
@@ -991,7 +1012,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
         self.protocolWorker.stateNumSignal.connect(self.updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self.updateResponseResult)
-        self.protocolWorker.newTrialInfoSignal.connect(self.updateCurrentTrialInfo)  # This works without lambda because 'self.updateCurrentTrialInfo' is in the main thread.
+        self.protocolWorker.newTrialInfoSignal.connect(self.updateCurrentTrialInfo)  # This works without lambda because 'self.updateCurrentTrialInfo' is in the main thread. # the input to the function is the trial_dict
         self.protocolWorker.resultsCounterListSignal.connect(self.resultsPlot.updatePlot)
         self.protocolWorker.resultsCounterListSignal.connect(self.flowUsagePlot.updatePlot)
         self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
@@ -1012,6 +1033,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.mediaPlayer.moveToThread(self.playbackThread)
         self.protocolWorker.saveVideoSignal.connect(self.mediaPlayer.playLastTrial)
         self.protocolWorker.finished.connect(self.playbackThread.quit)
+        sleep(5)
         self.playbackThread.start()
 if __name__ == "__main__":
     # Check whether there is already a running QApplication (e.g., if running

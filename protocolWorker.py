@@ -34,7 +34,7 @@ class ProtocolWorker(QObject):
     finished = pyqtSignal()
 
     def __init__(self,
-            bpodObject, protocolFileName, olfaConfigFileName, experimentType, shuffleMultiplier, leftSensorPort, leftWaterValvePort, leftWaterValveDuration, 
+            bpodObject, protocolFileName, olfaConfigFileName, experimentType, camera, shuffleMultiplier, leftSensorPort, leftWaterValvePort, leftWaterValveDuration,
             rightSensorPort, rightWaterValvePort, rightWaterValveDuration, finalValvePort, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1
         ):
         super(ProtocolWorker, self).__init__()
@@ -45,6 +45,7 @@ class ProtocolWorker(QObject):
         self.protocolFileName = protocolFileName
         self.olfaConfigFileName = olfaConfigFileName
         self.experimentType = experimentType
+        self.camera = camera
         self.shuffleMultiplier = shuffleMultiplier
         self.correctResponse = ''
         self.currentTrialNum = 1
@@ -731,9 +732,9 @@ class ProtocolWorker(QObject):
                     else:
                         listOfTuples.append((channelName, channelValue))                       
                 
-                print(self.bpod._hardware.outputs)
-                print(self.bpod._hardware.inputs)
-                print(self.bpod._hardware.channels)
+                # print(self.bpod._hardware.outputs) # this prints a lot of stuff
+                # print(self.bpod._hardware.inputs)
+                # print(self.bpod._hardware.channels)
                 
                 # Now add the updated state to the state machine.
                 self.sma.add_state(
@@ -742,7 +743,7 @@ class ProtocolWorker(QObject):
                     state_change_conditions=state['stateChangeConditions'],
                     output_actions=listOfTuples
                 )
-                print(self.sma.manifest)
+                # print(self.sma.manifest)
 
                 listOfTuples = []  # reset to empty list.
             
@@ -752,12 +753,27 @@ class ProtocolWorker(QObject):
 
             # Add the timers from whatever you read from json file
             #
-            print(type(self.sma))
+            # print(type(self.sma))
             self.currentResponseResult = '--'  # reset until bpod gets response result.
             self.responseResultSignal.emit(self.currentResponseResult)
             currentTrialInfo = self.getCurrentTrialInfoDict()
             self.newTrialInfoSignal.emit(currentTrialInfo)
             
+
+            if self.camera is not None:
+                try:
+
+                    print('The trial number for saving camera data is {:03d}'.format(currentTrialInfo['currentTrialNum']))
+                    self.camera.set_prefix(r'Trial_{:03d}'.format(currentTrialInfo['currentTrialNum']))
+                    self.camera.start_acquisition()
+                    print('Camera initialized')
+
+                except TimeoutError as timeout_error:
+                    self.show_message_box(window_title='Error Initializing Camera',
+                                      icon=QMessageBox.Critical,
+                                      text=str(timeout_error))
+
+
 
             try:
                 self.bpod.send_state_machine(self.sma)  # Send state machine description to Bpod device

@@ -2,7 +2,6 @@
     "Dilutors": [],
     "Olfactometers": [
         {
-            "Dilutors": [],
             "MFCs": [
                 {
                     "MFC_type": "analog",
@@ -29,57 +28,57 @@
                 },
                 "5": {
                     "conc": 0.1,
-                    "odor": "limonene_5",
+                    "odor": "Methyl Valerate",
                     "flows": [
-                        10,
-                        14,
-                        19,
-                        27,
-                        37,
-                        52,
-                        72,
                         100
                     ]
                 },
                 "6": {
                     "conc": 0.1,
-                    "odor": "limonene_6",
+                    "odor": "Ethyl Tiglate",
                     "flows": [
-                        10,
-                        14,
-                        19,
-                        27,
-                        37,
-                        52,
-                        72,
                         100
                     ]
                 },
                 "7": {
                     "conc": 0.1,
-                    "odor": "pinene_7",
+                    "odor": "Benzaldehyde",
                     "flows": [
-                        10,
-                        14,
-                        19,
-                        27,
-                        37,
-                        52,
-                        72,
                         100
                     ]
                 },
                 "8": {
                     "conc": 0.1,
-                    "odor": "pinene_8",
+                    "odor": "Hexanal",
                     "flows": [
-                        10,
-                        14,
-                        19,
-                        27,
-                        37,
-                        52,
-                        72,
+                        100
+                    ]
+                },
+                "9": {
+                    "odor": "empty",
+                    "conc": 0.0001,
+                    "flows": [
+                        100
+                    ]
+                },
+                "10": {
+                    "odor": "empty",
+                    "conc": 0.0002,
+                    "flows": [
+                        100
+                    ]
+                },
+                "11": {
+                    "odor": "empty",
+                    "conc": 0.00030000000000000003,
+                    "flows": [
+                        100
+                    ]
+                },
+                "12": {
+                    "odor": "empty",
+                    "conc": 0.0004,
+                    "flows": [
                         100
                     ]
                 }
@@ -87,7 +86,7 @@
             "cassette_1_sn": 1222,
             "cassette_2_sn": 1234,
             "cleandate": 20140101,
-            "com_port": 7,
+            "com_port": 4,
             "interface": "teensy",
             "master_sn": 212,
             "slave_index": 1

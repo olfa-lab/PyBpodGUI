@@ -1,4 +1,5 @@
 import collections
+from time import sleep
 import numpy as np
 import logging
 import time
@@ -20,11 +21,13 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 class PlaybackWorker(QObject):  
-    def __init__(self, mediaplayer,playLastTrial_Button , positionSlider):
+    def __init__(self, mediaplayer, playLastTrial_Button, positionSlider, camera):
         super().__init__()
         self.positionSlider = positionSlider
         self.mediaplayer = mediaplayer
         self.playLastTrial_Button = playLastTrial_Button
+        self.camera = camera
+        self.lastTrialVideo = None
     
     def play(self):
         if self.mediaplayer.state() == QMediaPlayer.PlayingState:
@@ -54,24 +57,29 @@ class PlaybackWorker(QObject):
         #self.errorLabel.setText("Error: " + self.videoLabel.errorString())
 
     def findLastTrialVideo(self):
-        folder = 'R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages'
-
-
-        list_of_files = glob.glob(folder +'\\*') # * means all if need specific format then *.csv
-        latest_file = max(list_of_files, key=os.path.getctime)
-        self.lastTrialVideo = latest_file
-
-        
+        folder = 'H:\\repos\\PyBpodGUI\\camera_data\\' # need to change to camera.camera_data_dir
+        # folder = self.camera.camera_data_dir # need to change to camera.camera_data_dir
+        print(self.camera)
+        list_of_tifs = []
+        while not bool(list_of_tifs):
+            list_of_tifs = glob.glob(folder +'\\*\\*.tif') # * means all if need specific format then *.csv
+        latest_tif = max(list_of_tifs, key=os.path.getctime)
+        self.lastTrialVideo = latest_tif
+        print('Found {0} as most recent tif.'.format(latest_tif))
 
     def playLastTrial(self):
         #fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
+        print('Finding last trial video')
         self.findLastTrialVideo()
-       
-        imstack1    = skio.imread(self.lastTrialVideo)
+        sleep(1)
+        # self.lastTrialVideo = 'H:\\repos\\PyBpodGUI\\camera_data\\test.tif'
+        print('Using {0} as most recent tif.'.format(self.lastTrialVideo))
+
+        imstack1 = skio.imread(self.lastTrialVideo)
         meanframe = np.mean(imstack1[:100,:,:], axis = 0)
         normstack = imstack1 - meanframe
-        print(type(imstack1), imstack1.shape)
-        video_name = 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
+
+        video_name = 'temp.avi' # 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         fps = 30
         vidshape = np.shape(normstack)
