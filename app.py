@@ -16,6 +16,7 @@ from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import AnalogInException, BpodAnalogIn
 import olfactometry
 
+from trialPlaybackSubWindowWidget import trialPlaybackSubWindowWidget
 from ui_files.main_window_ui import Ui_MainWindow
 from saveDataWorker import SaveDataWorker
 from inputEventWorker import InputEventWorker
@@ -33,7 +34,7 @@ from imageAcquisition import MicroManagerPrime95B
 import numpy as np
 import skimage.io as skio
 import cv2
-#from tiffutils import *
+from datetime import datetime
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 from time import sleep
 
@@ -151,16 +152,19 @@ class Window(QMainWindow, Ui_MainWindow):
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
 
 
-        
-        self.mediaPlayer = PlaybackWorker(self.mediaplayer, self.playLastTrial_Button, self.positionSlider, self.camera)
-        #self.trialPlaybackSubWindowWidgetGridLayout.addWidget(self.resultsPlot.getWidget(), 1, 0, 1, 3)
-        self.trialPlaybackSubWindow = MyQMdiSubWindow()
-        #self.trialPlaybackSubWindow.closed.connect(self.updateViewMenu)
+        self.trialPlaybackSubWindow = MyQMdiSubWindow()        
         self.trialPlaybackSubWindow.setObjectName("trialPlaybackSubWindow")
         self.trialPlaybackSubWindow.setWidget(self.trialPlaybackSubWindowWidget)
+        self.trialPlaybackSubWindowWidget.build_playback_window()
+        self.playBackWorker = PlaybackWorker(self.trialPlaybackSubWindowWidget, self.camera)
+        self.mediaPlayer = self.playBackWorker.mediaPlayer
+        self.trialPlaybackSubWindow.closed.connect(self.updateViewMenu)
+
         self.trialPlaybackSubWindow.setAttribute(Qt.WA_DeleteOnClose, False)  # Set to False because I do not want the subWindow's wrapped C/C++ object to get deleted and removed from the mdiArea's subWindowList when it closes.
         self.trialPlaybackSubWindow.resize(300, 320)
         self.mdiArea.addSubWindow(self.trialPlaybackSubWindow)
+        self.positionSlider = self.trialPlaybackSubWindowWidget.positionSlider
+        self.playLastTrial_Button = self.trialPlaybackSubWindowWidget.playLastTrial_Button #widget before
 
     def connectSignalsSlots(self):
         self.startButton.clicked.connect(self.runTask)
@@ -221,14 +225,22 @@ class Window(QMainWindow, Ui_MainWindow):
         self.rightWaterValveDurationSpinBox.valueChanged.connect(self.recordRightWaterValveDuration)
         self.finalValvePortNumComboBox.currentTextChanged.connect(self.recordFinalValvePort)
 
-        self.positionSlider.sliderMoved.connect(self.mediaPlayer.setPosition)
-        self.playLastTrial_Button.clicked.connect(self.mediaPlayer.playLastTrial)
-        self.mediaplayer.stateChanged.connect(self.mediaPlayer.mediaStateChanged)
-        self.mediaplayer.positionChanged.connect(self.mediaPlayer.positionChanged)
-        self.mediaplayer.durationChanged.connect(self.mediaPlayer.durationChanged)
-        self.mediaplayer.error.connect(self.mediaPlayer.handleError)
+        self.positionSlider.sliderMoved.connect(self.playBackWorker.setPosition)
+        self.playLastTrial_Button.clicked.connect(self.playBackWorker.playLastTrial)
+        self.mediaPlayer.stateChanged.connect(self.playBackWorker.mediaStateChanged)
+        self.mediaPlayer.positionChanged.connect(self.playBackWorker.positionChanged)
+        self.mediaPlayer.durationChanged.connect(self.playBackWorker.durationChanged)
+        self.mediaPlayer.error.connect(self.playBackWorker.handleError)
         
         self.experimentTypeComboBox.currentTextChanged.connect(self.setExperimentType)
+
+        self.selectCameraDataDestinationPushButton.clicked.connect(self.selectCameraDataDestination)
+
+
+
+    def selectCameraDataDestination(self):
+        fname = QFileDialog.getExistingDirectory(self, "Open Folder", "H:\\repos\\PyBpodGUI\\camera_data\\test_bea\\")
+        self.CameraDataDestinationLineEdit.setText(fname)
 
     def setExperimentType(self):
         if self.experimentTypeComboBox.currentIndex() == 1:
@@ -422,7 +434,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if fileName:
             print(fileName)
             self.olfaConfigFileName = fileName
-            self.olfaFileLineEdit.setText(fileName)
+            self.olfaConfigFileLineEdit.setText(fileName)
 
     def configureBpodFlexChannels(self):
         if self.bpod is not None:
@@ -540,8 +552,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
         if self.imaging:
                 self.camera = MicroManagerPrime95B(ACQ_CONFIG_FILE)                
-                self.camera.set_camera_data_dir('H:\\repos\\PyBpodGUI\\camera_data')
+                  
+                dateTimeString = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+                #camera_data_dir = f"H:\\repos\\PyBpodGUI\\camera_data\\{dateTimeString}_M_{self.mouseNumberLineEdit.text()}\\"
+                camera_data_dir = self.CameraDataDestinationLineEdit.text() +'\\' +  f'{dateTimeString}_M_{self.mouseNumberLineEdit.text()}\\'
+                if not os.path.exists(camera_data_dir):
+                    os.makedirs(camera_data_dir)
 
+                self.camera.set_camera_data_dir(camera_data_dir)
+                self.playBackWorker.updateCamera(self.camera)     
 
         # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
         # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
@@ -761,6 +780,8 @@ class Window(QMainWindow, Ui_MainWindow):
     def recordNumTrials(self, value):
         if self.protocolWorker is not None:
             self.protocolWorker.setNumTrials(self.nTrialsSpinBox.value())
+
+
 
     def recordNoResponseCutoff(self, value):
         if self.protocolWorker is not None:
@@ -1030,9 +1051,10 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def runPlaybackThread(self):
         self.playbackThread = QThread(parent=self)
-        self.mediaPlayer.moveToThread(self.playbackThread)
-        self.protocolWorker.saveVideoSignal.connect(self.mediaPlayer.playLastTrial)
+        self.playBackWorker.moveToThread(self.playbackThread)
+        self.protocolWorker.saveVideoSignal.connect(self.playBackWorker.playLastTrial)
         self.protocolWorker.finished.connect(self.playbackThread.quit)
+        self.stopRunningSignal.connect(lambda: self.playbackThread.quit())  # I use lambda because the run_state_machine is a blocking function so the protocolThread will not be able to call stop_trial if the user clicks the stop button mid trial.
         sleep(5)
         self.playbackThread.start()
 if __name__ == "__main__":

@@ -4,6 +4,9 @@ import os
 import json
 import numpy as np
 from datetime import datetime
+from unicodedata import name
+from shutil import copy2  # preserve metadata
+import glob
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
 
 
@@ -57,9 +60,12 @@ class SaveDataWorker(QObject):
         super(SaveDataWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         dateTimeString = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        fileName = f"results/Mouse_{mouseNum}_Rig_{rigLetter}_{dateTimeString}.h5"
+        fileName = f"results/{dateTimeString}_M_{mouseNum}_Rig_{rigLetter}.h5"
         if not os.path.isdir('results'):
             os.mkdir('results')
+        self.h5folder = os.getcwd() + '/results'
+        print(self.h5folder)
+        
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
         
         # File attributes for future reference.
@@ -490,6 +496,31 @@ class SaveDataWorker(QObject):
         self.h5file.close()
         logging.info("h5 file closed")
         self.finished.emit()
-        
+    
+    
+    def migrateSessionData(self):
+
+    
+        # get all camera tifs and h5
+        folder = self.camera.camera_data_dir
+        list_of_tifs = []
+        while not bool(list_of_tifs):
+            list_of_tifs = glob.glob(folder +'\\*\\*.tif')
+
+        if bool(list_of_tifs):
+            for tif in list_of_tifs:
+                copy2(tif, self.destination)
+
+        # copy h5 from experiment
+        h5folder = self.h5folder
+        list_of_h5s = []
+        while not bool(list_of_h5s):
+            list_of_h5s = glob.glob(folder +'\\*.h5')
+
+        latest_h5 = max(list_of_h5s, key=os.path.getctime)
+        copy2(latest_h5, self.destination)
+        pass   
+
     def stopRunning(self):
         self.keepRunning = False
+        self.migrateSessionData()

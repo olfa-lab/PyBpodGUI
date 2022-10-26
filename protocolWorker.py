@@ -5,11 +5,12 @@ from serial.serialutil import SerialException
 from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer, QEventLoop
 from pybpodapi.protocol import StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
+import os
 
 import olfactometry
 from olfactometry.utils import OlfaException
-
-
+from time import sleep
+from datetime import datetime
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
@@ -105,6 +106,7 @@ class ProtocolWorker(QObject):
         self.rightWaterDuration = duration / 1000  # Convert to seconds.
 
     def setNumTrials(self, value):
+        print(value)
         self.nTrials = value
     
     def setMinITI(self, value):
@@ -624,7 +626,7 @@ class ProtocolWorker(QObject):
             # self.finished.emit()
         
     def startTrial(self):
-        if self.keepRunning and (self.currentTrialNum < self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
+        if self.keepRunning and (self.currentTrialNum <= self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
             # load protocol from json file. I do this every trial because I need to reset some values back to their original as read
             # from the file, so instead of looping through the self.stateMachine dictionary a second time just to reset the values
             # after parsing it and adding the state to the state machine, I'll just re-read the file and all value will go back to
@@ -764,7 +766,12 @@ class ProtocolWorker(QObject):
                 try:
 
                     print('The trial number for saving camera data is {:03d}'.format(currentTrialInfo['currentTrialNum']))
-                    self.camera.set_prefix(r'Trial_{:03d}'.format(currentTrialInfo['currentTrialNum']))
+                    # dateString = datetime.now().strftime("%Y-%m-%d")
+                    # self.camera.set_camera_data_name(r'{}_Trial_{:03d}'.format(dateString,currentTrialInfo['currentTrialNum']))
+                    camera_data_dirbase = os.path.basename(os.path.normpath(self.camera.camera_data_dir))
+                    self.camera.set_camera_data_name(r'{}_Trial_{:03d}'.format(camera_data_dirbase,currentTrialInfo['currentTrialNum']))
+
+                    print('Acquiring {}'.format(self.camera.camera_data_name))
                     self.camera.start_acquisition()
                     print('Camera initialized')
 
@@ -773,7 +780,7 @@ class ProtocolWorker(QObject):
                                       icon=QMessageBox.Critical,
                                       text=str(timeout_error))
 
-
+            sleep(6) # we are trying this to see if BNC1High (camera trigger) is no longer delayed by 6.5s
 
             try:
                 self.bpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
@@ -825,6 +832,7 @@ class ProtocolWorker(QObject):
         self.keepRunning = False
         self.bpod.stop_trial()
         logging.info("current trial aborted")
+        self.camera.stop_acquisition()
         if self.olfas:
             self.olfas.set_dummy_vials()  # Close vials in case experiment stopped while olfactometer was on.
 

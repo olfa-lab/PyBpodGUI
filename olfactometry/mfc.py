@@ -67,7 +67,7 @@ class MFC(QtWidgets.QGroupBox):
         if setflow < 0 or setflow > self.capacity:
             flow = self.get_flowrate()
             if flow is not None:
-                self.mfcslider.setValue(flow * self.capacity)
+                self.mfcslider.setValue(int(flow * self.capacity))
                 self.last_poll_time = time.time()
         else:
             self.set_flowrate(setflow)

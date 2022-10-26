@@ -12,7 +12,7 @@ class DeviceException(Exception):
     pass
 
 
-class MicroManagerPrime95B:
+class MicroManagerPrime95B:  # here we define the 'camera' object used in app.py
     bridge = None
     core = None
     studio = None
@@ -91,6 +91,11 @@ class MicroManagerPrime95B:
         self.settings._set_field('prefix', prefix)
         self.update_settings()
 
+    def set_camera_data_name(self, camera_data_name):
+        self.settings._set_field('prefix', camera_data_name)
+        self.camera_data_name = camera_data_name
+        self.update_settings()
+
     def start_acquisition(self):
         self.update_settings()
         
@@ -99,6 +104,9 @@ class MicroManagerPrime95B:
 
         self.current_acquisition = self.acquisitions.run_acquisition_nonblocking() # has to be started for every trial, _nonblocking?
         self.acquisitions.get_acquisition_settings()
+
+    def stop_acquisition(self): # need to write this
+        self.acquisitions.run_acquisition_nonblocking() # has to be started for every trial, _nonblocking?
 
     def is_acquisition_running(self):
         return self.acquisitions.is_acquisition_running()

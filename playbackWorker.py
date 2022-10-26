@@ -1,4 +1,5 @@
 import collections
+#from socket import CAN_BCM_RX_READ
 from time import sleep
 import numpy as np
 import logging
@@ -21,30 +22,33 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 class PlaybackWorker(QObject):  
-    def __init__(self, mediaplayer, playLastTrial_Button, positionSlider, camera):
+    def __init__(self, trialPlaybackSubWindowWidget, camera):
         super().__init__()
-        self.positionSlider = positionSlider
-        self.mediaplayer = mediaplayer
-        self.playLastTrial_Button = playLastTrial_Button
+        self.positionSlider = trialPlaybackSubWindowWidget.positionSlider
+        self.mediaPlayer = trialPlaybackSubWindowWidget.mediaPlayer
+        self.playLastTrial_Button = trialPlaybackSubWindowWidget.playLastTrial_Button
         self.camera = camera
         self.lastTrialVideo = None
     
     def play(self):
-        if self.mediaplayer.state() == QMediaPlayer.PlayingState:
-            self.mediaplayer.pause()
+        if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
+            self.mediaPlayer.pause()
         else:
-            self.mediaplayer.play()
+            self.mediaPlayer.play()
 
     def setPosition(self, position):
-        self.mediaplayer.setPosition(position)
+        self.mediaPlayer.setPosition(position)
 
     def mediaStateChanged(self, state):
-        if self.mediaplayer.state() == QMediaPlayer.PlayingState:
+        if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
             self.playLastTrial_Button.setIcon(
                     self.playLastTrial_Button.style().standardIcon(QStyle.SP_MediaPause))
         else:
             self.playLastTrial_Button.setIcon(
                     self.playLastTrial_Button.style().standardIcon(QStyle.SP_MediaPlay))
+
+    def updateCamera(self,camera):
+        self.camera = camera
 
     def positionChanged(self, position):
         self.positionSlider.setValue(position)
@@ -57,12 +61,13 @@ class PlaybackWorker(QObject):
         #self.errorLabel.setText("Error: " + self.videoLabel.errorString())
 
     def findLastTrialVideo(self):
-        folder = 'H:\\repos\\PyBpodGUI\\camera_data\\' # need to change to camera.camera_data_dir
-        # folder = self.camera.camera_data_dir # need to change to camera.camera_data_dir
-        print(self.camera)
+        #folder = 'H:\\repos\\PyBpodGUI\\camera_data\\' # need to change to camera.camera_data_dir
+        folder = self.camera.camera_data_dir # need to change to camera.camera_data_dir
+        print(self.camera.camera_data_dir)
         list_of_tifs = []
         while not bool(list_of_tifs):
-            list_of_tifs = glob.glob(folder +'\\*\\*.tif') # * means all if need specific format then *.csv
+            list_of_tifs = glob.glob(folder +'\\*\\*.tif')
+            print(list_of_tifs)
         latest_tif = max(list_of_tifs, key=os.path.getctime)
         self.lastTrialVideo = latest_tif
         print('Found {0} as most recent tif.'.format(latest_tif))
@@ -101,7 +106,7 @@ class PlaybackWorker(QObject):
         writer.release()
         print('done')
 
-        self.mediaplayer.setMedia(
+        self.mediaPlayer.setMedia(
                     QMediaContent(QUrl.fromLocalFile(video_name)))
         self.playLastTrial_Button.setEnabled(True)
         

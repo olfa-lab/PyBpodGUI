@@ -98,8 +98,9 @@ class StreamingWorker(QObject):
 
     def setPlotInterval(self, value):
         self.plotInterval = value
-        self.anim._stop()  # Since there is no setter function for interval in the FuncAnimation class definition, I need to remove the animation from the timer's callback list and destroy it, which is what _stop() does. Otherwise the animation keeps going even if the self.anim object is deleted.
-        del self.anim  # Then I delete the object.
+        if self.anim is not None:
+            self.anim._stop()  # Since there is no setter function for interval in the FuncAnimation class definition, I need to remove the animation from the timer's callback list and destroy it, which is what _stop() does. Otherwise the animation keeps going even if the self.anim object is deleted.
+            del self.anim  # Then I delete the object.
         self.animate()  # Then I call animate() again to re-create the FuncAnimation with the new interval.
     
     def setSniffLine(self, value):
@@ -233,7 +234,8 @@ class StreamingWorker(QObject):
 
     def pauseAnimation(self):
         if not self.paused:
-            self.anim.event_source.stop()
+            if self.anim is not None:
+                self.anim.event_source.stop()
             self.paused = True
 
     def resumeAnimation(self):
