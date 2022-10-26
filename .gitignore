@@ -6,3 +6,4 @@ protocol_files/
 olfactometry_config_files/
 camera_data/
 *.log
+*.avi
