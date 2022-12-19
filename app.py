@@ -384,6 +384,7 @@ class Window(QMainWindow, Ui_MainWindow):
                     self.bpodFlexChannelSettingsDialog = BpodFlexChannelSettingsDialog(parent=self)
                     self.bpodFlexChannelSettingsDialog.accepted.connect(self.configureBpodFlexChannels)
                 settings = self.bpodFlexChannelSettingsDialog.getSettings()
+                # Those are the functions that set flex channels settings
                 self.bpod.set_flex_channel_types(settings['channelTypes'])
                 self.bpod.set_analog_input_sampling_interval(settings['samplingPeriod'])
                 self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
@@ -956,6 +957,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
         self.protocolWorker.newStateSignal.connect(self.updateCurrentState)
         self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
+        self.protocolWorker.newStateSignal.connect(self.streaming.checkOdorPresentation)
         self.protocolWorker.stateNumSignal.connect(self.updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self.updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self.updateCurrentTrialInfo)  # This works without lambda because 'self.updateCurrentTrialInfo' is in the main thread.
