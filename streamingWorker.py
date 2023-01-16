@@ -77,6 +77,7 @@ class StreamingWorker(QObject):
         self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
         
         self.activateResponseWindow = False
+        self.presentOdor = False
         self.paused = False
         self.isRun = False
         self.isSetup = True
@@ -162,7 +163,7 @@ class StreamingWorker(QObject):
         self.port_4_Line.set_data(self.tdata, self.port_4_Data)
         
 
-        if self.activateResponseWindow:
+        if self.activateResponseWindow or self.presentOdor:
             self.spanEnd = self.tdata[-1]  # Make the responseWindow grow with sniff signal.
             # set_xy() takes an (N, 2) list of the verticies of the polygon. Since axvspan is a rectangle, there are 5 verticies in order to create a complete closed circuit.
             self.span.set_xy([[self.spanStart, self.ymin], [self.spanStart, self.ymax], [self.spanEnd, self.ymax], [self.spanEnd, self.ymin], [self.spanStart, self.ymin]])
@@ -189,12 +190,21 @@ class StreamingWorker(QObject):
     def getFigure(self):
         return self.dynamic_canvas
 
+
+    def checkOdorPresentation(self, stateName): 
+        if stateName == 'PresentOdor':
+            self.presentOdor = True
+            self.spanStart = self.tdata[-1]
+            self.span.set_color('y')
+            self.spanColor = 'y'
+
     def checkResponseWindow(self, stateName):
         # This function gets the newStateSignal from protocolWorker.
         if stateName == 'WaitForResponse':
             self.spanStart = self.tdata[-1]
             self.span.set_color('b')  # reset color to blue until lick occurs.
             self.activateResponseWindow = True
+            self.presentOdor = False
             self.spanColor = 'b'  # also reset the color variable to blue.
         elif stateName == 'Correct':
             self.span.set_color('g')

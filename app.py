@@ -38,6 +38,7 @@ from datetime import datetime
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 from time import sleep
 
+
 ACQ_CONFIG_FILE = os.path.abspath(r'.default_acq')
 
 class MyQMdiSubWindow(QMdiSubWindow):
@@ -231,6 +232,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.mediaPlayer.positionChanged.connect(self.playBackWorker.positionChanged)
         self.mediaPlayer.durationChanged.connect(self.playBackWorker.durationChanged)
         self.mediaPlayer.error.connect(self.playBackWorker.handleError)
+
+        self.sniffThresholdSpinBox.valueChanged.connect(lambda sniffth: self.updateFlexChanThreshold1(sniffth))
         
         self.experimentTypeComboBox.currentTextChanged.connect(self.setExperimentType)
 
@@ -436,6 +439,17 @@ class Window(QMainWindow, Ui_MainWindow):
             self.olfaConfigFileName = fileName
             self.olfaConfigFileLineEdit.setText(fileName)
 
+
+    def updateFlexChanThreshold1(self, sniffth):
+        
+        settings = self.bpodFlexChannelSettingsDialog.getSettings()
+        settings['thresholds_1'][0] = ((sniffth/1000 / self.bpodFlexChannelSettingsDialog.maxFlexVoltage) * 4095)
+        print('VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV')
+        print(settings['thresholds_1'][0])
+        self.bpodFlexChannelSettingsDialog.loadSettings(settings)
+        self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
+        
+
     def configureBpodFlexChannels(self):
         if self.bpod is not None:
             if self.bpod.hardware.machine_type > 3:
@@ -443,11 +457,13 @@ class Window(QMainWindow, Ui_MainWindow):
                     self.bpodFlexChannelSettingsDialog = BpodFlexChannelSettingsDialog(parent=self)
                     self.bpodFlexChannelSettingsDialog.accepted.connect(self.configureBpodFlexChannels)
                 settings = self.bpodFlexChannelSettingsDialog.getSettings()
+                
                 self.bpod.set_flex_channel_types(settings['channelTypes'])
                 self.bpod.set_analog_input_sampling_interval(settings['samplingPeriod'])
                 self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
                 self.bpod.set_analog_input_threshold_polarity(settings['polarities_1'], settings['polarities_2'])
                 self.bpod.set_analog_input_threshold_mode(settings['modes'])
+                print(settings['thresholds_1'])
 
     def configureAnalogInputModule(self):
         if self.adc is not None:
@@ -471,6 +487,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.adc.stopUSBStream()
 
     def connectDevices(self):
+        self.disconnectDevices()
         try:
             if self.analogInputModuleCOMPortSpinBox.value() > 0:
                 self.adc = BpodAnalogIn(serial_port=f"COM{self.analogInputModuleCOMPortSpinBox.value()}")
@@ -487,10 +504,12 @@ class Window(QMainWindow, Ui_MainWindow):
             return
 
         try:
+            print("here")
             self.bpod = Bpod(serial_port=f"COM{self.bpodCOMPortSpinBox.value()}" if self.bpodCOMPortSpinBox.value() > 0 else None)
             self.configureBpodFlexChannels()
 
         except (BpodErrorException, SerialException, UnicodeDecodeError):
+            print(BpodErrorException)
             if self.bpod is not None:
                 self.bpod.close()
                 del self.bpod
@@ -648,11 +667,17 @@ class Window(QMainWindow, Ui_MainWindow):
     def closeDevices(self):
         if self.adc is not None:
             self.adc.close()
+            del self.adc
+            self.adc = None
         if self.olfas is not None:
             self.olfas.close_serials()
+            del self.olfas
+            self.olfas = None
             # self.olfas.close()
         if self.bpod is not None:
             self.bpod.close()
+            del self.bpod
+            self.bpod = None
 
     def toggleFinalValve(self):
         if self.bpod is not None:
@@ -1031,6 +1056,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
         self.protocolWorker.newStateSignal.connect(self.updateCurrentState)
         self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
+        self.protocolWorker.newStateSignal.connect(self.streaming.checkOdorPresentation)
         self.protocolWorker.stateNumSignal.connect(self.updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self.updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self.updateCurrentTrialInfo)  # This works without lambda because 'self.updateCurrentTrialInfo' is in the main thread. # the input to the function is the trial_dict
@@ -1057,6 +1083,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.stopRunningSignal.connect(lambda: self.playbackThread.quit())  # I use lambda because the run_state_machine is a blocking function so the protocolThread will not be able to call stop_trial if the user clicks the stop button mid trial.
         sleep(5)
         self.playbackThread.start()
+
+    def bpodClose(self):
+        self.bpod.close()
+        
+import atexit
+
 if __name__ == "__main__":
     # Check whether there is already a running QApplication (e.g., if running
     # from an IDE).
@@ -1065,6 +1097,9 @@ if __name__ == "__main__":
         qapp = QApplication(sys.argv)
 
     win = Window()
+    # Solution for bpod conncetion issue
+    atexit.register(win.bpodClose)
+
     win.show()
     win.activateWindow()
     win.raise_()

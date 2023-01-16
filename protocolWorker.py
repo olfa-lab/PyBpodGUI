@@ -749,8 +749,10 @@ class ProtocolWorker(QObject):
 
                 listOfTuples = []  # reset to empty list.
             
-            for timer in self.stateMachine['timers']:
-                self.sma.set_global_timer(**timer) # Camera
+            # Add timers if they exist
+            if 'timers' in self.stateMachine.keys():
+                for timer in self.stateMachine['timers']:
+                    self.sma.set_global_timer(**timer) # Camera
 
 
             # Add the timers from whatever you read from json file
@@ -832,7 +834,8 @@ class ProtocolWorker(QObject):
         self.keepRunning = False
         self.bpod.stop_trial()
         logging.info("current trial aborted")
-        self.camera.stop_acquisition()
+        if self.camera is not None:
+            self.camera.stop_acquisition()
         if self.olfas:
             self.olfas.set_dummy_vials()  # Close vials in case experiment stopped while olfactometer was on.
 
