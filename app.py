@@ -252,7 +252,7 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             self.experimentType = 'Behavior'
             self.imaging = 0
-        print(self.experimentType)
+        
 
     def loadDefaults(self):
         if os.path.exists("defaults.json"):
@@ -433,9 +433,9 @@ class Window(QMainWindow, Ui_MainWindow):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Open Olfactometer Configuration File", directory="olfactometry_config_files", filter="JSON Files (*.json)", options=options)
-        print(fileName)
+        
         if fileName:
-            print(fileName)
+           
             self.olfaConfigFileName = fileName
             self.olfaConfigFileLineEdit.setText(fileName)
 
@@ -444,8 +444,6 @@ class Window(QMainWindow, Ui_MainWindow):
         
         settings = self.bpodFlexChannelSettingsDialog.getSettings()
         settings['thresholds_1'][0] = ((sniffth/1000 / self.bpodFlexChannelSettingsDialog.maxFlexVoltage) * 4095)
-        print('VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV')
-        print(settings['thresholds_1'][0])
         self.bpodFlexChannelSettingsDialog.loadSettings(settings)
         self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
         
@@ -463,7 +461,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
                 self.bpod.set_analog_input_threshold_polarity(settings['polarities_1'], settings['polarities_2'])
                 self.bpod.set_analog_input_threshold_mode(settings['modes'])
-                print(settings['thresholds_1'])
 
     def configureAnalogInputModule(self):
         if self.adc is not None:
@@ -488,6 +485,8 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def connectDevices(self):
         self.disconnectDevices()
+        
+        
         try:
             if self.analogInputModuleCOMPortSpinBox.value() > 0:
                 self.adc = BpodAnalogIn(serial_port=f"COM{self.analogInputModuleCOMPortSpinBox.value()}")
@@ -503,13 +502,18 @@ class Window(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, "Warning", f"Analog Input Module Error.\n{err}")
             return
 
+      
         try:
-            print("here")
+           
             self.bpod = Bpod(serial_port=f"COM{self.bpodCOMPortSpinBox.value()}" if self.bpodCOMPortSpinBox.value() > 0 else None)
             self.configureBpodFlexChannels()
 
         except (BpodErrorException, SerialException, UnicodeDecodeError):
-            print(BpodErrorException)
+            #print(BpodErrorException)
+            #print(SerialException)
+            #message = str(SerialException)
+            #print(message)
+            #print(open())
             if self.bpod is not None:
                 self.bpod.close()
                 del self.bpod
