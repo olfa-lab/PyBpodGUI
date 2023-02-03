@@ -1,0 +1,64 @@
+appdirs @ file:///home/conda/feedstock_root/build_artifacts/appdirs_1603108395799/work
+blosc2==2.0.0
+brotlipy @ file:///D:/bld/brotlipy_1666764795627/work
+certifi==2022.12.7
+cffi @ file:///D:/bld/cffi_1671179520384/work
+charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1661170624537/work
+click @ file:///D:/bld/click_1666798499870/work
+cloudpickle @ file:///home/conda/feedstock_root/build_artifacts/cloudpickle_1674202310934/work
+colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1666700638685/work
+confapp==1.1.11
+contourpy==1.0.7
+cryptography @ file:///D:/bld/cryptography-split_1672672639257/work
+cycler==0.11.0
+Cython==0.29.33
+cytoolz @ file:///D:/bld/cytoolz_1666829782875/work
+dask @ file:///home/conda/feedstock_root/build_artifacts/dask-core_1674873905639/work
+docstring-inheritance==1.1.1
+fonttools==4.38.0
+fsspec @ file:///home/conda/feedstock_root/build_artifacts/fsspec_1674184942191/work
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1663625384323/work
+imagecodecs @ file:///D:/bld/imagecodecs_1674483289814/work
+imageio @ file:///home/conda/feedstock_root/build_artifacts/imageio_1674460904928/work
+kiwisolver==1.4.4
+locket @ file:///home/conda/feedstock_root/build_artifacts/locket_1650660393415/work
+logging-bootstrap==1.0.0
+matplotlib==3.6.3
+msgpack==1.0.4
+ndtiff==1.9.0
+networkx @ file:///home/conda/feedstock_root/build_artifacts/networkx_1673151334029/work
+numexpr==2.8.4
+numpy @ file:///D:/bld/numpy_1675039086438/work
+opencv-python==4.7.0.68
+packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1673482170163/work
+partd @ file:///home/conda/feedstock_root/build_artifacts/partd_1660316728562/work
+Pillow @ file:///D:/bld/pillow_1672675483575/work
+pooch @ file:///home/conda/feedstock_root/build_artifacts/pooch_1643032624649/work
+py-cpuinfo==9.0.0
+-e git+https://github.com/olfa-lab/pybpod-api.git@744e06a5532b7c187d2c2cf766d9092400cb48ad#egg=pybpod_api
+pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1636257122734/work
+pycromanager==0.25.1
+pyOpenSSL @ file:///home/conda/feedstock_root/build_artifacts/pyopenssl_1672659226110/work
+pyparsing==3.0.9
+PyQt5==5.15.8
+PyQt5-Qt5==5.15.2
+PyQt5-sip==12.11.1
+pyqtgraph==0.13.1
+pyserial==3.5
+PySocks @ file:///D:/bld/pysocks_1661604991356/work
+python-dateutil==2.8.2
+PyWavelets @ file:///D:/bld/pywavelets_1673082488813/work
+PyYAML @ file:///D:/bld/pyyaml_1666772550836/work
+pyzmq==25.0.0
+requests @ file:///home/conda/feedstock_root/build_artifacts/requests_1673863902341/work
+safe-and-collaborative-architecture==0.2
+scikit-image @ file:///D:/bld/scikit-image_1667117302376/work
+scipy==1.10.0
+Send2Trash==1.8.0
+six==1.16.0
+tables==3.8.0
+tifffile @ file:///home/conda/feedstock_root/build_artifacts/tifffile_1674498532372/work
+toolz @ file:///home/conda/feedstock_root/build_artifacts/toolz_1657485559105/work
+urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1673452138552/work
+win-inet-pton @ file:///D:/bld/win_inet_pton_1667051142467/work
+wincertstore==0.2
