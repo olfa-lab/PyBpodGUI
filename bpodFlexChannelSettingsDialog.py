@@ -57,6 +57,10 @@ class BpodFlexChannelSettingsDialog(QDialog, Ui_Dialog):
     def connectSignalsSlots(self):
         self.buttonBox.accepted.connect(self.updateSettingsDict)
 
+    #def updateSniffThreshold(self, value):
+    #    self.threshold_1_doubleSpinBox_1.value() = value
+    #    self.settingsDict['thresholds_1'][0] = (value / self.maxFlexVoltage) * 4095
+
     def updateSettingsDict(self):
         self.settingsDict['channelTypes'] = [
             self.channelTypeComboBox_1.currentIndex(),
@@ -128,6 +132,7 @@ class BpodFlexChannelSettingsDialog(QDialog, Ui_Dialog):
         self.modeComboBox_4.setCurrentIndex(settingsDict['modes'][3])
 
         self.samplingPeriodSpinBox.setValue(settingsDict['samplingPeriod'])
-    
+        self.settingsDict = settingsDict
+
     def getSettings(self):
         return self.settingsDict

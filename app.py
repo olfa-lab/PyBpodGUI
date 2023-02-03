@@ -23,6 +23,7 @@ from inputEventWorker import InputEventWorker
 from protocolWorker import ProtocolWorker
 from playbackWorker import PlaybackWorker
 from streamingWorker import StreamingWorker
+from readDataWorker import ReadDataWorker
 from flowUsagePlotWorker import FlowUsagePlotWorker
 from resultsPlotWorker import ResultsPlotWorker
 from protocolEditorDialog import ProtocolEditorDialog
@@ -50,6 +51,7 @@ class MyQMdiSubWindow(QMdiSubWindow):
     '''
 
     closed = pyqtSignal(str)
+    
 
     # This method is the result of VScode's auto-complete text. I only wrote the line that emits the closed signal.
     def closeEvent(self, closeEvent: QCloseEvent) -> None:
@@ -64,6 +66,7 @@ class MyQMdiSubWindow(QMdiSubWindow):
 
 class Window(QMainWindow, Ui_MainWindow):
     stopRunningSignal = pyqtSignal()
+    startExperimentSignal = pyqtSignal()
     # launchOlfaGUISignal = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -98,6 +101,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.oldProtocolThreads = []
         self.oldSaveDataThreads = []
         self.oldInputEventThreads = []
+
+        self.oldProtocolWorkers= []
+        self.protocolThread = None
+        self.streamingThread =None
+        self.playbackThread =None
 
 
 
@@ -215,9 +223,10 @@ class Window(QMainWindow, Ui_MainWindow):
         self.yMinDoubleSpinBox.valueChanged.connect(lambda ymin: self.streaming.setYaxis(ymin, self.yMaxDoubleSpinBox.value()))
         self.maxtSpinBox.valueChanged.connect(lambda maxt: self.streaming.setXaxis(maxt))
         self.dtDoubleSpinBox.valueChanged.connect(lambda dt: self.streaming.set_dt(dt))
-        self.plotIntervalSpinBox.valueChanged.connect(lambda x: self.streaming.setPlotInterval(x))
+        #self.plotIntervalSpinBox.valueChanged.connect(lambda x: self.streaming.setPlotInterval(x))
         self.sniffThresholdSpinBox.valueChanged.connect(lambda sniffth: self.streaming.setSniffLine(self.sniffThresholdSpinBox.value()))
-        
+        #self.sniffThresholdSpinBox.valueChanged.connect(lambda sniffth: self.BpodFlexChannelSettingsDialog.setSniffLine(self.sniffThresholdSpinBox.value()))
+       
         self.leftSensorPortNumComboBox.currentTextChanged.connect(self.recordLeftSensorPort)
         self.leftWaterValvePortNumComboBox.currentTextChanged.connect(self.recordLeftWaterValvePort)
         self.leftWaterValveDurationSpinBox.valueChanged.connect(self.recordLeftWaterValveDuration)
@@ -255,7 +264,10 @@ class Window(QMainWindow, Ui_MainWindow):
         
 
     def loadDefaults(self):
+
+        
         if os.path.exists("defaults.json"):
+           
             with open("defaults.json", 'r') as defaultSettings:
                 self.defaultSettings = json.load(defaultSettings)
 
@@ -282,7 +294,8 @@ class Window(QMainWindow, Ui_MainWindow):
             self.rightSensorPortNumComboBox.setCurrentIndex(self.defaultSettings['bpodChannels']['rightSensorPortNum'] - 1)  # Subtract 1 to get the index.
             self.rightWaterValvePortNumComboBox.setCurrentIndex(self.defaultSettings['bpodChannels']['rightWaterValvePortNum'] - 1)  # Subtract 1 to get the index.
             self.rightWaterValveDurationSpinBox.setValue(self.defaultSettings['bpodChannels']['rightWaterValveDuration'])
-
+            
+            
             self.yMaxDoubleSpinBox.setValue(self.defaultSettings['streamingPlot']['y_max'])
             self.yMinDoubleSpinBox.setValue(self.defaultSettings['streamingPlot']['y_min'])
             self.maxtSpinBox.setValue(self.defaultSettings['streamingPlot']['max_t'])
@@ -291,8 +304,15 @@ class Window(QMainWindow, Ui_MainWindow):
 
             if self.bpodFlexChannelSettingsDialog is None:  # In case the user starts experiment without configuring the bpod flex channel settings from the dialog window, create the dialog window object once here. There get the default settings for it.
                 self.bpodFlexChannelSettingsDialog = BpodFlexChannelSettingsDialog(parent=self)
+                self.bpodFlexChannelSettingsDialog.loadSettings(self.defaultSettings['bpodFlexChannels'])
+                
                 self.bpodFlexChannelSettingsDialog.accepted.connect(self.configureBpodFlexChannels)
+                self.bpodFlexChannelSettingsDialog.accept()
+
             self.bpodFlexChannelSettingsDialog.loadSettings(self.defaultSettings['bpodFlexChannels'])
+            flex_settings = self.bpodFlexChannelSettingsDialog.getSettings()
+            self.dtDoubleSpinBox.setValue(flex_settings['samplingPeriod']/10000)
+       
 
             if self.analogInputModuleSettingsDialog is None:  # In case the user starts experiment without configuring the analog input settings from the dialog window, create the dialog window object once here. Then get the default settings for it.
                 self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
@@ -444,23 +464,30 @@ class Window(QMainWindow, Ui_MainWindow):
         
         settings = self.bpodFlexChannelSettingsDialog.getSettings()
         settings['thresholds_1'][0] = ((sniffth/1000 / self.bpodFlexChannelSettingsDialog.maxFlexVoltage) * 4095)
+        
         self.bpodFlexChannelSettingsDialog.loadSettings(settings)
         self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
         
 
     def configureBpodFlexChannels(self):
+     
         if self.bpod is not None:
             if self.bpod.hardware.machine_type > 3:
+                
                 if self.bpodFlexChannelSettingsDialog is None:
                     self.bpodFlexChannelSettingsDialog = BpodFlexChannelSettingsDialog(parent=self)
                     self.bpodFlexChannelSettingsDialog.accepted.connect(self.configureBpodFlexChannels)
-                settings = self.bpodFlexChannelSettingsDialog.getSettings()
                 
+                self.bpodFlexChannelSettingsDialog.updateSettingsDict()
+                settings = self.bpodFlexChannelSettingsDialog.getSettings()
+               
                 self.bpod.set_flex_channel_types(settings['channelTypes'])
                 self.bpod.set_analog_input_sampling_interval(settings['samplingPeriod'])
                 self.bpod.set_analog_input_thresholds(settings['thresholds_1'], settings['thresholds_2'])
                 self.bpod.set_analog_input_threshold_polarity(settings['polarities_1'], settings['polarities_2'])
                 self.bpod.set_analog_input_threshold_mode(settings['modes'])
+                # update linked parameters in the streaming window accordingly
+                self.dtDoubleSpinBox.setValue(settings['samplingPeriod']/10000)
 
     def configureAnalogInputModule(self):
         if self.adc is not None:
@@ -509,11 +536,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.configureBpodFlexChannels()
 
         except (BpodErrorException, SerialException, UnicodeDecodeError):
-            #print(BpodErrorException)
-            #print(SerialException)
-            #message = str(SerialException)
-            #print(message)
-            #print(open())
+           
             if self.bpod is not None:
                 self.bpod.close()
                 del self.bpod
@@ -561,71 +584,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushLeftWaterButton.setEnabled(False)
         self.flushRightWaterButton.setEnabled(False)
 
-    def runTask(self):
-
-        if (self.mouseNumberLineEdit.text() == ''):
-            QMessageBox.warning(self, "Warning", "Please enter mouse number!")
-            return
-        elif (self.rigLetterLineEdit.text() == ''):
-            QMessageBox.warning(self, "Warning", "Please enter rig letter!")
-            return
-        elif (self.protocolFileName == ''):
-            QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
-            return
-
-        if self.imaging:
-                self.camera = MicroManagerPrime95B(ACQ_CONFIG_FILE)                
-                  
-                dateTimeString = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-                #camera_data_dir = f"H:\\repos\\PyBpodGUI\\camera_data\\{dateTimeString}_M_{self.mouseNumberLineEdit.text()}\\"
-                camera_data_dir = self.CameraDataDestinationLineEdit.text() +'\\' +  f'{dateTimeString}_M_{self.mouseNumberLineEdit.text()}\\'
-                if not os.path.exists(camera_data_dir):
-                    os.makedirs(camera_data_dir)
-
-                self.camera.set_camera_data_dir(camera_data_dir)
-                self.playBackWorker.updateCamera(self.camera)     
-
-        # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
-        # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
-        if self.olfas:
-            self.olfas.close_serials()
-            del self.olfas
-            self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
-
-        # Check if adc was created which would mean the user provided a COM port and the analog input module was connected.
-        if self.adc is not None:
-            self.startAnalogModule()
-
-        self.runSaveDataThread()
-        self.runInputEventThread()
-        self.runProtocolThread()
-        self.runPlaybackThread()
-
-        if not self.streaming.startAnimation():
-            self.streaming.resetPlot()
-            self.streaming.resumeAnimation()
-
-        self.resultsPlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
-        self.flowUsagePlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
-        if (self.experimentTypeComboBox.currentIndex() == 2):
-            self.flowUsagePlotSubWindow.showShaded()
-
-        self.startButton.setEnabled(False)
-        self.flushLeftWaterButton.setEnabled(False)
-        self.flushRightWaterButton.setEnabled(False)
-        self.stopButton.setEnabled(True)
-        self.pauseButton.setEnabled(True)
-        self.disconnectDevicesButton.setEnabled(False)  # Do not let user disconnect devices while experiment is running.
-        self.actionConfigureBpodFlexChannels.setEnabled(False)  # Prevent user from configuring flex channels while experiment is running.
-        if self.adc is not None:
-            self.actionConfigureAnalogInSettings.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
-        if self.olfaCheckBox.isChecked():
-            self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
-            # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
-            # the protocolWorker's thread know not to use it. Only one object can access a serial port at any given time.
 
     def endTask(self):
-        self.streaming.pauseAnimation()
+        #self.streaming.pauseAnimation()
         if self.adc is not None:
             self.stopAnalogModule()
             # self.getSDCardLog()
@@ -810,8 +771,6 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.protocolWorker is not None:
             self.protocolWorker.setNumTrials(self.nTrialsSpinBox.value())
 
-
-
     def recordNoResponseCutoff(self, value):
         if self.protocolWorker is not None:
             self.protocolWorker.setNoResponseCutoff(value)
@@ -970,7 +929,6 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.odorA_concLineEdit.setText('N/A')
                 self.odorA_flowLineEdit.setText('N/A')
 
-
     def noResponseAbortDialog(self):
         QMessageBox.information(self, "Notice", "Session aborted due to too many consecutive no responses.")
 
@@ -996,6 +954,78 @@ class Window(QMainWindow, Ui_MainWindow):
     def bpodExceptionDialog(self, error):
         QMessageBox.warning(self, "Warning", f"Experiment aborted because the bpod raised the following exception:\n{error}")
 
+    def runTask(self):
+
+        if (self.mouseNumberLineEdit.text() == ''):
+            QMessageBox.warning(self, "Warning", "Please enter mouse number!")
+            return
+        elif (self.rigLetterLineEdit.text() == ''):
+            QMessageBox.warning(self, "Warning", "Please enter rig letter!")
+            return
+        elif (self.protocolFileName == ''):
+            QMessageBox.warning(self, "Warning", "Please load a protocol file. Go to 'File' > 'Open'.")
+            return
+
+        if self.imaging:
+                self.camera = MicroManagerPrime95B(ACQ_CONFIG_FILE)                
+                  
+                dateTimeString = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+                #camera_data_dir = f"H:\\repos\\PyBpodGUI\\camera_data\\{dateTimeString}_M_{self.mouseNumberLineEdit.text()}\\"
+                camera_data_dir = self.CameraDataDestinationLineEdit.text() +'\\' +  f'{dateTimeString}_M_{self.mouseNumberLineEdit.text()}\\'
+                if not os.path.exists(camera_data_dir):
+                    os.makedirs(camera_data_dir)
+
+                self.camera.set_camera_data_dir(camera_data_dir)
+                self.playBackWorker.updateCamera(self.camera)     
+
+        # Safety check to close and delete the main thread's olfactometer (if in use or was in use) before running the protocolWorker's thread
+        # so that the protocolWorker's thread can access the olfactometer's serial port if the user enables the olfactometer for the experiment.
+        if self.olfas:
+            self.olfas.close_serials()
+            del self.olfas
+            self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
+
+        # Check if adc was created which would mean the user provided a COM port and the analog input module was connected.
+        if self.adc is not None:
+            self.startAnalogModule()
+        
+        
+        self.runInputEventThread()
+        self.runSaveDataThread()
+        self.runReadingDataThread()
+        self.runProtocolThread()
+       
+        self.runStreamingThread()
+        self.runPlaybackThread()
+        # Emit signal for experiment start
+        self.startExperimentSignal.emit()
+
+        #if not self.streaming.startAnimation():
+        #    self.streaming.resetPlot()
+        #    self.streaming.resumeAnimation()
+
+        self.resultsPlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
+        self.flowUsagePlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
+        if (self.experimentTypeComboBox.currentIndex() == 2):
+            self.flowUsagePlotSubWindow.showShaded()
+
+        
+        self.startButton.setEnabled(False)
+        self.flushLeftWaterButton.setEnabled(False)
+        self.flushRightWaterButton.setEnabled(False)
+        self.stopButton.setEnabled(True)
+        self.pauseButton.setEnabled(True)
+        self.disconnectDevicesButton.setEnabled(False)  # Do not let user disconnect devices while experiment is running.
+        self.actionConfigureBpodFlexChannels.setEnabled(False)  # Prevent user from configuring flex channels while experiment is running.
+        if self.adc is not None:
+            self.actionConfigureAnalogInSettings.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
+        if self.olfaCheckBox.isChecked():
+            self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
+            # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
+            # the protocolWorker's thread know not to use it. Only one object can access a serial port at any given time.
+
+## THREADS
+
     def runInputEventThread(self):
         logging.info(f"from _runInputEventThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
         self.inputEventThread = QThread(parent=self)
@@ -1010,9 +1040,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.inputEventWorker.finished.connect(self.inputEventWorker.deleteLater)
         self.inputEventThread.finished.connect(self.inputEventThread.deleteLater)
         self.inputEventWorker.inputEventSignal.connect(self.streaming.setInputEvent)
-        self.stopRunningSignal.connect(self.inputEventWorker.stopRunning)
+        #self.stopRunningSignal.connect(self.inputEventWorker.stopRunning)
+        self.stopRunningSignal.connect(lambda: self.inputEventWorker.stopRunning())
         self.inputEventThread.start()
-        logging.info(f"inputEventThread is running? {self.inputEventThread.isRunning()}")
+        logging.info(f"inputEventThread is running {self.inputEventThread.isRunning()}")
+    
 
     def runSaveDataThread(self):
         logging.info(f"from _runSaveDataThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
@@ -1034,18 +1066,65 @@ class Window(QMainWindow, Ui_MainWindow):
         self.saveDataWorker.finished.connect(self.saveDataThread.quit)
         self.saveDataWorker.finished.connect(self.saveDataWorker.deleteLater)
         self.saveDataThread.finished.connect(self.saveDataThread.deleteLater)
-        self.saveDataWorker.analogDataSignal.connect(self.streaming.getData)
+        #self.saveDataWorker.analogDataSignal.connect(self.streaming.getData)
         self.stopRunningSignal.connect(lambda: self.saveDataWorker.stopRunning())  # Need to use lambda, to explicitly make function call (from the main thread). Because the saveDataWorker thread will never call it since its in a infinite loop.
         self.saveDataThread.start()
         logging.info(f"saveDataThread running? {self.saveDataThread.isRunning()}")
+        
+
+    def runReadingDataThread(self):
+        self.readingDataThread = QThread(parent=self)
+        self.readDataWorker = ReadDataWorker(self.adc, self.bpod)
+        self.readDataWorker.moveToThread(self.readingDataThread)
+        
+        
+        
+        self.readDataWorker.finished.connect(self.saveDataThread.quit)
+        self.readDataWorker.finished.connect(self.saveDataWorker.deleteLater)
+        self.readingDataThread.finished.connect(self.saveDataWorker.deleteLater)
+
+        self.readDataWorker.finished.connect(self.readingDataThread.quit)
+        self.readDataWorker.finished.connect(self.readDataWorker.deleteLater)
+        self.readingDataThread.finished.connect(self.readingDataThread.deleteLater)
+
+        self.readingDataThread.started.connect(self.readDataWorker.run)
+
+        self.saveDataWorker.analogDataSignalProcessed.connect(lambda x :self.streaming.getData(x))# give analog data to streamer for plotting
+        self.readDataWorker.analogDataSignal.connect(lambda x : self.saveDataWorker.saveAnalogDataFromBpod(x)) # give analog data to SaveDataWorker for saving
+        self.stopRunningSignal.connect(lambda: self.readDataWorker.stopRunning()) 
+        self.readingDataThread.start()
+        logging.info(f"readDataThread running? {self.readingDataThread.isRunning()}")
+
+
+    def runStreamingThread(self):
+        # The streaming Thread is associated to a worker that is created before ever starting,
+        # so it can never be deleted and recreated or the worker won't recognize it as its own thread
+        if self.streamingThread is None:
+            self.streamingThread = QThread(parent=self)
+
+        self.streaming.moveToThread(self.streamingThread)
+        #self.saveDataWorker.analogDataSignal.connect(self.streaming.getData)
+        #self.inputEventWorker.inputEventSignal.connect(self.streaming.setInputEvent)
+        self.streaming.finished.connect(self.streamingThread.quit)
+        #self.streaming.finished.connect(self.streaming.deleteLater)
+        #self.streamingThread.finished.connect(self.streamingThread.deleteLater)
+        self.startExperimentSignal.connect(self.streaming.resetPlot)
+        self.stopRunningSignal.connect(self.streaming.stopRunning)
+        #self.streaming.inputPlottedSignal.connect(self.streaming.clear)
+        self.streamingThread.start()
+        logging.info(f"streamingDataThread running? {self.streamingThread.isRunning()}")
+
 
     def runProtocolThread(self):
         logging.info(f"from _runProtocolThread, thread is {QThread.currentThread()} and ID is {int(QThread.currentThreadId())}")
+        
         self.protocolThread = QThread(parent=self)
 
         ## hack fix for Qthread deleted error, more info in __init__
         self.oldProtocolThreads.append(self.protocolThread)
+        #self.oldProtocolWorkers.append(self.protocolWorker)
 
+    
         self.protocolWorker = ProtocolWorker(
             self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentIndex(), self.camera, self.shuffleMultiplierSpinBox.value(),
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
@@ -1054,13 +1133,15 @@ class Window(QMainWindow, Ui_MainWindow):
         )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)
+        
         self.protocolWorker.finished.connect(self.protocolThread.quit)
         self.protocolWorker.finished.connect(self.endTask)  # This serves to stop the other threads when the protocol thread completes all trials.
         self.protocolWorker.finished.connect(self.protocolWorker.deleteLater)
         self.protocolThread.finished.connect(self.protocolThread.deleteLater)
+
         self.protocolWorker.newStateSignal.connect(self.updateCurrentState)
-        self.protocolWorker.newStateSignal.connect(self.streaming.checkResponseWindow)
-        self.protocolWorker.newStateSignal.connect(self.streaming.checkOdorPresentation)
+        self.protocolWorker.newStateSignal.connect(self.streaming.getStateNameTime)
+        #self.protocolWorker.newStateSignal.connect(self.streaming.checkOdorPresentation)
         self.protocolWorker.stateNumSignal.connect(self.updateCurrentTrialProgressBar)
         self.protocolWorker.responseResultSignal.connect(self.updateResponseResult)
         self.protocolWorker.newTrialInfoSignal.connect(self.updateCurrentTrialInfo)  # This works without lambda because 'self.updateCurrentTrialInfo' is in the main thread. # the input to the function is the trial_dict
@@ -1069,24 +1150,33 @@ class Window(QMainWindow, Ui_MainWindow):
         self.protocolWorker.duplicateVialsSignal.connect(self.resultsPlot.receiveDuplicatesDict)
         self.protocolWorker.duplicateVialsSignal.connect(self.flowUsagePlot.receiveDuplicatesDict)
         self.protocolWorker.totalsDictSignal.connect(self.updateSessionTotals)
-        self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
+        self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.saveDataWorker.receiveInfoDict(x))
+        self.protocolWorker.saveTrialDataDictSignal.connect(lambda x: self.readDataWorker.receiveInfoDict(x))  # 'x' is the dictionary parameter emitted from 'saveTrialDataDictSignal' and passed into 'receiveInfoDict(x)'
         self.protocolWorker.noResponseAbortSignal.connect(self.noResponseAbortDialog)
         self.protocolWorker.olfaNotConnectedSignal.connect(self.cannotConnectOlfaDialog)
         self.protocolWorker.olfaExceptionSignal.connect(self.olfaExceptionDialog)
         self.protocolWorker.invalidFileSignal.connect(self.invalidFileDialog)
         self.protocolWorker.bpodExceptionSignal.connect(self.bpodExceptionDialog)
         self.stopRunningSignal.connect(lambda: self.protocolWorker.stopRunning())  # I use lambda because the run_state_machine is a blocking function so the protocolThread will not be able to call stop_trial if the user clicks the stop button mid trial.
+        #self.stopRunningSignal.connect(self.protocolWorker.stopRunning) 
         self.protocolThread.start()
         logging.info(f"protocolThread running? {self.protocolThread.isRunning()}")
+ 
 
     def runPlaybackThread(self):
-        self.playbackThread = QThread(parent=self)
+        # The playback Thread is associated to a worker that is created before ever starting,
+        # so it can never be deleted and recreated or the worker won't recognize it as its own thread
+
+        if self.playbackThread is None:
+            self.playbackThread = QThread(parent=self)
+
         self.playBackWorker.moveToThread(self.playbackThread)
         self.protocolWorker.saveVideoSignal.connect(self.playBackWorker.playLastTrial)
-        self.protocolWorker.finished.connect(self.playbackThread.quit)
         self.stopRunningSignal.connect(lambda: self.playbackThread.quit())  # I use lambda because the run_state_machine is a blocking function so the protocolThread will not be able to call stop_trial if the user clicks the stop button mid trial.
-        sleep(5)
+       
         self.playbackThread.start()
+        
+
 
     def bpodClose(self):
         self.bpod.close()

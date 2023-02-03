@@ -598,6 +598,8 @@ class ProtocolWorker(QObject):
         pass
 
     def run(self):
+
+        print(self.currentTrialNum)
         try:
             if self.olfaChecked:
                 self.getOdorsFromConfigFile()
@@ -627,6 +629,7 @@ class ProtocolWorker(QObject):
         
     def startTrial(self):
         if self.keepRunning and (self.currentTrialNum <= self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
+            sleep(1)
             # load protocol from json file. I do this every trial because I need to reset some values back to their original as read
             # from the file, so instead of looping through the self.stateMachine dictionary a second time just to reset the values
             # after parsing it and adding the state to the state machine, I'll just re-read the file and all value will go back to
@@ -756,14 +759,13 @@ class ProtocolWorker(QObject):
 
 
             # Add the timers from whatever you read from json file
-            #
-            # print(type(self.sma))
+            
             self.currentResponseResult = '--'  # reset until bpod gets response result.
             self.responseResultSignal.emit(self.currentResponseResult)
             currentTrialInfo = self.getCurrentTrialInfoDict()
             self.newTrialInfoSignal.emit(currentTrialInfo)
             
-
+            
             if self.camera is not None:
                 try:
 
@@ -781,21 +783,21 @@ class ProtocolWorker(QObject):
                     self.show_message_box(window_title='Error Initializing Camera',
                                       icon=QMessageBox.Critical,
                                       text=str(timeout_error))
-
-            sleep(6) # we are trying this to see if BNC1High (camera trigger) is no longer delayed by 6.5s
-
             try:
                 self.bpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
                 self.bpod.run_state_machine(self.sma)  # Run state machine
+               
             except (BpodErrorException, TypeError) as err:
+                
                 self.bpodExceptionSignal.emit(str(err))
-                # self.stopRunning()
+                self.stopRunning()
                 self.finished.emit()
                 return  # This is here to avoid executing the remaining code below.
 
             self.currentStateName = 'exit'
             self.stimIndex = 0
             self.saveVideoSignal.emit(1)
+            
             if self.saveTrial:
                 endOfTrialDict = self.getEndOfTrialInfoDict()
                 self.saveTrialDataDictSignal.emit(endOfTrialDict)

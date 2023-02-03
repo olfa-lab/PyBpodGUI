@@ -2,7 +2,8 @@ import time
 
 import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer
-from pycromanager import Bridge, Acquisition, multi_d_acquisition_events
+from pycromanager.zmq_bridge._bridge import _Bridge
+from pycromanager import Acquisition, multi_d_acquisition_events
 from time import sleep
 
 import logging
@@ -24,7 +25,7 @@ class MicroManagerPrime95B:  # here we define the 'camera' object used in app.py
     camera_data_dir = None
 
     def __init__(self, acq_settings_file=None):
-        self.bridge = Bridge()
+        self.bridge = _Bridge()
         self.core = self.bridge.get_core()
         self.studio = self.bridge.get_studio()
         self.acquisitions = self.studio.acquisitions()

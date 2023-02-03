@@ -2,24 +2,39 @@ import collections
 import numpy as np
 import logging
 import time
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.animation as animation
-
-
+import pyqtgraph as pg
+from pyqtgraph import PlotWidget, plot
+import math
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
 class StreamingWorker(QObject):  
-    def __init__(self, maxt=2, dt=0.02, ymin=-1.0, ymax=1.0, plotInterval=5, sniffth = 1):
+    finished = pyqtSignal()
+
+
+    def __init__(self, maxt=2, dt=0.02, ymin=-1.0, ymax=1.0, plotInterval=5, sniffth = 1, adc = None, bpod = None):
         super().__init__()
-        self.dynamic_canvas = FigureCanvas(Figure(figsize=(10, 3)))
+        #self.dynamic_canvas = FigureCanvas(Figure(figsize=(10, 3)))
+        #self.fig = self.dynamic_canvas.figure
+        #self.ax = self.dynamic_canvas.figure.subplots()
+        self.dynamic_canvas = pg.PlotWidget()  
+        self.dynamic_canvas.setBackground('w')
+        self.ax = self.dynamic_canvas.getPlotItem()
+        self.buffersize = 50
 
-        self.fig = self.dynamic_canvas.figure
-        self.ax = self.dynamic_canvas.figure.subplots()
-
+        pensniffsig = pg.mkPen(color=(0, 0, 0))
+        penstate = pg.mkPen(color=(0, 0, 0), width=5)
+        pensniffth = pg.mkPen(color=(255, 0, 0))
+        maxt =1
+        self.update_calls_count = 0
         self.dt = dt
         self.maxt = maxt
         self.ymax = ymax
@@ -27,48 +42,28 @@ class StreamingWorker(QObject):
         self.plotInterval = plotInterval  # milliseconds
         self.tdata = [0]
         self.ydata = [0]
+        self.tports = [0]
+        self.port_1_Time = [0]
+        self.port_3_Time = [0]
         self.port_1_Data = [np.nan]
         self.port_2_Data = [np.nan]
         self.port_3_Data = [np.nan]
         self.port_4_Data = [np.nan]
         self.sniffth = sniffth
-
+        self.inputPortsTime = [np.nan] * 4
         self.attemptime = [ 0, maxt]
         self.sniffthdata = [ self.sniffth, self.sniffth]
-        self.line = Line2D(self.tdata, self.ydata, animated=True)
-        self.sniffthline = Line2D(self.attemptime, self.sniffthdata,  color='k', dashes=(1, 1), animated=False)
-        self.port_1_Line = Line2D(self.tdata, self.port_1_Data, color='b', marker='.', animated=True)
-        self.port_2_Line = Line2D(self.tdata, self.port_2_Data, color='b', marker='.', animated=True)
-        self.port_3_Line = Line2D(self.tdata, self.port_3_Data, color='b', marker='.', animated=True)
-        self.port_4_Line = Line2D(self.tdata, self.port_4_Data, color='b', marker='.', animated=True)
-        
-        self.ax.add_line(self.line)
-        self.ax.add_line(self.sniffthline)
-        self.ax.add_line(self.port_1_Line)
-        self.ax.add_line(self.port_2_Line)
-        self.ax.add_line(self.port_3_Line)
-        self.ax.add_line(self.port_4_Line)
-        
-        self.ax.set_ylim(self.ymin - 0.1, self.ymax + 0.1)
-        self.ax.set_xlim(0, self.maxt)
-        self.span = self.ax.axvspan(0, 0, color='blue', alpha=0.2)
-        self.spanStart = 0
-        self.spanEnd = 0
-        self.spanColor = 'b'
+        self.previousTimer = 0
+         
+        self.line =  self.dynamic_canvas.plot(self.tdata, self.ydata, pen=pensniffsig)
+        #self.stateline = self.dynamic_canvas.plot(self.tstate, self.statevalue, pen=pensniffsig) # line that marks the state
+        self.sniffthline = self.dynamic_canvas.plot(self.attemptime, self.sniffthdata, pen=pensniffth)
+        self.port_1_Line = self.dynamic_canvas.plot(self.tports, self.port_1_Data, pen = 'w',  symbolPen ='w', symbol='o',  symbolSize = 6)
+        self.port_3_Line = self.dynamic_canvas.plot(self.tports, self.port_3_Data, pen = 'w', symbolPen ='w', symbol='o', symbolSize = 6)
 
-        self.analogData = np.zeros(self.maxt)
+        self.analogData = []
         self.nTotalDataPoints = 0
         self.nDataPointsPlotted = 0
-
-        self.timeText = self.ax.text(0.70, 0.99, '', transform=self.ax.transAxes)
-        self.fpsText = self.ax.text(0.70, 0.90, '', transform=self.ax.transAxes)
-        self.elapsed = self.ax.text(0.70, 0.80, '', transform=self.ax.transAxes)
-        self.nTotalDataPointsText = self.ax.text(0.70, 0.70, '', transform=self.ax.transAxes)
-        self.nDataPointsPlottedText = self.ax.text(0.70, 0.60, '', transform=self.ax.transAxes)
-        self.port_1_Text = self.ax.text(1.01, 0.91, 'Port_1', transform=self.ax.transAxes)
-        self.port_2_Text = self.ax.text(1.01, 0.60, 'Port_2', transform=self.ax.transAxes)
-        self.port_3_Text = self.ax.text(1.01, 0.30, 'Port_3', transform=self.ax.transAxes)
-        self.port_4_Text = self.ax.text(1.01, 0.01, 'Port_4', transform=self.ax.transAxes)
         
         self.plotTimer = 0
         self.previousTimer = 0
@@ -81,101 +76,205 @@ class StreamingWorker(QObject):
         self.paused = False
         self.isRun = False
         self.isSetup = True
+        self.keepRunning = True
+
+
+        
+        self.events = []
+        self.event_color_dict = {'WaitForOdor':'k',
+            'WaitForSniff':'y',
+            'PresentOdor': 'g',
+            'WaitForResponse':'b',
+            'NoResponse':'c',
+            'Correct':'g',
+            'Wrong':'r',
+            'ITI':'m'}
 
     def setYaxis(self, ymin, ymax):
         self.ymax = ymax
         self.ymin = ymin
-        self.ax.set_ylim(self.ymin - 0.1, self.ymax + 0.1)
+        self.dynamic_canvas.setYRange(self.ymin, self.ymax )
         self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
-        self.ax.figure.canvas.draw()
-
+        #self.ax.figure.canvas.draw()
+    
     def setXaxis(self, maxt):
         self.maxt = maxt
-        self.ax.set_xlim(self.tdata[-1], self.tdata[-1] + self.maxt)
-        self.ax.figure.canvas.draw()
+        self.dynamic_canvas.setXRange(self.tdata[0], self.tdata[0] + self.maxt)
+        #self.ax.figure.canvas.draw()
 
     def set_dt(self, dt):
         self.dt = dt
 
-    def setPlotInterval(self, value):
-        self.plotInterval = value
-        if self.anim is not None:
-            self.anim._stop()  # Since there is no setter function for interval in the FuncAnimation class definition, I need to remove the animation from the timer's callback list and destroy it, which is what _stop() does. Otherwise the animation keeps going even if the self.anim object is deleted.
-            del self.anim  # Then I delete the object.
-        self.animate()  # Then I call animate() again to re-create the FuncAnimation with the new interval.
+    # def setPlotInterval(self, value):
+    #     self.plotInterval = value
+    #     if self.anim is not None:
+    #         self.anim._stop()  # Since there is no setter function for interval in the FuncAnimation class definition, I need to remove the animation from the timer's callback list and destroy it, which is what _stop() does. Otherwise the animation keeps going even if the self.anim object is deleted.
+    #         del self.anim  # Then I delete the object.
+    #     self.animate()  # Then I call animate() again to re-create the FuncAnimation with the new interval.
     
     def setSniffLine(self, value):
         self.sniffth = value/1000
         self.attemptime = [ 0, self.maxt]
         self.sniffthdata = [ self.sniffth, self.sniffth]
 
-        self.sniffthline.set_data(self.attemptime,self.sniffthdata )
-        self.ax.figure.canvas.draw()
+        #self.sniffthline.setData(self.attemptime,self.sniffthdata )
+        #self.ax.figure.canvas.draw()
+    
+    
+    def update_plot_data(self):
 
-    def update(self, y):
+        self.x = self.x[1:]  # Remove the first y element.
+        self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
+
+        self.y = self.y[1:]  # Remove the first
+        self.y.append( randint(0,100))  # Add a new random value.
+
+        self.data_line.setData(self.x, self.y)  #
+
+    def update_port_data(self):
+        
+        #print('update_port_data')
+        print(self.inputPorts, self.inputPortsTime)
+        for i in range(len(self.inputPorts)):
+            if self.inputPorts[i] is not np.nan:
+                match i:
+                    case 0:
+                        self.port_1_Data.append(self.inputPorts[0]) 
+                        self.port_1_Time.append(self.inputPortsTime[0])
+                        self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
+                        if len(self.port_1_Data)>10:
+                            self.port_1_Data = []
+                            self.port_1_Time = []
+                    case 1:
+                        pass
+                    case 2:
+                        self.port_3_Data.append(self.inputPorts[2])
+                        self.port_3_Time.append(self.inputPortsTime[2])
+                        self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
+                        if len(self.port_3_Data)>10:
+                            self.port_3_Data = []
+                            self.port_3_Time = []
+                    case 3:
+                        pass
+    
+
+
+    def update(self):
+
+        # Function can be called either regularly whenever enough samples of the Analog Data have been read (flagAnalog = 1)
+        # or when one of the lick sensor has been touched (flagLick = 1)
+        print('Function update in steaming worker called')
+        print( self.keepRunning)
+        #Maximum number of samples that can be plotted in the windows (this is decided from the maxt input in the GUI)   
+        maxSamples = int(self.maxt/self.dt)
+        # Read currrent time
         currentTimer = time.perf_counter()
-        self.plotTimer = round(((currentTimer - self.previousTimer) * 1000), 3)     # the first reading will be erroneous
-        self.previousTimer = currentTimer
-        self.timeText.set_text('Plot Interval = ' + str(self.plotTimer) + 'ms')
-        tx = 'Mean Frame Rate: {fps:.3f}FPS'.format(fps= ((self.counter) / (time.perf_counter() - self.t_start)) ) 
-        self.fpsText.set_text(tx)
-        self.counter += 1
-        elap = 'Elapsed Time: {dt:.3f} sec'.format(dt= (time.perf_counter() - self.t_start))
-        self.elapsed.set_text(elap)
-        self.nTotalDataPointsText.set_text('Total data points: {0}'.format(self.nTotalDataPoints))
-        self.nDataPointsPlottedText.set_text('Plotted data points: {0}'.format(self.nDataPointsPlotted))
 
-        lastt = self.tdata[-1]
-        if lastt > self.tdata[0] + self.maxt:  # reset the arrays
-            self.tdata = [self.tdata[-1]]
-            self.ydata = [self.ydata[-1]]
-            self.port_1_Data = [self.port_1_Data[-1]]
-            self.port_2_Data = [self.port_2_Data[-1]]
-            self.port_3_Data = [self.port_3_Data[-1]]
-            self.port_4_Data = [self.port_4_Data[-1]]
-            
-            self.ax.set_xlim(self.tdata[0], self.tdata[0] + self.maxt)
-            self.ax.figure.canvas.draw()
-
-        # t = self.tdata[-1] + self.dt
-        # self.tdata.append(t)
-        # self.ydata.append(y)
-        # self.lickRightCorrectData.append(self.lickRightCorrect)
-        # self.lickRightWrongData.append(self.lickRightWrong)
-        # self.lickLeftCorrectData.append(self.lickLeftCorrect)
-        # self.lickLeftWrongData.append(self.lickLeftWrong)
-        # self.nDataPointsPlotted += 1
-
-        for i in range(len(y)):
-            t = self.tdata[-1] + self.dt
-            self.tdata.append(t)
-            self.ydata.append(y[i])
-            self.port_1_Data.append(self.inputPorts[0])
-            self.port_2_Data.append(self.inputPorts[1])
-            self.port_3_Data.append(self.inputPorts[2])
-            self.port_4_Data.append(self.inputPorts[3])
-            self.nDataPointsPlotted += 1
-
-        self.line.set_data(self.tdata, self.ydata)
-        self.port_1_Line.set_data(self.tdata, self.port_1_Data)
-        self.port_2_Line.set_data(self.tdata, self.port_2_Data)
-        self.port_3_Line.set_data(self.tdata, self.port_3_Data)
-        self.port_4_Line.set_data(self.tdata, self.port_4_Data)
+        # Initialize time vector the very first time you plot
         
 
-        if self.activateResponseWindow or self.presentOdor:
-            self.spanEnd = self.tdata[-1]  # Make the responseWindow grow with sniff signal.
-            # set_xy() takes an (N, 2) list of the verticies of the polygon. Since axvspan is a rectangle, there are 5 verticies in order to create a complete closed circuit.
-            self.span.set_xy([[self.spanStart, self.ymin], [self.spanStart, self.ymax], [self.spanEnd, self.ymax], [self.spanEnd, self.ymin], [self.spanStart, self.ymin]])
-        else:
-            # This else statement keeps the responseWindow showing until the canvas gets redrawn because I need to do something with self.span in order to be able to return it.
-            self.span.set_xy([[self.spanStart, self.ymin], [self.spanStart, self.ymax], [self.spanEnd, self.ymax], [self.spanEnd, self.ymin], [self.spanStart, self.ymin]])
+        if self.keepRunning:
+            lastt = self.tdata[-1]
+            n_new_datapoints= len(self.analogData)
+            
+            if self.update_calls_count == 0:
+                self.tdata = [currentTimer-n_new_datapoints*self.dt]
+                
+            
+            t = np.linspace(self.previousTimer, currentTimer, n_new_datapoints)
+            
+            if lastt >= self.tdata[0] + self.maxt:
+                self.tdata = self.tdata[n_new_datapoints-1:]
+                self.ydata = self.ydata[n_new_datapoints-1:]
+                #self.dataColor =  self.dataColor[n_new_datapoints-1:]
+                
+                self.tdata.extend(t)
+                self.ydata.extend(self.analogData)
+                
+                self.dynamic_canvas.setXRange(int(self.tdata[0]), int(self.tdata[0] + self.maxt))
+            else:
+                
+                self.tdata.extend(t)
+                self.ydata.extend(self.analogData)
+                self.dynamic_canvas.setXRange(self.tdata[0], self.tdata[0] + self.maxt)
+            
+            nSamples = len(self.tdata)
+            timeslist = []
+            colorslist = []
+            maxtime = self.tdata[-1] - self.tdata[0] + self.dt
+         
 
-        return self.line, self.port_1_Line, self.port_2_Line, self.port_3_Line, self.port_4_Line, self.span,
+            #newevents = [ event for i, event in enumerate(self.events[:-1]) if self.events[i+1][1]< self.tdata[0]]
+            #newevents.append(self.events[-1])
+            #self.events = newevents
+            #print(newevents,  self.events)
+            #print( self.events)
+            i = 0
+            while i < len(self.events)-1:
+                event = self.events[i]
+                if self.events[i+1][1] < self.tdata[0]:  # delete if next event is also in past, leaving only one past event
+                    self.events.pop(i)
+                i+=1
+            #for i, event in enumerate(self.events[:-1]):
+            #    if self.events[i+1][1] < self.tdata[0]:  # delete if next event is also in past, leaving only one past event
+            #        self.events.pop(i)
+            
+            #print( self.events)
+            for i, event in enumerate(self.events):
+                if event[1] < self.tdata[0]:
+                    timeslist.append(0)
+                    colorslist.append(self.event_color_dict[event[0]])
+                    if i < len(self.events)-1:
+                        timeslist.append((self.events[i+1][1]-self.tdata[0]-self.dt)/maxtime)
+                        colorslist.append(self.event_color_dict[event[0]])
+                elif event[1] > self.tdata[0]:
+                    timeslist.append((event[1]-self.tdata[0])/maxtime)
+                    if i < len(self.events)-1:
+                        timeslist.append((self.events[i+1][1]-self.tdata[0]-self.dt)/maxtime)
+                    colorslist.append(self.event_color_dict[event[0]])
+                    colorslist.append(self.event_color_dict[event[0]])
+
+            
+            cm = pg.ColorMap(timeslist,colorslist)
+
+            pen = cm.getPen( span=(self.tdata[0], self.tdata[-1]), width=5 ,orientation='horizontal')
+            self.line.setData(self.tdata, self.ydata )
+            self.line.setPen(pen)
+            self.tsniff = [self.tdata[0], self.tdata[-1]]
+            self.sniffthline.setData(self.tsniff, self.sniffthdata)
+        else:
+            self.finished.emit()
+        self.update_calls_count +=1
+        self.previousTimer = currentTimer
+        return self.line #self.port_1_Line, self.port_2_Line, self.port_3_Line, self.port_4_Line, self.span,
 
     def getData(self, data):
-        self.analogData = data
+        self.analogData.extend(data)
+        self.analogFlag = 1
+        if len(self.analogData)>self.buffersize:
+            self.update()
+            self.analogData = []
         self.nTotalDataPoints += len(data)
+    
+    
+    
+    def setInputEvent(self, inputs):
+        currentTimer = time.perf_counter()
+        self.lickFlag = 1
+        self.analogFlag = 0
+        for i in range(len(inputs)):
+            if inputs[i] > 0:
+                print('lick')
+                self.inputPorts[i] = self.triggeredValues[i]
+                self.inputPortsTime[i] = currentTimer
+                
+        nancheck = [0 if math.isnan(x) else 1 for x in self.inputPorts ]
+        if sum(nancheck)>0:
+            self.update_port_data()
+            self.inputPorts = [np.nan] * 4
+            self.inputPortsTime = [np.nan] * 4
+
+
 
     def emitter(self):
         yield self.analogData
@@ -183,9 +282,13 @@ class StreamingWorker(QObject):
         # for y in self.analogData:
         #     yield y
 
-    def animate(self):
-        # pass a generator in "emitter" to produce data for the update func
-        self.anim = animation.FuncAnimation(self.fig, self.update, self.emitter, interval=self.plotInterval, blit=True)
+    #def animate(self):
+    #    # pass a generator in "emitter" to produce data for the update func
+    #    #self.anim = animation.FuncAnimation(self.fig, self.update, self.emitter, interval=self.plotInterval, blit=True)
+    #    self.timer = QtCore.QTimer()
+    #    self.timer.setInterval(1)
+    #    self.timer.timeout.connect(self.update)
+    #    self.timer.start()
 
     def getFigure(self):
         return self.dynamic_canvas
@@ -198,68 +301,78 @@ class StreamingWorker(QObject):
             self.span.set_color('y')
             self.spanColor = 'y'
 
-    def checkResponseWindow(self, stateName):
-        # This function gets the newStateSignal from protocolWorker.
-        if stateName == 'WaitForResponse':
-            self.spanStart = self.tdata[-1]
-            self.span.set_color('b')  # reset color to blue until lick occurs.
-            self.activateResponseWindow = True
-            self.presentOdor = False
-            self.spanColor = 'b'  # also reset the color variable to blue.
-        elif stateName == 'Correct':
-            self.span.set_color('g')
-            self.activateResponseWindow = False
-        elif stateName == 'Wrong':
-            self.span.set_color('r')
-            self.activateResponseWindow = False
-        elif stateName == 'NoResponse':
-            # No need to set span color here as it is already blue.
-            self.activateResponseWindow = False
+
+    def getStateNameTime(self, stateName):
+        currentTimer = time.perf_counter()
+
+        self.events.append((stateName, currentTimer))
+        #self.timeCol.append(currentTimer)
+        #self.allCol.append(self.currentColor)
+
+    def stopRunning(self):
+        self.keepRunning = False
+
+    # def checkResponseWindow(self, stateName):
+    #     # This function gets the newStateSignal from protocolWorker.
+    #     if stateName == 'WaitForResponse':
+    #         self.spanStart = self.tdata[-1]
+    #         self.span.set_color('b')  # reset color to blue until lick occurs.
+    #         self.activateResponseWindow = True
+    #         self.presentOdor = False
+    #         self.spanColor = 'b'  # also reset the color variable to blue.
+    #     elif stateName == 'Correct':
+    #         self.span.set_color('g')
+    #         self.activateResponseWindow = False
+    #     elif stateName == 'Wrong':
+    #         self.span.set_color('r')
+    #         self.activateResponseWindow = False
+    #     elif stateName == 'NoResponse':
+    #         # No need to set span color here as it is already blue.
+    #         self.activateResponseWindow = False
         
-        # This else statement is here to end the response window and set its color based on the inputEventSignal received from the inputEventWorker thread,
-        # instead of based on the stateName.
-        else:
-            if self.activateResponseWindow:  
-                # This if statement ensures the span color is set only once: when the 'WaitForResponse' state completes and transitions to the next state.
-                # Otherwise, every state that is not named 'WaitForResponse' will call set_color(). I used a QTimer.singleShot to set the span color because
-                # there seems to be a timing conflict (or thats what I think is happening) where the checkResponseWindow() function is called by the
-                # protocolWorker thread's newStateSignal and it finishes execution before the setInputEvent() function has a chance to change the span color
-                # variable based on the type of lick detected by the inputEventWorker thread. Perhaps the newStateSignal is emitted first and then comes the
-                # inputEventSignal. Both signals are handled by the main thread (i think) because both slot functions (setInputEvent() and checkResponseWindow())
-                # are inside StreamingWorker which is running on the main thread. So maybe two pyqtSignals cannot be handled simultaneously on the same thread?
-                # Or maybe they do, but checkResponseWindow() executes faster/finishes earlier than setInputEvent does? This solution works most of the time,
-                # except for the rare cases when the left sensor is touched and then the right sensor is touched very shortly after, and vise versa, such that
-                # the span color variable changes more than once within the QTimer.singleShot's duration. This can cause the span color to be set incorrectly;
-                # opposite to the actual response result. A better solution might be to check if the stateName equals "Correct", "Wrong", or "No Response" 
-                # using the string sent by the protocolWorker thread's newStateSignal or responseResultSignal.
-                QTimer.singleShot(100, lambda: self.span.set_color(self.spanColor))
-                self.activateResponseWindow = False
+    #     # This else statement is here to end the response window and set its color based on the inputEventSignal received from the inputEventWorker thread,
+    #     # instead of based on the stateName.
+    #     else:
+    #         if self.activateResponseWindow:  
+    #             # This if statement ensures the span color is set only once: when the 'WaitForResponse' state completes and transitions to the next state.
+    #             # Otherwise, every state that is not named 'WaitForResponse' will call set_color(). I used a QTimer.singleShot to set the span color because
+    #             # there seems to be a timing conflict (or thats what I think is happening) where the checkResponseWindow() function is called by the
+    #             # protocolWorker thread's newStateSignal and it finishes execution before the setInputEvent() function has a chance to change the span color
+    #             # variable based on the type of lick detected by the inputEventWorker thread. Perhaps the newStateSignal is emitted first and then comes the
+    #             # inputEventSignal. Both signals are handled by the main thread (i think) because both slot functions (setInputEvent() and checkResponseWindow())
+    #             # are inside StreamingWorker which is running on the main thread. So maybe two pyqtSignals cannot be handled simultaneously on the same thread?
+    #             # Or maybe they do, but checkResponseWindow() executes faster/finishes earlier than setInputEvent does? This solution works most of the time,
+    #             # except for the rare cases when the left sensor is touched and then the right sensor is touched very shortly after, and vise versa, such that
+    #             # the span color variable changes more than once within the QTimer.singleShot's duration. This can cause the span color to be set incorrectly;
+    #             # opposite to the actual response result. A better solution might be to check if the stateName equals "Correct", "Wrong", or "No Response" 
+    #             # using the string sent by the protocolWorker thread's newStateSignal or responseResultSignal.
+    #             QTimer.singleShot(100, lambda: self.span.set_color(self.spanColor))
+    #             self.activateResponseWindow = False
 
-    def setInputEvent(self, inputs):
-        for i in range(len(inputs)):
-            if inputs[i]:
-                self.inputPorts[i] = self.triggeredValues[i]
-            else:
-                self.inputPorts[i] = np.nan
+   
+                
 
-    def pauseAnimation(self):
-        if not self.paused:
-            if self.anim is not None:
-                self.anim.event_source.stop()
-            self.paused = True
+    #def pauseAnimation(self):
+    #    if not self.paused:
+    #        if self.anim is not None:
+    #            self.anim.event_source.stop()
+    #        self.paused = True
 
-    def resumeAnimation(self):
-        if self.paused:
-            self.anim.event_source.start()
-            self.paused = False
+    #def resumeAnimation(self):
+    #    if self.paused:
+    #        self.anim.event_source.start()
+    #        self.paused = False
 
     def startAnimation(self):
-        if self.isSetup and not self.isRun:
-            self.animate()
-            self.t_start = time.perf_counter()
-            self.isRun = True
-            return True
-        return False
+
+        self.animate()
+        return True
+        #if self.isSetup and not self.isRun:
+        #    self.animate()
+        #    self.t_start = time.perf_counter()
+        #    self.isRun = True
+        #    return True
+        #return False
 
     def resetPlot(self):
         self.tdata = [0]
@@ -268,25 +381,37 @@ class StreamingWorker(QObject):
         self.port_2_Data = [np.nan]
         self.port_3_Data = [np.nan]
         self.port_4_Data = [np.nan]
+
+        self.port_1_Time = [np.nan]
+        self.port_2_Time = [np.nan]
+        self.port_3_Time = [np.nan]
+        self.port_4_Time = [np.nan]
         
-        self.ax.set_xlim(0, self.maxt)
+        self.line.setData(self.tdata, self.ydata)
+        self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
+        #self.port_2_Line.setData(self.port_2_Time, self.port_2_Data)
+        self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
+        #self.port_4_Line.setData(self.port_4_Time, self.port_4_Data)
+        self.keepRunning = True
 
-        self.timeText.set_text('')
-        self.fpsText.set_text('')
-        self.elapsed.set_text('')
-        self.nTotalDataPointsText.set_text('')
-        self.nDataPointsPlottedText.set_text('')
+        #self.ax.set_xlim(0, self.maxt)
 
-        self.nTotalDataPoints = 0
-        self.nDataPointsPlotted = 0
-        self.plotTimer = 0
-        self.previousTimer = 0
-        self.counter = 0
-        self.inputPorts = [np.nan] * 4
+        # self.timeText.set_text('')
+        # self.fpsText.set_text('')
+        # self.elapsed.set_text('')
+        # self.nTotalDataPointsText.set_text('')
+        # self.nDataPointsPlottedText.set_text('')
+
+        # self.nTotalDataPoints = 0
+        # self.nDataPointsPlotted = 0
+        # self.plotTimer = 0
+        # self.previousTimer = 0
+        # self.counter = 0
+        # self.inputPorts = [np.nan] * 4
         
-        self.spanStart = 0
-        self.spanEnd = 0
-        self.activateResponseWindow = False
-        self.t_start = time.perf_counter()
+        # self.spanStart = 0
+        # self.spanEnd = 0
+        # self.activateResponseWindow = False
+        # self.t_start = time.perf_counter()
 
-        self.ax.figure.canvas.draw()
+        # self.ax.figure.canvas.draw()

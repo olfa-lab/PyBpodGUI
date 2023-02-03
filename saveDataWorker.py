@@ -52,6 +52,7 @@ Example trial info dictionary created by the bpod.
 
 class SaveDataWorker(QObject):
     analogDataSignal = pyqtSignal(np.ndarray)
+    analogDataSignalProcessed = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
     def __init__(self,
@@ -88,6 +89,7 @@ class SaveDataWorker(QObject):
         self.eventsTable = None  # Same thing here, and also because I do not want to create the eventsTable if no input events even occurred.
         self.eventsTableDescDict = {}  # Description for the events table instead of making a class definition and subclassing tables.IsDescription.
         
+        self.camera = None
         self.keepRunning = True
         self.newData = False
         self.trialNum = 1
@@ -409,14 +411,15 @@ class SaveDataWorker(QObject):
                 self.counter += 1
             else:
                 # self.voltsTable.flush()  # Write to the file whenever the buffer gets full instead of waiting for the end of trial dict to come from the protocolWorker thread.
+                
                 self.analogDataSignal.emit(self.analogDataBuffer)
                 self.counter = 0
                 self.analogDataBuffer[self.counter] = voltages[0]
                 self.counter += 1
     
-    def saveAnalogDataFromBpod(self):
-        analogData = self.bpod.read_analog_input()
-
+    def saveAnalogDataFromBpod(self, analogData):#modified by Bea in introducing ReadDataThread
+        #analogData = self.bpod.read_analog_input()
+        
         if len(analogData) > 0:
             # convert decimal bit value to voltage. The length of samples indicates how many channels are streaming to USB.
             nSamples = int(len(analogData) / (self.nChannels + 1))  # Add one to account for the trial number that is included with every sample.
@@ -441,7 +444,7 @@ class SaveDataWorker(QObject):
                     for i in range(self.nChannels):
                         ind += 1
 
-            self.analogDataSignal.emit(np.array(voltages[0], dtype='float32'))  # StreamingWorker is currently only capable of plotting one channel.
+            self.analogDataSignalProcessed.emit(np.array(voltages[0], dtype='float32'))  # StreamingWorker is currently only capable of plotting one channel.
     
     def run(self):
         # self.t_start = time.perf_counter()
@@ -481,11 +484,11 @@ class SaveDataWorker(QObject):
                         self.voltsRow = self.voltsTable.row
 
             
-            elif self.adc is not None:
-                self.saveAnalogDataFromModule()
-
-            elif self.bpod is not None:
-                self.saveAnalogDataFromBpod()
+            #elif self.adc is not None:
+            #    self.saveAnalogDataFromModule()
+            #
+            #elif self.bpod is not None:
+            #    self.saveAnalogDataFromBpod()
 
             else:
                 QThread.sleep(1)  # Need this or else entire application will become severely unresponsive.
@@ -495,6 +498,7 @@ class SaveDataWorker(QObject):
 
         self.h5file.close()
         logging.info("h5 file closed")
+        logging.info("SaveDataWorker Finished")
         self.finished.emit()
     
     
@@ -502,6 +506,7 @@ class SaveDataWorker(QObject):
 
     
         # get all camera tifs and h5
+       
         folder = self.camera.camera_data_dir
         list_of_tifs = []
         while not bool(list_of_tifs):
@@ -523,4 +528,5 @@ class SaveDataWorker(QObject):
 
     def stopRunning(self):
         self.keepRunning = False
-        self.migrateSessionData()
+        if self.camera is not None: 
+            self.migrateSessionData()

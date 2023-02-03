@@ -73,47 +73,48 @@ class PlaybackWorker(QObject):
         print('Found {0} as most recent tif.'.format(latest_tif))
 
     def playLastTrial(self):
-        #fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
-        print('Finding last trial video')
-        self.findLastTrialVideo()
-        sleep(1)
-        # self.lastTrialVideo = 'H:\\repos\\PyBpodGUI\\camera_data\\test.tif'
-        print('Using {0} as most recent tif.'.format(self.lastTrialVideo))
+        if self.camera is not None: 
+            #fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
+            print('Finding last trial video')
+            self.findLastTrialVideo()
+            sleep(1)
+            # self.lastTrialVideo = 'H:\\repos\\PyBpodGUI\\camera_data\\test.tif'
+            print('Using {0} as most recent tif.'.format(self.lastTrialVideo))
 
-        imstack1 = skio.imread(self.lastTrialVideo)
-        meanframe = np.mean(imstack1[:100,:,:], axis = 0)
-        normstack = imstack1 - meanframe
+            imstack1 = skio.imread(self.lastTrialVideo)
+            meanframe = np.mean(imstack1[:100,:,:], axis = 0)
+            normstack = imstack1 - meanframe
 
-        video_name = 'temp.avi' # 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        fps = 30
-        vidshape = np.shape(normstack)
-        perc20 = np.percentile(normstack, 1)
-        perc95 = np.percentile(normstack, 99.99)
-        normstack[normstack < perc20] = perc20
-        normstack[normstack > perc95] = perc95
-        normstackn = normstack - np.amin(normstack)
-        normstackn = normstackn / np.amax(normstackn)
-        print(type(normstackn), normstackn.shape)
-        vidin = 255 * normstackn
-        vidint = vidin.astype('uint8')
+            video_name = 'temp.avi' # 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
+            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            fps = 30
+            vidshape = np.shape(normstack)
+            perc20 = np.percentile(normstack, 1)
+            perc95 = np.percentile(normstack, 99.99)
+            normstack[normstack < perc20] = perc20
+            normstack[normstack > perc95] = perc95
+            normstackn = normstack - np.amin(normstack)
+            normstackn = normstackn / np.amax(normstackn)
+            print(type(normstackn), normstackn.shape)
+            vidin = 255 * normstackn
+            vidint = vidin.astype('uint8')
 
-        writer = cv2.VideoWriter(video_name, fourcc, fps, (vidshape[1], vidshape[2]), False)
-        for i in range(vidshape[0]):
-            x = vidint[i,:,:]
-            writer.write(x)
-        
-        writer.release()
-        print('done')
+            writer = cv2.VideoWriter(video_name, fourcc, fps, (vidshape[1], vidshape[2]), False)
+            for i in range(vidshape[0]):
+                x = vidint[i,:,:]
+                writer.write(x)
+            
+            writer.release()
+            print('done')
 
-        self.mediaPlayer.setMedia(
-                    QMediaContent(QUrl.fromLocalFile(video_name)))
-        self.playLastTrial_Button.setEnabled(True)
+            self.mediaPlayer.setMedia(
+                        QMediaContent(QUrl.fromLocalFile(video_name)))
+            self.playLastTrial_Button.setEnabled(True)
         
 
         # self.videoLabel.setMedia(
         #             QMediaContent(QUrl.fromLocalFile(fname[0])))
         # self.playLastTrial_Button.setEnabled(True)
   
-        self.play()
+            self.play()
         
