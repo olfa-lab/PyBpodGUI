@@ -137,25 +137,25 @@ class StreamingWorker(QObject):
         print(self.inputPorts, self.inputPortsTime)
         for i in range(len(self.inputPorts)):
             if self.inputPorts[i] is not np.nan:
-                match i:
-                    case 0:
-                        self.port_1_Data.append(self.inputPorts[0]) 
-                        self.port_1_Time.append(self.inputPortsTime[0])
-                        self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
-                        if len(self.port_1_Data)>10:
-                            self.port_1_Data = []
-                            self.port_1_Time = []
-                    case 1:
-                        pass
-                    case 2:
-                        self.port_3_Data.append(self.inputPorts[2])
-                        self.port_3_Time.append(self.inputPortsTime[2])
-                        self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
-                        if len(self.port_3_Data)>10:
-                            self.port_3_Data = []
-                            self.port_3_Time = []
-                    case 3:
-                        pass
+                if i == 0:
+                   
+                    self.port_1_Data.append(self.inputPorts[0]) 
+                    self.port_1_Time.append(self.inputPortsTime[0])
+                    self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
+                    if len(self.port_1_Data)>10:
+                        self.port_1_Data = []
+                        self.port_1_Time = []
+                elif i == 1:
+                    pass
+                elif i ==2:
+                    self.port_3_Data.append(self.inputPorts[2])
+                    self.port_3_Time.append(self.inputPortsTime[2])
+                    self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
+                    if len(self.port_3_Data)>10:
+                        self.port_3_Data = []
+                        self.port_3_Time = []
+                elif i ==3:
+                    pass
     
 
 
