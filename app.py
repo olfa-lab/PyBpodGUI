@@ -255,11 +255,11 @@ class Window(QMainWindow, Ui_MainWindow):
         self.CameraDataDestinationLineEdit.setText(fname)
 
     def setExperimentType(self):
-        if self.experimentTypeComboBox.currentIndex() == 1:
+        if self.experimentTypeComboBox.currentIndex() == 3:
             self.experimentType = 'Imaging'
             self.imaging = 1
         else:
-            self.experimentType = 'Behavior'
+            #self.experimentType = 'Behavior'
             self.imaging = 0
         
 
@@ -1192,7 +1192,7 @@ if __name__ == "__main__":
 
     win = Window()
     # Solution for bpod conncetion issue
-    atexit.register(win.bpodClose)
+    #atexit.register(win.bpodClose)
 
     win.show()
     win.activateWindow()

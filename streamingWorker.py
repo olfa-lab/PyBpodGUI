@@ -119,17 +119,7 @@ class StreamingWorker(QObject):
 
         #self.sniffthline.setData(self.attemptime,self.sniffthdata )
         #self.ax.figure.canvas.draw()
-    
-    
-    def update_plot_data(self):
 
-        self.x = self.x[1:]  # Remove the first y element.
-        self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
-
-        self.y = self.y[1:]  # Remove the first
-        self.y.append( randint(0,100))  # Add a new random value.
-
-        self.data_line.setData(self.x, self.y)  #
 
     def update_port_data(self):
         
@@ -141,21 +131,26 @@ class StreamingWorker(QObject):
                    
                     self.port_1_Data.append(self.inputPorts[0]) 
                     self.port_1_Time.append(self.inputPortsTime[0])
+                    self.dynamic_canvas.disableAutoRange()
                     self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
-                    if len(self.port_1_Data)>10:
-                        self.port_1_Data = []
-                        self.port_1_Time = []
+                    self.dynamic_canvas.autoRange()
                 elif i == 1:
                     pass
                 elif i ==2:
                     self.port_3_Data.append(self.inputPorts[2])
                     self.port_3_Time.append(self.inputPortsTime[2])
+                    self.dynamic_canvas.disableAutoRange()
                     self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
-                    if len(self.port_3_Data)>10:
-                        self.port_3_Data = []
-                        self.port_3_Time = []
+                    self.dynamic_canvas.autoRange()
+                    
                 elif i ==3:
                     pass
+
+                if len(self.port_1_Data)+len(self.port_3_Data)>10:
+                    self.port_1_Data = []
+                    self.port_1_Time = []
+                    self.port_3_Data = []
+                    self.port_3_Time = []
     
 
 
@@ -163,8 +158,6 @@ class StreamingWorker(QObject):
 
         # Function can be called either regularly whenever enough samples of the Analog Data have been read (flagAnalog = 1)
         # or when one of the lick sensor has been touched (flagLick = 1)
-        print('Function update in steaming worker called')
-        print( self.keepRunning)
         #Maximum number of samples that can be plotted in the windows (this is decided from the maxt input in the GUI)   
         maxSamples = int(self.maxt/self.dt)
         # Read currrent time
@@ -172,7 +165,7 @@ class StreamingWorker(QObject):
 
         # Initialize time vector the very first time you plot
         
-
+        print(self.port_1_Time)
         if self.keepRunning:
             lastt = self.tdata[-1]
             n_new_datapoints= len(self.analogData)
@@ -191,12 +184,12 @@ class StreamingWorker(QObject):
                 self.tdata.extend(t)
                 self.ydata.extend(self.analogData)
                 
-                self.dynamic_canvas.setXRange(int(self.tdata[0]), int(self.tdata[0] + self.maxt))
+                #self.dynamic_canvas.setXRange(int(self.tdata[0]), int(self.tdata[0] + self.maxt))
             else:
                 
                 self.tdata.extend(t)
                 self.ydata.extend(self.analogData)
-                self.dynamic_canvas.setXRange(self.tdata[0], self.tdata[0] + self.maxt)
+                #self.dynamic_canvas.setXRange(self.tdata[0], self.tdata[0] + self.maxt)
             
             nSamples = len(self.tdata)
             timeslist = []
@@ -238,10 +231,12 @@ class StreamingWorker(QObject):
             cm = pg.ColorMap(timeslist,colorslist)
 
             pen = cm.getPen( span=(self.tdata[0], self.tdata[-1]), width=5 ,orientation='horizontal')
+            self.dynamic_canvas.disableAutoRange()
             self.line.setData(self.tdata, self.ydata )
             self.line.setPen(pen)
             self.tsniff = [self.tdata[0], self.tdata[-1]]
             self.sniffthline.setData(self.tsniff, self.sniffthdata)
+            self.dynamic_canvas.autoRange()
         else:
             self.finished.emit()
         self.update_calls_count +=1

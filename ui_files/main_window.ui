@@ -1208,17 +1208,17 @@
        </item>
        <item>
         <property name="text">
-         <string>1PImaging</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>Intensity</string>
         </property>
        </item>
        <item>
         <property name="text">
          <string>Identity</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1PImaging</string>
         </property>
        </item>
       </widget>

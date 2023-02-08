@@ -40,6 +40,7 @@ class ResultsPlotWorker(QObject):
             self.updatePlot(self.resultsList)
 
     def updatePlot(self, resultsList):
+        #print("experiment type is :", self.experimentType)
         if (self.experimentType == 1):
             self.intensityPlot(resultsList)
         elif (self.experimentType == 2):

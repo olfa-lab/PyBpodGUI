@@ -3,6 +3,7 @@ import time
 import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer
 from pycromanager.zmq_bridge._bridge import _Bridge
+#from pycromanager import Bridge
 from pycromanager import Acquisition, multi_d_acquisition_events
 from time import sleep
 
