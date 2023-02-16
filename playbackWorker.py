@@ -67,10 +67,10 @@ class PlaybackWorker(QObject):
         list_of_tifs = []
         while not bool(list_of_tifs):
             list_of_tifs = glob.glob(folder +'\\*\\*.tif')
-            print(list_of_tifs)
+            #print(list_of_tifs)
         latest_tif = max(list_of_tifs, key=os.path.getctime)
         self.lastTrialVideo = latest_tif
-        print('Found {0} as most recent tif.'.format(latest_tif))
+        #print('Found {0} as most recent tif.'.format(latest_tif))
 
     def playLastTrial(self):
         if self.camera is not None: 

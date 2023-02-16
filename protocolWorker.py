@@ -106,7 +106,7 @@ class ProtocolWorker(QObject):
         self.rightWaterDuration = duration / 1000  # Convert to seconds.
 
     def setNumTrials(self, value):
-        print(value)
+        #print(value)
         self.nTrials = value
     
     def setMinITI(self, value):
@@ -599,7 +599,7 @@ class ProtocolWorker(QObject):
 
     def run(self):
 
-        print(self.currentTrialNum)
+        #print(self.currentTrialNum)
         try:
             if self.olfaChecked:
                 self.getOdorsFromConfigFile()

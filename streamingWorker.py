@@ -124,7 +124,7 @@ class StreamingWorker(QObject):
     def update_port_data(self):
         
         #print('update_port_data')
-        print(self.inputPorts, self.inputPortsTime)
+        #print(self.inputPorts, self.inputPortsTime)
         for i in range(len(self.inputPorts)):
             if self.inputPorts[i] is not np.nan:
                 if i == 0:
@@ -165,7 +165,7 @@ class StreamingWorker(QObject):
 
         # Initialize time vector the very first time you plot
         
-        print(self.port_1_Time)
+        #print(self.port_1_Time)
         if self.keepRunning:
             lastt = self.tdata[-1]
             n_new_datapoints= len(self.analogData)
@@ -259,7 +259,7 @@ class StreamingWorker(QObject):
         self.analogFlag = 0
         for i in range(len(inputs)):
             if inputs[i] > 0:
-                print('lick')
+                #('lick')
                 self.inputPorts[i] = self.triggeredValues[i]
                 self.inputPortsTime[i] = currentTimer
                 
