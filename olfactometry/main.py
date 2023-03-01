@@ -345,7 +345,7 @@ class Olfactometers(QtWidgets.QMainWindow):
         dilutor_def = dict()
         olfa_definition = dict()
         for i, dilutor in enumerate(self.dilutors):
-            assert isinstance(dilutor, Dilutor)
+            # assert isinstance(dilutor, Dilutor)
             k = 'dilutor_{0}'.format(i)
             dilutor_def[k] = dilutor.generate_tables_definition()
         for i, olfa in enumerate(self.olfas):

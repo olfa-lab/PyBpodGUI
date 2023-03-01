@@ -77,21 +77,24 @@ class StreamingWorker(QObject):
         self.isRun = False
         self.isSetup = True
         self.keepRunning = True
+
         self.events = []
-        self.event_color_dict = {'WaitForOdor':'gray',
-            'WaitForSniff':'peachpuff',
-            'PresentOdor': 'sandybrown',
-            'WaitForResponse':'steelblue',
-            'NoResponse':'gray',
-            'Correct':'yellowgreen',
-            'Wrong':'darkred',
-            'ITI':'k'}
+
+        self.event_color_dict = {'WaitForOdor':'k',
+            'LedOn':'y',
+            'CameraOn':'g',
+            'CameraOff':'r',
+            'WaitForSniff':'y',
+            'PresentOdor': 'g',
+            'WaitForResponse':'b',
+            'NoResponse':'c',
+            'Correct':'g',
+            'Wrong':'r',
+            'ITI':'m'}
 
     def setYaxis(self, ymin, ymax):
         self.ymax = ymax
         self.ymin = ymin
-
-        print( self.ymin,  self.ymax)
         self.dynamic_canvas.setYRange(self.ymin, self.ymax )
         self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
         #self.ax.figure.canvas.draw()
@@ -164,10 +167,6 @@ class StreamingWorker(QObject):
 
         # Initialize time vector the very first time you plot
         
-
-
-       
-        print(self.port_1_Time)
         #print(self.port_1_Time)
         if self.keepRunning:
             lastt = self.tdata[-1]
@@ -240,24 +239,6 @@ class StreamingWorker(QObject):
             self.tsniff = [self.tdata[0], self.tdata[-1]]
             self.sniffthline.setData(self.tsniff, self.sniffthdata)
             self.dynamic_canvas.autoRange()
-
-            # delete events in the past
-            neg_idx = [i if j < self.tdata[0] else None for i,j in enumerate(self.port_1_Time )]
-            for i in neg_idx:
-                if i is not None:
-                    self.port_1_Time.pop(i)
-                    self.port_1_Data.pop(i)
-                    self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
-                    self.dynamic_canvas.autoRange()
-
-            neg_idx = [i if j < self.tdata[0] else None for i,j in enumerate(self.port_3_Time )]
-            for i in neg_idx:
-                if i is not None:
-                    self.port_3_Time.pop(i)
-                    self.port_3_Data.pop(i)
-                    self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
-                    self.dynamic_canvas.autoRange()
-            
         else:
             self.finished.emit()
         self.update_calls_count +=1

@@ -214,7 +214,7 @@ class ProtocolWorker(QObject):
             self.previousResponseResult = self.currentResponseResult
             self.consecutiveNoResponses = 0  # Reset counter to 0 because there was a response.
 
-            if (self.experimentType == 1):
+            if (self.experimentType == 1 or self.experimentType == 3):
                 for i in range(self.nOlfas):
                     vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
                     flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
@@ -243,7 +243,7 @@ class ProtocolWorker(QObject):
             self.previousResponseResult = self.currentResponseResult
             self.consecutiveNoResponses = 0  # Reset counter to 0 because there was a response.
 
-            if (self.experimentType == 1):
+            if (self.experimentType == 1 or self.experimentType == 3):
                 for i in range(self.nOlfas):
                     vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
                     flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
@@ -305,7 +305,7 @@ class ProtocolWorker(QObject):
             self.currentResponseResult = 'None'
             self.responseResultSignal.emit(self.currentResponseResult)
 
-            if (self.experimentType == 1):
+            if (self.experimentType == 1 or self.experimentType == 3):
                 for i in range(self.nOlfas):
                     vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
                     flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
@@ -345,7 +345,7 @@ class ProtocolWorker(QObject):
             self.nOlfas = len(self.olfaConfigDict['Olfactometers'])
             self.mfc_0_capacity = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['capacity']  # will be used to set 'mfc_0_flow' in every stim dict because the olfactometers have been reconfigured such that the bigger mfc will always push out 1000 sccm.
 
-        if (self.experimentType == 1):
+        if (self.experimentType == 1 or self.experimentType == 3):
             self.stimulusFunction = self.intensityGenerator
 
             olfaIndex = 0
