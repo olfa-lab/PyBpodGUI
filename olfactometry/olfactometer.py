@@ -138,6 +138,7 @@ class TeensyOlfa(Olfactometer):
             success = dilutor.set_stimulus(dilspecs[k])
             successes.append(success)
         flows = []
+        #for i in range(2): changing from 2 to 1 to work around error "number of flows specified is not equal to number of mfcs" - Tim R 02/10/2023
         for i in range(2):
             k = 'mfc_{0}_flow'.format(i)
             flows.append(stimulus_dict[k])
@@ -448,11 +449,13 @@ class TeensyOlfa(Olfactometer):
 
     def _set_valve(self, valvenum, valvestate=1):
         # todo: set this to use Olfactometer method instead of hardcoding arduino protocol here.
+        
         if valvestate:
             command = "valve {0} {1} on".format(self.slaveindex, valvenum)
         else:
             command = "valve {0} {1} off".format(self.slaveindex, valvenum)
         logging.debug(command)
+        print(command)
         line = self.parent_device.send_command(command)
         logging.debug(line)
         return

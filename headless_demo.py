@@ -20,7 +20,7 @@ save_dir = r"H:\repos\PyBpodGUI\camera_data\headless_demo"
 
 def image_saved_fn(axes, dataset):
     pixels = dataset.read_image(**axes)
-    print(np.mean(pixels))
+    #print(np.mean(pixels))
 
 with Acquisition(directory=save_dir, name="tcz_acq", show_display=True,
                 image_saved_fn=image_saved_fn

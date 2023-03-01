@@ -168,6 +168,7 @@ class StreamingWorker(QObject):
 
        
         print(self.port_1_Time)
+        #print(self.port_1_Time)
         if self.keepRunning:
             lastt = self.tdata[-1]
             n_new_datapoints= len(self.analogData)
@@ -279,7 +280,7 @@ class StreamingWorker(QObject):
         self.analogFlag = 0
         for i in range(len(inputs)):
             if inputs[i] > 0:
-                print('lick')
+                #('lick')
                 self.inputPorts[i] = self.triggeredValues[i]
                 self.inputPortsTime[i] = currentTimer
                 
