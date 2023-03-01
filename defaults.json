@@ -5,7 +5,7 @@
         "enableOlfactometer": true,
         "olfaConfigFile": "olfactometry_config_files/olfa_config_with_flow_rates.json",
         "protocolFile": "protocol_files/Intensity/Step2_Intensity_TestSession_Noise_Sniff.json",
-        "experimentType": 2,
+        "experimentType": 1,
         "shuffleMultiplier": 0,
         "nTrials": 300,
         "noResponseCutoff": 0,
