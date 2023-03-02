@@ -239,6 +239,24 @@ class StreamingWorker(QObject):
             self.tsniff = [self.tdata[0], self.tdata[-1]]
             self.sniffthline.setData(self.tsniff, self.sniffthdata)
             self.dynamic_canvas.autoRange()
+
+
+            # delete events in the past
+            neg_idx = [i if j < self.tdata[0] else None for i,j in enumerate(self.port_1_Time )]
+            for i in neg_idx:
+                if i is not None:
+                    self.port_1_Time.pop(i)
+                    self.port_1_Data.pop(i)
+                    self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
+                    #self.dynamic_canvas.autoRange()
+
+            neg_idx = [i if j < self.tdata[0] else None for i,j in enumerate(self.port_3_Time )]
+            for i in neg_idx:
+                if i is not None:
+                    self.port_3_Time.pop(i)
+                    self.port_3_Data.pop(i)
+                    self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
+                    #self.dynamic_canvas.autoRange()
         else:
             self.finished.emit()
         self.update_calls_count +=1
