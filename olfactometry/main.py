@@ -30,11 +30,14 @@ class Olfactometers(QtWidgets.QMainWindow):
         self._buildmenubar(menubar)
         self.olfa_specs = self.config_obj['Olfactometers']
         self.olfas = self._config_olfas(self.olfa_specs)
-        try:
-            self.dilutor_specs = self.config_obj['Dilutors']  # configure *global* dilutors.
-            self.dilutors = self._config_dilutors(self.dilutor_specs)
-        except (TypeError, KeyError):  # no global Dilutors are specified, which is OK!
-            self.dilutors = []
+        #try:Bea modified to debug, put back
+            
+        self.dilutor_specs = self.config_obj['Dilutors']  # configure *global* dilutors.
+        self.dilutors = self._config_dilutors(self.dilutor_specs)
+        print("We are printing dilutors in init Olfactometerssss : ", self.dilutors )
+        #except (TypeError, KeyError):  # no global Dilutors are specified, which is OK!
+        #    print(' we ended up in the expection case while reading dilutors')
+        #    self.dilutors = []
         self.setWindowTitle("Olfactometry")
         layout = QtWidgets.QVBoxLayout()
         for olfa in self.olfas:
@@ -45,6 +48,8 @@ class Olfactometers(QtWidgets.QMainWindow):
         self.setCentralWidget(central_widget)
         central_widget.setLayout(layout)
         self.statusBar()
+
+        print(f'Printing olfa_config file in Olfactometers : {self.config_obj}')
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create('CleanLooks'))
 
     def set_stimulus(self, stimulus_dictionary, open_vials=True):
@@ -59,19 +64,27 @@ class Olfactometers(QtWidgets.QMainWindow):
         :rtype: bool
         """
         std = stimulus_dictionary
+        print("Printing std in set_stimulus of Olfatctomeres", std)
+        print('Printing std keys, ', list(std.keys()))
         n_olfas = len(std['olfas'])
         successes = []
         for i in range(n_olfas):
             k = 'olfa_{0}'.format(i)
             o = std['olfas'][k]
+            print("printing o: ", o)
             olfa = self.olfas[i]
             success = olfa.set_stimulus(o, open_vials=open_vials)
             successes.append(success)
         if 'dilutors' in list(std.keys()):
+            print("printing std ", std['dilutors'])
             for i in range(len(std['dilutors'])):
+                
                 dil = self.dilutors[i]
                 k = 'dilutor_{0}'.format(i)
+                print("printing k ", k)
+                #print("printing std ", std['dilutors'])
                 d = std['dilutors'][k]
+                print("We read dilutors from dict in set_stimulus of Olfactometers")
                 success = dil.set_stimulus(d)
                 successes.append(success)
         return all(successes)
@@ -270,8 +283,10 @@ class Olfactometers(QtWidgets.QMainWindow):
         for i in range(len(dilutor_config)):
             v = dilutor_config[i]
             dilutor_type = v['dilutor_type']
+           
             logging.debug('Configuring {0} dilutor.'.format(dilutor_type))
-            dil = DILUTORS[dilutor_type](self, v)
+            #dil = DILUTORS[dilutor_type](self, v)
+            dil = Dilutor(self, v)
             dilutors.append(dil)
             dil.setTitle(dil.title() + " ({0})".format(i))
         return dilutors

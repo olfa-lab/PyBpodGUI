@@ -858,11 +858,18 @@
     </property>
     <addaction name="actionConfigureBpodFlexChannels"/>
    </widget>
+   <widget class="QMenu" name="menuExperiment">
+    <property name="title">
+     <string>Experiment</string>
+    </property>
+    <addaction name="actionOdors"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOlfactometer"/>
    <addaction name="menuBpod"/>
    <addaction name="menuAnalogIn"/>
    <addaction name="menuView"/>
+   <addaction name="menuExperiment"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="experimentSetupDockWidget">
@@ -1350,6 +1357,11 @@
   <action name="actionConfigureBpodFlexChannels">
    <property name="text">
     <string>Configure Flex Channels</string>
+   </property>
+  </action>
+  <action name="actionOdors">
+   <property name="text">
+    <string>Odors</string>
    </property>
   </action>
  </widget>

@@ -28,6 +28,7 @@ from flowUsagePlotWorker import FlowUsagePlotWorker
 from resultsPlotWorker import ResultsPlotWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
+from odorEditorDialog import OdorEditorDialog
 from analogInputModuleSettingsDialog import AnalogInputModuleSettingsDialog
 from bpodFlexChannelSettingsDialog import BpodFlexChannelSettingsDialog
 from PyQt5.QtGui import QPixmap
@@ -201,6 +202,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionSelectOlfaConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
         self.actionConfigureOlfaSettings.triggered.connect(self.launchOlfaEditor)
         self.actionLaunchOlfaGUI.triggered.connect(self.launchOlfaGUI)
+        self.actionOdors.triggered.connect(self.setOdorStimuli)
         self.actionConfigureBpodFlexChannels.triggered.connect(self.launchBpodFlexChannelSettingsDialog)
         self.actionConfigureAnalogInputModuleSettings.triggered.connect(self.launchAnalogInputModuleSettingsDialog)
         self.actionViewStreaming.toggled.connect(self.viewStreamingSubWindow)
@@ -423,6 +425,10 @@ class Window(QMainWindow, Ui_MainWindow):
                     QMessageBox.warning(self, "Error", "Please try again.")
         else:
             QMessageBox.warning(self, "Warning", "Please select an olfa config file first! Go to 'Olfactometer' menu > 'Select config file'")
+
+    def setOdorStimuli(self):
+        self.odorEditor = OdorEditorDialog(self.olfaConfigFileName)
+        self.odorEditor.show()
 
     def launchOlfaEditor(self):
         self.olfaEditor = OlfaEditorDialog(self.olfaConfigFileName)
@@ -1126,7 +1132,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     
         self.protocolWorker = ProtocolWorker(
-            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentIndex(), self.camera, self.shuffleMultiplierSpinBox.value(),
+            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, self.shuffleMultiplierSpinBox.value(), self.odorEditor.all_trials_dict,
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
             int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
             self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1104</width>
+    <height>755</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QPushButton" name="odorSaveButton">
+   <property name="geometry">
+    <rect>
+     <x>810</x>
+     <y>720</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>120</y>
+     <width>651</width>
+     <height>501</height>
+    </rect>
+   </property>
+   <property name="editTriggers">
+    <set>QAbstractItemView::AllEditTriggers</set>
+   </property>
+   <property name="rowCount">
+    <number>0</number>
+   </property>
+   <property name="columnCount">
+    <number>6</number>
+   </property>
+   <column>
+    <property name="text">
+     <string>Vial number</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Odor</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>% Headspace</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>MFC</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Dilutor</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Repetitions num</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QPushButton" name="odorLoadButton">
+   <property name="geometry">
+    <rect>
+     <x>730</x>
+     <y>720</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="odorSaveasButton">
+   <property name="geometry">
+    <rect>
+     <x>890</x>
+     <y>720</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save as...</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="generateOdorTableButton">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>650</y>
+     <width>161</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Generate stimuli table</string>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="stimuliTable">
+   <property name="geometry">
+    <rect>
+     <x>680</x>
+     <y>120</y>
+     <width>421</width>
+     <height>501</height>
+    </rect>
+   </property>
+   <column>
+    <property name="text">
+     <string>Vial</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Odor</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>MFC</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Dilutor</string>
+    </property>
+   </column>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
