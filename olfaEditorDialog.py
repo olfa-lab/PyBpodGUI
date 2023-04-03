@@ -10,11 +10,12 @@ logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 class OlfaEditorDialog(QDialog, Ui_Dialog):
 
-    def __init__(self, olfaConfigFileName=None, parent=None):
+    def __init__(self, olfaConfigFileName=None, olfa_idx = 0, parent=None):
         super().__init__()
         self.setupUi(self)
-        self.setWindowTitle("Olfactometer Configuration Editor")
+        self.setWindowTitle(f"Olfactometer Configuration Editor # {olfa_idx}")
         self.olfaConfigFile = olfaConfigFileName
+        self.olfa_idx = olfa_idx
 
         if self.olfaConfigFile:
             try:
@@ -91,120 +92,120 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
 
     def displayCurrentValues(self):
         try:
-            mfcType = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['MFC_type']
+            mfcType = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['MFC_type']
             self.mfcTypeComboBox_0.setCurrentText(mfcType)
-            address = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['address']
+            address = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['address']
             self.mfcAddressComboBox_0.setCurrentText(address)
-            arduinoPortNum = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['arduino_port_num']
+            arduinoPortNum = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['arduino_port_num']
             self.mfcArduinoPortNumComboBox_0.setCurrentText(str(arduinoPortNum))
-            capacity = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['capacity']
+            capacity = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['capacity']
             self.mfcCapacitySpinBox_0.setValue(capacity)
-            gas = self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['gas']
+            gas = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['gas']
             self.mfcGasComboBox_0.setCurrentText(gas)
 
-            mfcType = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['MFC_type']
+            mfcType = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['MFC_type']
             self.mfcTypeComboBox_1.setCurrentText(mfcType)
-            address = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['address']
+            address = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['address']
             self.mfcAddressComboBox_1.setCurrentText(address)
-            arduinoPortNum = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['arduino_port_num']
+            arduinoPortNum = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['arduino_port_num']
             self.mfcArduinoPortNumComboBox_1.setCurrentText(str(arduinoPortNum))
-            capacity = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['capacity']
+            capacity = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['capacity']
             self.mfcCapacitySpinBox_1.setValue(capacity)
-            gas = self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['gas']
+            gas = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['gas']
             self.mfcGasComboBox_1.setCurrentText(gas)
 
-            comPort = self.olfaConfigDict['Olfactometers'][0]['com_port']
+            comPort = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['com_port']
             self.comPortLineEdit.setText(str(comPort))
-            interface = self.olfaConfigDict['Olfactometers'][0]['interface']
+            interface = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['interface']
             self.interfaceComboBox.setCurrentText(interface)
-            cassette_1_sn = self.olfaConfigDict['Olfactometers'][0]['cassette_1_sn']
+            cassette_1_sn = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['cassette_1_sn']
             self.cassetteSNLineEdit_1.setText(str(cassette_1_sn))
-            cassette_2_sn = self.olfaConfigDict['Olfactometers'][0]['cassette_2_sn']
+            cassette_2_sn = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['cassette_2_sn']
             self.cassetteSNLineEdit_2.setText(str(cassette_2_sn))
-            master_sn = self.olfaConfigDict['Olfactometers'][0]['master_sn']
+            master_sn = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['master_sn']
             self.masterSNLineEdit.setText(str(master_sn))
-            slaveIndex = self.olfaConfigDict['Olfactometers'][0]['slave_index']
+            slaveIndex = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['slave_index']
             self.slaveIndexLineEdit.setText(str(slaveIndex))
             
-            if '5' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['odor']
+            if '5' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['odor']
                 self.vialOdorNameLineEdit_5.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['conc']
                 self.vialConcDoubleSpinBox_5.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['flows']
                 self.flowratesLineEdit_5.setText(str(flows).strip('[]'))
-            if '6' in self.olfaConfigDict['Olfactometers'][0]['Vials']:  
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['odor']
+            if '6' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:  
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['odor']
                 self.vialOdorNameLineEdit_6.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['conc']
                 self.vialConcDoubleSpinBox_6.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['flows']
                 self.flowratesLineEdit_6.setText(str(flows).strip('[]'))
-            if '7' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['odor']
+            if '7' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['odor']
                 self.vialOdorNameLineEdit_7.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['conc']
                 self.vialConcDoubleSpinBox_7.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['flows']
                 self.flowratesLineEdit_7.setText(str(flows).strip('[]'))
-            if '8' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['odor']
+            if '8' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['odor']
                 self.vialOdorNameLineEdit_8.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['conc']
                 self.vialConcDoubleSpinBox_8.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['flows']
                 self.flowratesLineEdit_8.setText(str(flows).strip('[]'))
-            if '9' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['odor']
+            if '9' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['odor']
                 self.vialOdorNameLineEdit_9.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['conc']
                 self.vialConcDoubleSpinBox_9.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['flows']
                 self.flowratesLineEdit_9.setText(str(flows).strip('[]'))
-            if '10' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['odor']
+            if '10' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['odor']
                 self.vialOdorNameLineEdit_10.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['conc']
                 self.vialConcDoubleSpinBox_10.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['flows']
                 self.flowratesLineEdit_10.setText(str(flows).strip('[]'))
-            if '11' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['odor']
+            if '11' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['odor']
                 self.vialOdorNameLineEdit_11.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['conc']
                 self.vialConcDoubleSpinBox_11.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['flows']
                 self.flowratesLineEdit_11.setText(str(flows).strip('[]'))
-            if '12' in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-                odor = self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['odor']
+            if '12' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+                odor = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['odor']
                 self.vialOdorNameLineEdit_12.setText(odor)
-                conc = self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['conc']
+                conc = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['conc']
                 self.vialConcDoubleSpinBox_12.setValue(conc)
-                flows = self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['flows']
+                flows = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['flows']
                 self.flowratesLineEdit_12.setText(str(flows).strip('[]'))
 
-            if ('Dilutors' in self.olfaConfigDict['Olfactometers'][0]) and (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) > 0):
-                dilutorMFCType = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['MFC_type']
+            if ('Dilutors' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]) and (len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors']) > 0):
+                dilutorMFCType = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['MFC_type']
                 self.dilutorMFCTypeComboBox_0.setCurrentText(dilutorMFCType)
-                dilutorMFCAddress = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['address']
+                dilutorMFCAddress = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['address']
                 self.dilutorMFCAddressComboBox_0.setCurrentText(dilutorMFCAddress)
-                dilutorMFCCapacity = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['capacity']
+                dilutorMFCCapacity = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['capacity']
                 self.dilutorMFCCapacitySpinBox_0.setValue(dilutorMFCCapacity)
-                dilutorMFCGas = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['gas']
+                dilutorMFCGas = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['gas']
                 self.dilutorMFCGasComboBox_0.setCurrentText(dilutorMFCGas)
 
-                dilutorMFCType = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['MFC_type']
+                dilutorMFCType = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['MFC_type']
                 self.dilutorMFCTypeComboBox_1.setCurrentText(dilutorMFCType)
-                dilutorMFCAddress = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['address']
+                dilutorMFCAddress = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['address']
                 self.dilutorMFCAddressComboBox_1.setCurrentText(dilutorMFCAddress)
-                dilutorMFCCapacity = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['capacity']
+                dilutorMFCCapacity = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['capacity']
                 self.dilutorMFCCapacitySpinBox_1.setValue(dilutorMFCCapacity)
-                dilutorMFCGas = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['gas']
+                dilutorMFCGas = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['gas']
                 self.dilutorMFCGasComboBox_1.setCurrentText(dilutorMFCGas)
 
-                dilutorCOMPort = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['com_port']
+                dilutorCOMPort = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['com_port']
                 self.dilutorComPortLineEdit.setText(str(dilutorCOMPort))
-                dilutorType = self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['dilutor_type']
+                dilutorType = self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['dilutor_type']
                 self.dilutorTypeComboBox.setCurrentText(dilutorType)
         except KeyError as err:
             QMessageBox.warning(self, "Warning", f"There was an error displaying contents of the file. One or more values may be missing or invalid.\nKeyError: {err}")
@@ -274,333 +275,333 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
             self.clearDilutorButton.clicked.connect(self.clearDilutor)
 
     def recordMFCType_0(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['MFC_type'] = self.mfcTypeComboBox_0.currentText()
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['MFC_type'] = self.mfcTypeComboBox_0.currentText()
         
     def recordMFCAddress_0(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['address'] = self.mfcAddressComboBox_0.currentText()
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['address'] = self.mfcAddressComboBox_0.currentText()
 
     def recordMFCArduinoPortNum_0(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_0.currentText())
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_0.currentText())
 
     def recordMFCCapacity_0(self, value):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['capacity'] = value
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['capacity'] = value
 
     def recordMFCGas_0(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][0]['gas'] = self.mfcGasComboBox_0.currentText()
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][0]['gas'] = self.mfcGasComboBox_0.currentText()
 
     def recordMFCType_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['MFC_type'] = self.mfcTypeComboBox_1.currentText()
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['MFC_type'] = self.mfcTypeComboBox_1.currentText()
 
     def recordMFCAddress_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['address'] = self.mfcAddressComboBox_1.currentText()
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['address'] = self.mfcAddressComboBox_1.currentText()
 
     def recordMFCArduinoPortNum_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_1.currentText())
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['arduino_port_num'] = int(self.mfcArduinoPortNumComboBox_1.currentText())
 
     def recordMFCCapacity_1(self, value):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['capacity'] = value
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['capacity'] = value
 
     def recordMFCGas_1(self):
-        self.olfaConfigDict['Olfactometers'][0]['MFCs'][1]['gas'] = self.mfcGasComboBox_1.currentText()
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][1]['gas'] = self.mfcGasComboBox_1.currentText()
 
     def recordCOMPort(self):
         if not (self.comPortLineEdit.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['com_port'] = int(self.comPortLineEdit.text())
-        elif 'com_port' in self.olfaConfigDict['Olfactometers'][0]:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['com_port']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['com_port'] = int(self.comPortLineEdit.text())
+        elif 'com_port' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['com_port']  # Delete the key if it was created.
 
     def recordInterface(self):
-        self.olfaConfigDict['Olfactometers'][0]['interface'] = self.interfaceComboBox.currentText()
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['interface'] = self.interfaceComboBox.currentText()
 
     def recordCassetteSN_1(self):
         if not (self.cassetteSNLineEdit_1.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['cassette_1_sn'] = int(self.cassetteSNLineEdit_1.text())
-        elif 'cassette_1_sn' in self.olfaConfigDict['Olfactometers'][0]:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['cassette_1_sn']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['cassette_1_sn'] = int(self.cassetteSNLineEdit_1.text())
+        elif 'cassette_1_sn' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['cassette_1_sn']  # Delete the key if it was created.
 
     def recordCassetteSN_2(self):
         if not (self.cassetteSNLineEdit_2.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['cassette_2_sn'] = int(self.cassetteSNLineEdit_2.text())
-        elif 'cassette_2_sn' in self.olfaConfigDict['Olfactometers'][0]:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['cassette_2_sn']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['cassette_2_sn'] = int(self.cassetteSNLineEdit_2.text())
+        elif 'cassette_2_sn' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['cassette_2_sn']  # Delete the key if it was created.
 
     def recordMasterSN(self):
         if not (self.masterSNLineEdit.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['master_sn'] = int(self.masterSNLineEdit.text())
-        elif 'master_sn' in self.olfaConfigDict['Olfactometers'][0]:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['master_sn']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['master_sn'] = int(self.masterSNLineEdit.text())
+        elif 'master_sn' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['master_sn']  # Delete the key if it was created.
 
     def recordSlaveIndex(self):
         if not (self.slaveIndexLineEdit.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['slave_index'] = int(self.slaveIndexLineEdit.text())
-        elif 'slave_index' in self.olfaConfigDict['Olfactometers'][0]:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['slave_index']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['slave_index'] = int(self.slaveIndexLineEdit.text())
+        elif 'slave_index' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['slave_index']  # Delete the key if it was created.
 
     def recordVialOdorName_5(self):
-        if '5' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['5'] = {}
+        if '5' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5'] = {}
         if not (self.vialOdorNameLineEdit_5.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['odor'] = self.vialOdorNameLineEdit_5.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['odor'] = self.vialOdorNameLineEdit_5.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['odor']  # Delete the key if it was created.
 
     def recordVialOdorName_6(self):
-        if '6' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['6'] = {}
+        if '6' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6'] = {}
         if not (self.vialOdorNameLineEdit_6.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['odor'] = self.vialOdorNameLineEdit_6.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['odor'] = self.vialOdorNameLineEdit_6.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['odor']  # Delete the key if it was created.
 
     def recordVialOdorName_7(self):
-        if '7' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['7'] = {}
+        if '7' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7'] = {}
         if not (self.vialOdorNameLineEdit_7.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['odor'] = self.vialOdorNameLineEdit_7.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['odor'] = self.vialOdorNameLineEdit_7.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['odor']  # Delete the key if it was created.
 
     def recordVialOdorName_8(self):
-        if '8' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['8'] = {}
+        if '8' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8'] = {}
         if not (self.vialOdorNameLineEdit_8.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['odor'] = self.vialOdorNameLineEdit_8.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['odor'] = self.vialOdorNameLineEdit_8.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['odor']  # Delete the key if it was created.
 
     def recordVialOdorName_9(self):
-        if '9' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['9'] = {}
+        if '9' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9'] = {}
         if not (self.vialOdorNameLineEdit_9.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['odor'] = self.vialOdorNameLineEdit_9.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['odor'] = self.vialOdorNameLineEdit_9.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['odor']  # Delete the key if it was created.
 
     def recordVialOdorName_10(self):
-        if '10' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['10'] = {}
+        if '10' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10'] = {}
         if not (self.vialOdorNameLineEdit_10.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['odor'] = self.vialOdorNameLineEdit_10.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['odor'] = self.vialOdorNameLineEdit_10.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['odor']  # Delete the key if it was created.
 
     def recordVialOdorName_11(self):
-        if '11' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['11'] = {}
+        if '11' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11'] = {}
         if not (self.vialOdorNameLineEdit_11.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['odor'] = self.vialOdorNameLineEdit_11.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['odor'] = self.vialOdorNameLineEdit_11.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['odor']  # Delete the key if it was created.
 
     def recordVialOdorName_12(self):
-        if '12' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['12'] = {}
+        if '12' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12'] = {}
         if not (self.vialOdorNameLineEdit_12.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['odor'] = self.vialOdorNameLineEdit_12.text()
-        elif 'odor' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['odor']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['odor'] = self.vialOdorNameLineEdit_12.text()
+        elif 'odor' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['odor']  # Delete the key if it was created.
 
     def recordVialConc_5(self, value):
-        if '5' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['5'] = {}
+        if '5' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5'] = {}
         if not (self.vialConcDoubleSpinBox_5.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['conc']  # Delete the key if it was created.
     
     def recordVialConc_6(self, value):
-        if '6' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['6'] = {}
+        if '6' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6'] = {}
         if not (self.vialConcDoubleSpinBox_6.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['conc']  # Delete the key if it was created.
     
     def recordVialConc_7(self, value):
-        if '7' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['7'] = {}
+        if '7' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7'] = {}
         if not (self.vialConcDoubleSpinBox_7.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['conc']  # Delete the key if it was created.
 
     def recordVialConc_8(self, value):
-        if '8' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['8'] = {}
+        if '8' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8'] = {}
         if not (self.vialConcDoubleSpinBox_8.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['conc']  # Delete the key if it was created.
     
     def recordVialConc_9(self, value):
-        if '9' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['9'] = {}
+        if '9' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9'] = {}
         if not (self.vialConcDoubleSpinBox_9.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['conc']  # Delete the key if it was created.
     
     def recordVialConc_10(self, value):
-        if '10' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['10'] = {}
+        if '10' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10'] = {}
         if not (self.vialConcDoubleSpinBox_10.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['conc']  # Delete the key if it was created.
     
     def recordVialConc_11(self, value):
-        if '11' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['11'] = {}
+        if '11' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11'] = {}
         if not (self.vialConcDoubleSpinBox_11.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['conc']  # Delete the key if it was created.
     
     def recordVialConc_12(self, value):
-        if '12' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['12'] = {}
+        if '12' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12'] = {}
         if not (self.vialConcDoubleSpinBox_12.value() == 0.0):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['conc'] = value
-        elif 'conc' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:  # Therefore doubleSpinBox must be 0.0.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['conc']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['conc'] = value
+        elif 'conc' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']:  # Therefore doubleSpinBox must be 0.0.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['conc']  # Delete the key if it was created.
 
     def recordFlowrates_5(self):
-        if '5' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['5'] = {}
+        if '5' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5'] = {}
         if not (self.flowratesLineEdit_5.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_5.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['5']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['5']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_5.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['5']['flows']  # Delete the key if it was created.
 
     def recordFlowrates_6(self):
-        if '6' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['6'] = {}
+        if '6' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6'] = {}
         if not (self.flowratesLineEdit_6.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_6.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['6']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['6']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_6.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['6']['flows']  # Delete the key if it was created.
 
     def recordFlowrates_7(self):
-        if '7' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['7'] = {}
+        if '7' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7'] = {}
         if not (self.flowratesLineEdit_7.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_7.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['7']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['7']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_7.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['7']['flows']  # Delete the key if it was created.
 
     def recordFlowrates_8(self):
-        if '8' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['8'] = {}
+        if '8' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8'] = {}
         if not (self.flowratesLineEdit_8.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_8.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['8']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['8']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_8.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['8']['flows']  # Delete the key if it was created.
 
     def recordFlowrates_9(self):
-        if '9' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['9'] = {}
+        if '9' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9'] = {}
         if not (self.flowratesLineEdit_9.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_9.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['9']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['9']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_9.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['9']['flows']  # Delete the key if it was created.
 
     def recordFlowrates_10(self):
-        if '10' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['10'] = {}
+        if '10' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10'] = {}
         if not (self.flowratesLineEdit_10.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_10.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['10']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['10']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_10.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['10']['flows']  # Delete the key if it was created.
 
     def recordFlowrates_11(self):
-        if '11' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['11'] = {}
+        if '11' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11'] = {}
         if not (self.flowratesLineEdit_11.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_11.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['11']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['11']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_11.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['11']['flows']  # Delete the key if it was created.
 
     def recordFlowrates_12(self):
-        if '12' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['12'] = {}
+        if '12' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12'] = {}
         if not (self.flowratesLineEdit_12.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_12.text().split(',')]  # make a list of integer flowrates from the comma separated string.
-        elif 'flows' in self.olfaConfigDict['Olfactometers'][0]['Vials']['12']:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Vials']['12']['flows']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['flows'] = [int(i.strip()) for i in self.flowratesLineEdit_12.text().split(',')]  # make a list of integer flowrates from the comma separated string.
+        elif 'flows' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['12']['flows']  # Delete the key if it was created.
     
     def recordDilutorCOMPort(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
         if not (self.dilutorComPortLineEdit.text() == ''):
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['com_port'] = int(self.dilutorComPortLineEdit.text())
-        elif 'com_port' in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:  # Therefore lineEdit must be an empty string.
-            del self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['com_port']  # Delete the key if it was created.
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['com_port'] = int(self.dilutorComPortLineEdit.text())
+        elif 'com_port' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:  # Therefore lineEdit must be an empty string.
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['com_port']  # Delete the key if it was created.
 
     def recordDilutorType(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['dilutor_type'] = self.dilutorTypeComboBox.currentText()
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['dilutor_type'] = self.dilutorTypeComboBox.currentText()
 
     def recordDilutorMFCType_0(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['MFC_type'] = self.dilutorMFCTypeComboBox_0.currentText()
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['MFC_type'] = self.dilutorMFCTypeComboBox_0.currentText()
 
     def recordDilutorMFCAddress_0(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['address'] = self.dilutorMFCAddressComboBox_0.currentText()
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['address'] = self.dilutorMFCAddressComboBox_0.currentText()
 
     def recordDilutorMFCCapacity_0(self, value):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) == 0):
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'].append({})
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['capacity'] = value
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if (len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors']) == 0):
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'].append({})
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['capacity'] = value
 
     def recordDilutorMFCGas_0(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][0]['gas'] = self.dilutorMFCGasComboBox_0.currentText()
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][0]['gas'] = self.dilutorMFCGasComboBox_0.currentText()
 
     def recordDilutorMFCType_1(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['MFC_type'] = self.dilutorMFCTypeComboBox_1.currentText()
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['MFC_type'] = self.dilutorMFCTypeComboBox_1.currentText()
 
     def recordDilutorMFCAddress_1(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['address'] = self.dilutorMFCAddressComboBox_1.currentText()
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['address'] = self.dilutorMFCAddressComboBox_1.currentText()
 
     def recordDilutorMFCCapacity_1(self, value):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['capacity'] = value
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['capacity'] = value
 
     def recordDilutorMFCGas_1(self):
-        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'] = [{}]
-        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
-            self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
-        self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][1]['gas'] = self.dilutorMFCGasComboBox_1.currentText()
+        if 'Dilutors' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'] = [{}]
+        if 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'] = [{}, {}]  # Create a list of two dictionaries, one dictionary per MFC.
+        self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][1]['gas'] = self.dilutorMFCGasComboBox_1.currentText()
 
     def clearDilutor(self):
-        if 'Dilutors' in self.olfaConfigDict['Olfactometers'][0]:
+        if 'Dilutors' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             self.dilutorMFCTypeComboBox_0.setCurrentIndex(-1)
             self.dilutorMFCAddressComboBox_0.setCurrentIndex(-1)
             self.dilutorMFCCapacitySpinBox_0.setValue(0)
@@ -616,48 +617,48 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
 
             # I delete the 'Dilutors' key AFTER changing the ComboBox indices to avoid recreating the key when the comboBox currentIndexChanged
             # signals fire and connect to their respective slots that create the 'Dilutors' key if its not already there.
-            del self.olfaConfigDict['Olfactometers'][0]['Dilutors']
+            del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors']
     
     def saveToCurrentFile(self):
-        if 'com_port' not in self.olfaConfigDict['Olfactometers'][0]:
+        if 'com_port' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the COM port number for the olfactometer!")
             return
-        elif 'interface' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'interface' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please choose the interface for the olfactometer!")
             return
-        elif 'cassette_1_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'cassette_1_sn' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 1!")
             return
-        elif 'cassette_2_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'cassette_2_sn' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 2!")
             return
-        elif 'master_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'master_sn' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the master SN!")
             return
-        elif 'slave_index' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'slave_index' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the slave index number!")
             return
         
-        for i in range(len(self.olfaConfigDict['Olfactometers'][0]['MFCs'])):  # There should only be two MFCs here.
-            if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+        for i in range(len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'])):  # There should only be two MFCs here.
+            if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the MFC type of the olfactometer MFC {i}!")
                 return
-            elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'address' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the address of the olfactometer MFC {i}!")
                 return
-            elif 'arduino_port_num' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'arduino_port_num' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the Arduino port number of the olfactometer MFC {i}!")
                 return
-            elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'capacity' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the capacity of the olfactometer MFC {i}!")
                 return
-            elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'gas' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the gas type of the olfactometer MFC {i}!")
                 return
         
-        if (len(self.olfaConfigDict['Olfactometers'][0]['Vials']) > 0):
+        if (len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']) > 0):
             emptyVials = []
-            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
+            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials'].items():
                 if ('conc' not in vialInfo) and ('odor' in vialInfo):
                     QMessageBox.warning(self, "Warning", f"Please enter concentration for vial {vialNum} before saving.")
                     return
@@ -671,88 +672,94 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
                     emptyVials.append(vialNum)
 
             for vialNum in emptyVials:
-                del self.olfaConfigDict['Olfactometers'][0]['Vials'][vialNum]  # Delete keys that have empty dict as their value.
+                del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials'][vialNum]  # Delete keys that have empty dict as their value.
         else:
             QMessageBox.warning(self, "Warning", "Please enter at least one vial!")
             return
 
         # After checking for user input vials, create the dummy vial if it is not already there.
-        if '4' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['4'] = {'odor': 'dummy', 'conc': 0, 'flows': [0]}
+        if '4' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['4'] = {'odor': 'dummy', 'conc': 0, 'flows': [0]}
         
-        if ('Dilutors' in self.olfaConfigDict['Olfactometers'][0]) and (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) > 0):  # This means at least one input field was edited with a valid input.
-            if (self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0] == {}):
-                self.olfaConfigDict['Olfactometers'][0]['Dilutors'].clear()  # Empty all contents of the list but do not delete the 'Dilutors' key
-                # self.olfaConfigDict['Olfactometers'][0]['Dilutors'].pop(0)
-                # del self.olfaConfigDict['Olfactometers'][0]['Dilutors']
-            elif 'com_port' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+        if ('Dilutors' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]) and (len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors']) > 0):  # This means at least one input field was edited with a valid input.
+            if (self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0] == {}):
+                self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'].clear()  # Empty all contents of the list but do not delete the 'Dilutors' key
+                # self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'].pop(0)
+                # del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors']
+            elif 'com_port' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
                 QMessageBox.warning(self, "Warning", "Please enter COM port number for the dilutor!")
                 return
-            elif 'dilutor_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            elif 'dilutor_type' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
                 QMessageBox.warning(self, "Warning", "Please choose an option for dilutor type!")
                 return
-            elif 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            elif 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
                 QMessageBox.warning(self, "Warning", "Please choose options for both MFCs!")
                 return
             else:
-                for i in range(len(self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'])):  # There should only be two MFCs here.
-                    if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                for i in range(len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'])):  # There should only be two MFCs here.
+                    if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose an MFC type for MFC {i}!")
                         return
-                    elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                    elif 'address' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose an address for MFC {i}!")
                         return
-                    elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                    elif 'capacity' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose a capacity for MFC {i}!")
                         return
-                    elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                    elif 'gas' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose a gas for MFC {i}!")
                         return
 
+        with open(self.olfaConfigFile, 'r') as olfa_config:
+            self.olfaConfigDictLatest = json.load(olfa_config)
+
+        self.olfacConfigDictUpdated = self.olfaConfigDictLatest
+        self.olfacConfigDictUpdated['Olfactometers'][self.olfa_idx] = self.olfaConfigDict['Olfactometers'][self.olfa_idx]
+        
         with open(self.olfaConfigFile, 'w') as olfa_config:
-            json.dump(self.olfaConfigDict, olfa_config, indent=4)
+            json.dump(self.olfacConfigDictUpdated, olfa_config, indent=4)
             self.accept()  # Closes the dialog window.
 
     def saveAsNewFile(self):
-        if 'com_port' not in self.olfaConfigDict['Olfactometers'][0]:
+        if 'com_port' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the COM port number for the olfactometer!")
             return
-        elif 'interface' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'interface' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please choose the interface for the olfactometer!")
             return
-        elif 'cassette_1_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'cassette_1_sn' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 1!")
             return
-        elif 'cassette_2_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'cassette_2_sn' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the SN for Cassette 2!")
             return
-        elif 'master_sn' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'master_sn' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the master SN!")
             return
-        elif 'slave_index' not in self.olfaConfigDict['Olfactometers'][0]:
+        elif 'slave_index' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]:
             QMessageBox.warning(self, "Warning", "Please enter the slave index number!")
             return
         
-        for i in range(len(self.olfaConfigDict['Olfactometers'][0]['MFCs'])):  # There should only be two MFCs here.
-            if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+        for i in range(len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'])):  # There should only be two MFCs here.
+            if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the MFC type of the olfactometer MFC {i}!")
                 return
-            elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'address' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the address of the olfactometer MFC {i}!")
                 return
-            elif 'arduino_port_num' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'arduino_port_num' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the Arduino port number of the olfactometer MFC {i}!")
                 return
-            elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'capacity' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the capacity of the olfactometer MFC {i}!")
                 return
-            elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['MFCs'][i]:
+            elif 'gas' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['MFCs'][i]:
                 QMessageBox.warning(self, "Warning", f"Please choose the gas type of the olfactometer MFC {i}!")
                 return
         
-        if (len(self.olfaConfigDict['Olfactometers'][0]['Vials']) > 0):
+        if (len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']) > 0):
             emptyVials = []
-            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][0]['Vials'].items():
+            for vialNum, vialInfo in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials'].items():
                 if ('conc' not in vialInfo) and ('odor' in vialInfo):
                     QMessageBox.warning(self, "Warning", f"Please enter concentration for vial {vialNum} before saving.")
                     return
@@ -766,41 +773,41 @@ class OlfaEditorDialog(QDialog, Ui_Dialog):
                     emptyVials.append(vialNum)
 
             for vialNum in emptyVials:
-                del self.olfaConfigDict['Olfactometers'][0]['Vials'][vialNum]  # Delete keys that have empty dict as their value.
+                del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials'][vialNum]  # Delete keys that have empty dict as their value.
         else:
             QMessageBox.warning(self, "Warning", "Please enter at least one vial!")
             return
 
         # After checking for user input vials, create the dummy vial if it is not already there.
-        if '4' not in self.olfaConfigDict['Olfactometers'][0]['Vials']:
-            self.olfaConfigDict['Olfactometers'][0]['Vials']['4'] = {'odor': 'dummy', 'conc': 0, 'flows': [0]}
+        if '4' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']:
+            self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Vials']['4'] = {'odor': 'dummy', 'conc': 0, 'flows': [0]}
         
-        if ('Dilutors' in self.olfaConfigDict['Olfactometers'][0]) and (len(self.olfaConfigDict['Olfactometers'][0]['Dilutors']) > 0):  # This means at least one input field was edited with a valid input.
-            if (self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0] == {}):
-                self.olfaConfigDict['Olfactometers'][0]['Dilutors'].clear()  # Empty all contents of the list but do not delete the 'Dilutors' key
-                # self.olfaConfigDict['Olfactometers'][0]['Dilutors'].pop(0)
-                # del self.olfaConfigDict['Olfactometers'][0]['Dilutors']
-            elif 'com_port' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+        if ('Dilutors' in self.olfaConfigDict['Olfactometers'][self.olfa_idx]) and (len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors']) > 0):  # This means at least one input field was edited with a valid input.
+            if (self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0] == {}):
+                self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'].clear()  # Empty all contents of the list but do not delete the 'Dilutors' key
+                # self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'].pop(0)
+                # del self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors']
+            elif 'com_port' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
                 QMessageBox.warning(self, "Warning", "Please enter COM port number for the dilutor!")
                 return
-            elif 'dilutor_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            elif 'dilutor_type' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
                 QMessageBox.warning(self, "Warning", "Please choose an option for dilutor type!")
                 return
-            elif 'MFCs' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]:
+            elif 'MFCs' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]:
                 QMessageBox.warning(self, "Warning", "Please choose options for both MFCs!")
                 return
             else:
-                for i in range(len(self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'])):  # There should only be two MFCs here.
-                    if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                for i in range(len(self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'])):  # There should only be two MFCs here.
+                    if 'MFC_type' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose an MFC type for MFC {i}!")
                         return
-                    elif 'address' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                    elif 'address' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose an address for MFC {i}!")
                         return
-                    elif 'capacity' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                    elif 'capacity' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose a capacity for MFC {i}!")
                         return
-                    elif 'gas' not in self.olfaConfigDict['Olfactometers'][0]['Dilutors'][0]['MFCs'][i]:
+                    elif 'gas' not in self.olfaConfigDict['Olfactometers'][self.olfa_idx]['Dilutors'][0]['MFCs'][i]:
                         QMessageBox.warning(self, "Warning", f"Please choose a gas for MFC {i}!")
                         return
 

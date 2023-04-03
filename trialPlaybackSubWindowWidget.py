@@ -15,11 +15,11 @@ from PyQt5.QtMultimedia import QMediaPlayer
 
 class trialPlaybackSubWindowWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        print('Initialize parent widget')
+        #('Initialize parent widget')
         super(trialPlaybackSubWindowWidget, self).__init__()
 
     def build_playback_window(self):
-        print('Initialize actual widget')
+        #('Initialize actual widget')
         #self.trialPlaybackSubWindowWidget = QtWidgets.QWidget()
         # self.trialPlaybackSubWindowWidget.setObjectName("trialPlaybackSubWindowWidget")  # set in main_window_ui.py
 

@@ -27,7 +27,6 @@ class MicroManagerPrime95B:  # here we define the 'camera' object used in app.py
 
     def __init__(self, acq_settings_file=None):
         self.bridge = _Bridge()
-        print(self.bridge)
         #self.core = self.bridge.get_core()
         self.core = Core()
         #self.studio = self.bridge.get_studio()
@@ -105,7 +104,6 @@ class MicroManagerPrime95B:  # here we define the 'camera' object used in app.py
         self.update_settings()
         
         check_settings = self.acquisitions.get_acquisition_settings()
-        print('\nshould_display_images is set to {0}\n'.format(check_settings.should_display_images()))
 
         self.current_acquisition = self.acquisitions.run_acquisition_nonblocking() # has to be started for every trial, _nonblocking?
         self.acquisitions.get_acquisition_settings()

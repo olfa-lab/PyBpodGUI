@@ -29,12 +29,12 @@ class Olfactometers(QtWidgets.QMainWindow):
         menubar = self.menuBar()
         self._buildmenubar(menubar)
         self.olfa_specs = self.config_obj['Olfactometers']
+        # print(f'Printing olfa_specs {self.olfa_specs}')
         self.olfas = self._config_olfas(self.olfa_specs)
         #try:Bea modified to debug, put back
             
         self.dilutor_specs = self.config_obj['Dilutors']  # configure *global* dilutors.
         self.dilutors = self._config_dilutors(self.dilutor_specs)
-        print("We are printing dilutors in init Olfactometerssss : ", self.dilutors )
         #except (TypeError, KeyError):  # no global Dilutors are specified, which is OK!
         #    print(' we ended up in the expection case while reading dilutors')
         #    self.dilutors = []
@@ -49,7 +49,6 @@ class Olfactometers(QtWidgets.QMainWindow):
         central_widget.setLayout(layout)
         self.statusBar()
 
-        print(f'Printing olfa_config file in Olfactometers : {self.config_obj}')
         QtWidgets.QApplication.setStyle(QtWidgets.QStyleFactory.create('CleanLooks'))
 
     def set_stimulus(self, stimulus_dictionary, open_vials=True):
@@ -64,27 +63,23 @@ class Olfactometers(QtWidgets.QMainWindow):
         :rtype: bool
         """
         std = stimulus_dictionary
-        print("Printing std in set_stimulus of Olfatctomeres", std)
-        print('Printing std keys, ', list(std.keys()))
-        n_olfas = len(std['olfas'])
+        olfas = std['olfas']
         successes = []
-        for i in range(n_olfas):
-            k = 'olfa_{0}'.format(i)
-            o = std['olfas'][k]
-            print("printing o: ", o)
+        
+        for olfa_name in olfas:
+            i = int(olfa_name[5])
+            o = std['olfas'][olfa_name]
             olfa = self.olfas[i]
             success = olfa.set_stimulus(o, open_vials=open_vials)
             successes.append(success)
         if 'dilutors' in list(std.keys()):
-            print("printing std ", std['dilutors'])
             for i in range(len(std['dilutors'])):
                 
                 dil = self.dilutors[i]
                 k = 'dilutor_{0}'.format(i)
-                print("printing k ", k)
+               
                 #print("printing std ", std['dilutors'])
                 d = std['dilutors'][k]
-                print("We read dilutors from dict in set_stimulus of Olfactometers")
                 success = dil.set_stimulus(d)
                 successes.append(success)
         return all(successes)

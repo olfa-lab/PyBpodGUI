@@ -63,19 +63,16 @@ class PlaybackWorker(QObject):
     def findLastTrialVideo(self):
         #folder = 'H:\\repos\\PyBpodGUI\\camera_data\\' # need to change to camera.camera_data_dir
         folder = self.camera.camera_data_dir # need to change to camera.camera_data_dir
-        print(self.camera.camera_data_dir)
+        print(f'Saving imagine in folder {self.camera.camera_data_dir}')
         list_of_tifs = []
         while not bool(list_of_tifs):
             list_of_tifs = glob.glob(folder +'\\*\\*.tif')
-            #print(list_of_tifs)
         latest_tif = max(list_of_tifs, key=os.path.getctime)
         self.lastTrialVideo = latest_tif
-        #print('Found {0} as most recent tif.'.format(latest_tif))
 
     def playLastTrial(self):
         if self.camera is not None: 
             #fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
-            print('Finding last trial video')
             self.findLastTrialVideo()
             sleep(1)
             # self.lastTrialVideo = 'H:\\repos\\PyBpodGUI\\camera_data\\test.tif'
@@ -95,7 +92,6 @@ class PlaybackWorker(QObject):
             normstack[normstack > perc95] = perc95
             normstackn = normstack - np.amin(normstack)
             normstackn = normstackn / np.amax(normstackn)
-            print(type(normstackn), normstackn.shape)
             vidin = 255 * normstackn
             vidint = vidin.astype('uint8')
 
@@ -105,7 +101,6 @@ class PlaybackWorker(QObject):
                 writer.write(x)
             
             writer.release()
-            print('done')
 
             self.mediaPlayer.setMedia(
                         QMediaContent(QUrl.fromLocalFile(video_name)))

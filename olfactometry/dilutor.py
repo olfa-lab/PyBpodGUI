@@ -13,7 +13,6 @@ class Dilutor(QtWidgets.QGroupBox):
     # TODO: implement json? dillution factor calibration system
     def __init__(self, parent, config, polling_interval=1.1):
         super(Dilutor, self).__init__()
-        print('We called the init function of the diluter')
         baudrate = 115200
         com_port = config['com_port']
         self.serial = connect_serial(com_port, baudrate=baudrate, timeout=1, writeTimeout=1)
@@ -27,13 +26,10 @@ class Dilutor(QtWidgets.QGroupBox):
             # mfc['arduino_port'] = i + 1
             mfc['arduino_port_num'] = i + 1
         
-        # print(config['MFCs'])
+        
 
         layout = QtWidgets.QHBoxLayout()
-        
-        print(layout)
         self.mfcs = self._config_mfcs(config['MFCs'])
-        
         self.polling_interval = polling_interval
         self.mfc_timer = self.start_mfc_polling()
        
@@ -54,7 +50,6 @@ class Dilutor(QtWidgets.QGroupBox):
             gas = mfc_spec['gas']
             
             mfc = MFCclasses[mfc_type](self, mfc_spec)
-            print('after MFC Classes')
             mfcs[gas_positions[gas.lower()]] = mfc
             
         return mfcs

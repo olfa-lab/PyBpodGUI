@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QPushButton" name="odorSaveButton">
+  <widget class="QPushButton" name="saveOdorTableButton">
    <property name="geometry">
     <rect>
      <x>810</x>
@@ -42,38 +42,8 @@
     <number>0</number>
    </property>
    <property name="columnCount">
-    <number>6</number>
+    <number>0</number>
    </property>
-   <column>
-    <property name="text">
-     <string>Vial number</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Odor</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>% Headspace</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>MFC</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Dilutor</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Repetitions num</string>
-    </property>
-   </column>
   </widget>
   <widget class="QPushButton" name="odorLoadButton">
    <property name="geometry">
@@ -88,7 +58,7 @@
     <string>Load</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="odorSaveasButton">
+  <widget class="QPushButton" name="saveOdorTableAsFileButton">
    <property name="geometry">
     <rect>
      <x>890</x>
@@ -126,26 +96,6 @@
      <height>501</height>
     </rect>
    </property>
-   <column>
-    <property name="text">
-     <string>Vial</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Odor</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>MFC</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Dilutor</string>
-    </property>
-   </column>
   </widget>
  </widget>
  <resources/>

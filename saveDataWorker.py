@@ -65,7 +65,6 @@ class SaveDataWorker(QObject):
         if not os.path.isdir('results'):
             os.mkdir('results')
         self.h5folder = os.getcwd() + '/results'
-        print(self.h5folder)
         
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
         
@@ -335,7 +334,12 @@ class SaveDataWorker(QObject):
                     # pos += 1
                     self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
                     pos += 1
+                for dilName in stimDict['dilutors'].keys():
+                    self.trialsTableDescDict[f'odor{stimIndex}_{dilName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
+                    pos += 1
+                    print('How are the dilutorscalled?')
                 stimIndex += 1
+                
             
             self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
             self.trialRow = self.trialsTable.row
@@ -357,6 +361,8 @@ class SaveDataWorker(QObject):
                 # self.trialRow[f'odor{stimIndex}_{olfaName}_name'] = olfaValues['odor']
                 # self.trialRow[f'odor{stimIndex}_{olfaName}_conc'] = olfaValues['vialconc']
                 self.trialRow[f'odor{stimIndex}_{olfaName}_flow'] = olfaValues['mfc_1_flow']
+            for dilName, dilValues in stimDict['dilutors'].items():
+                self.trialRow[f'odor{stimIndex}_{dilName}_flow'] = int(dilValues['vac_flow'])
             stimIndex += 1
         
         self.trialRow.append()

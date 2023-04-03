@@ -107,7 +107,6 @@ class ProtocolWorker(QObject):
         self.rightWaterDuration = duration / 1000  # Convert to seconds.
 
     def setNumTrials(self, value):
-        #print(value)
         self.nTrials = value
     
     def setMinITI(self, value):
@@ -184,11 +183,9 @@ class ProtocolWorker(QObject):
                     self.olfas.olfas[i]._poll_mfcs()
 
                 # TO-DO: check if any (global) dilutor and add here
-                print("Printing StimList before set_stimulus in sofcode handler", self.stimList[self.stimIndex])
                 self.olfas.set_stimulus(self.stimList[self.stimIndex])
                 self.stimIndex += 1
-                print(self.stimIndex)
-                print('\nThat was it\n')
+                
             except OlfaException as olf:
                 self.olfaExceptionSignal.emit(str(olf))
                 self.stopRunning()
@@ -445,24 +442,25 @@ class ProtocolWorker(QObject):
             self.stimulusFunction = self.imagingGenerator
 
     def imagingGenerator(self):
-        print('Running the imagingGenerator!!!')
+        print('Running the imagingGenerator!')
         # Simply get the list of dictionaries from odorEditorDialog, to get the current trial vial/vialname/vialconc/dilutor_flow/mfc_flow
         current_trial = self.allTrialsDict[self.currentTrialNum-1]
         ostim = {'olfas': {}}
-        for i in range(self.nOlfas):  # Loop thru each olfa if there is more than one (which will create a mixture)
-            currentVial = str(int(current_trial['vial_num']) + 4)
+        if current_trial['olfa_num'] is not list:
+            current_trial['olfa_num'] = [current_trial['olfa_num']]
+        for i in current_trial['olfa_num']:  # Loop thru each olfa if there is more than one (which will create a mixture)
+            currentVial = str(int(current_trial['vial_num']))
             ostim['olfas'][f'olfa_{i}'] = {
                     'mfc_0_flow': self.mfc_0_capacity,
                     'mfc_1_flow': current_trial['mfc_flow'],
                     'odor': current_trial['vial_name'],
                     'vialconc': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc'],  # useful when same odor in two vials at different
-                    'vialNum': str(int(current_trial['vial_num']) + 4)  # vial 1 is actually read to be vial 5 (4=dummy)
+                    'vialNum': str(int(current_trial['vial_num']))  # vial 1 is actually read to be vial 5 (4=dummy)
                 }
         ostim['dilutors'] ={'dilutor_0':{'vac_flow':current_trial['dilutor_flow'],'air_flow':current_trial['dilutor_flow']}}
 
         self.stimList.clear()
         self.stimList.append(ostim)
-        print('Finished the imagingGenerator!!!')
 
     def intensityGenerator(self):
         # This structure should work fine since its safe to assume intensity experiments will not use mixtures
@@ -521,8 +519,7 @@ class ProtocolWorker(QObject):
         if (self.shuffleMultiplier > 0):
             self.flowIndex += 1  # Since the lists are shuffled (and may be extended), then increment the flowIndex together with the vialIndex.
 
-        print(self.stimList)
-        # quit()
+        
 
     def identityGenerator(self):
         self.stimList.clear()  # Clear the previous trial's stimuli.
@@ -630,13 +627,11 @@ class ProtocolWorker(QObject):
 
     def run(self):
 
-        #print(self.currentTrialNum)
         try:
             if self.olfaChecked:
                 self.getOdorsFromConfigFile()
                 self.olfas = olfactometry.Olfactometers(config_obj=self.olfaConfigFileName)
                 #self.dilutors = olfactometry.Dilutor(config=self.olfaConfigFileName)
-                print(f'Printing dilutors: {self.olfas.dilutors}')
             self.bpod.softcode_handler_function = self.my_softcode_handler    
             self.startTrial()
 

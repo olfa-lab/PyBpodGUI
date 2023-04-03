@@ -431,8 +431,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.odorEditor.show()
 
     def launchOlfaEditor(self):
-        self.olfaEditor = OlfaEditorDialog(self.olfaConfigFileName)
-        self.olfaEditor.show()
+        # Loop through olfaConfigFileName, find number of olfas
+        with open(self.olfaConfigFileName, 'r') as olfa_config:
+            self.olfaConfigDict = json.load(olfa_config)
+        self.olfaEditor = []
+        for olfa_idx in range(0, len(self.olfaConfigDict['Olfactometers'])):
+            self.olfaEditor.append(OlfaEditorDialog(self.olfaConfigFileName, olfa_idx))
+            self.olfaEditor[olfa_idx].show()
 
     def launchProtocolEditor(self):
         if self.bpod is not None:
@@ -869,6 +874,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def updateCurrentTrialInfo(self, trialInfoDict):
         # Check if not empty.
+        
         if trialInfoDict:
             self.trialNumLineEdit.setText(str(trialInfoDict['currentTrialNum']))
             self.correctResponseLineEdit.setText(trialInfoDict['correctResponse'])
@@ -876,6 +882,9 @@ class Window(QMainWindow, Ui_MainWindow):
             self.currentTrialProgressBar.setRange(0, trialInfoDict['nStates'])
 
             if ('stimList' in trialInfoDict) and (len(trialInfoDict['stimList']) > 0):
+                # Show olfa name
+                olfa_names =  list(trialInfoDict['stimList'][0]['olfas'].keys()  )
+                self.olfaNamesLineEdit.setText(olfa_names[0])
                 odorA_vialString = ''
                 odorA_nameString = ''
                 odorA_concString = ''
