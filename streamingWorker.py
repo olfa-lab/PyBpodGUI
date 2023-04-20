@@ -27,6 +27,7 @@ class StreamingWorker(QObject):
         #self.ax = self.dynamic_canvas.figure.subplots()
         self.dynamic_canvas = pg.PlotWidget()  
         self.dynamic_canvas.setBackground('w')
+        self.dynamic_canvas.setYRange(0,5)
         self.ax = self.dynamic_canvas.getPlotItem()
         self.buffersize = 50
 
@@ -57,7 +58,7 @@ class StreamingWorker(QObject):
          
         self.line =  self.dynamic_canvas.plot(self.tdata, self.ydata, pen=pensniffsig)
         #self.stateline = self.dynamic_canvas.plot(self.tstate, self.statevalue, pen=pensniffsig) # line that marks the state
-        self.sniffthline = self.dynamic_canvas.plot(self.attemptime, self.sniffthdata, pen=pensniffth)
+        #self.sniffthline = self.dynamic_canvas.plot(self.attemptime, self.sniffthdata, pen=pensniffth)
         self.port_1_Line = self.dynamic_canvas.plot(self.tports, self.port_1_Data, pen = 'w',  symbolPen ='w', symbol='o',  symbolSize = 6)
         self.port_3_Line = self.dynamic_canvas.plot(self.tports, self.port_3_Data, pen = 'w', symbolPen ='w', symbol='o', symbolSize = 6)
 
@@ -80,23 +81,25 @@ class StreamingWorker(QObject):
 
         self.events = []
 
-        self.event_color_dict = {'WaitForOdor':'k',
+        self.event_color_dict = {'WaitForOdor':'gray',
             'LedOn':'y',
             'CameraOn':'g',
             'CameraOff':'r',
-            'WaitForSniff':'y',
-            'PresentOdor': 'g',
-            'WaitForResponse':'b',
-            'NoResponse':'c',
-            'Correct':'g',
-            'Wrong':'r',
-            'ITI':'m'}
+            'Reward':'coral',
+            'WaitForSniff':'peachpuff',
+            'PresentOdor': 'coral',
+            'WaitForResponse':'steelblue',
+            'NoResponse':'gray',
+            'Correct':'greenyellow',
+            'Wrong':'darkred',
+            'ITI':'k'}
 
     def setYaxis(self, ymin, ymax):
         self.ymax = ymax
         self.ymin = ymin
         self.dynamic_canvas.setYRange(self.ymin, self.ymax )
-        self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
+        #self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
+        self.triggeredValues = [4, 0, 1, 0]
         #self.ax.figure.canvas.draw()
     
     def setXaxis(self, maxt):
@@ -179,8 +182,8 @@ class StreamingWorker(QObject):
             t = np.linspace(self.previousTimer, currentTimer, n_new_datapoints)
             
             if lastt >= self.tdata[0] + self.maxt:
-                self.tdata = self.tdata[n_new_datapoints-1:]
-                self.ydata = self.ydata[n_new_datapoints-1:]
+                self.tdata = self.tdata[n_new_datapoints:]
+                self.ydata = self.ydata[n_new_datapoints:]
                 #self.dataColor =  self.dataColor[n_new_datapoints-1:]
                 
                 self.tdata.extend(t)
@@ -237,8 +240,8 @@ class StreamingWorker(QObject):
             self.line.setData(self.tdata, self.ydata )
             self.line.setPen(pen)
             self.tsniff = [self.tdata[0], self.tdata[-1]]
-            self.sniffthline.setData(self.tsniff, self.sniffthdata)
-            self.dynamic_canvas.autoRange()
+            #self.sniffthline.setData(self.tsniff, self.sniffthdata)
+           
 
 
             # delete events in the past
@@ -257,6 +260,9 @@ class StreamingWorker(QObject):
                     self.port_3_Data.pop(i)
                     self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
                     #self.dynamic_canvas.autoRange()
+            self.dynamic_canvas.setXRange(self.tdata[0], self.tdata[-1])
+           
+            #self.dynamic_canvas.autoRange()
         else:
             self.finished.emit()
         self.update_calls_count +=1
