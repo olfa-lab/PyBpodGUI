@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QProgressDia
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot, Qt, QUrl, QDir
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-
+from PyQt5 import QtCore, QtGui, QtWidgets
 from pybpodapi.protocol import Bpod, StateMachine
 from pybpodapi.exceptions.bpod_error import BpodErrorException
 from BpodAnalogInputModule import AnalogInException, BpodAnalogIn
@@ -161,6 +161,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
 
 
+       
+
+
         self.trialPlaybackSubWindow = MyQMdiSubWindow()        
         self.trialPlaybackSubWindow.setObjectName("trialPlaybackSubWindow")
         self.trialPlaybackSubWindow.setWidget(self.trialPlaybackSubWindowWidget)
@@ -247,12 +250,21 @@ class Window(QMainWindow, Ui_MainWindow):
         self.experimentTypeComboBox.currentTextChanged.connect(self.setExperimentType)
 
         self.selectCameraDataDestinationPushButton.clicked.connect(self.selectCameraDataDestination)
+        self.taskSettingspushButton.clicked.connect(self.selectTaskSettings)
 
 
 
     def selectCameraDataDestination(self):
         fname = QFileDialog.getExistingDirectory(self, "Open Folder", "H:\\repos\\PyBpodGUI\\camera_data\\test_bea\\")
         self.CameraDataDestinationLineEdit.setText(fname)
+    
+    
+    def selectTaskSettings(self):
+        fname, _ = QFileDialog.getOpenFileName(parent=self, caption="Open Task Settings File", directory="taskSettings", filter="JSON Files (*.json)")
+        #fname = QFileDialog.getExistingDirectory(self, "Open Folder", "C:\\Users\\olfa-lab\\pybpod\\PyBpodGUI\\taskSettings\\")
+        self.taskSettingsLineEdit.setText(fname)
+        self.taskSettingsFile = fname
+
 
     def setExperimentType(self):
         if self.experimentTypeComboBox.currentIndex() == 3:
@@ -458,7 +470,9 @@ class Window(QMainWindow, Ui_MainWindow):
            
             self.olfaConfigFileName = fileName
             self.olfaConfigFileLineEdit.setText(fileName)
+            
 
+   
 
     def updateFlexChanThreshold1(self, sniffth):
         
@@ -1129,7 +1143,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentIndex(), self.camera, self.shuffleMultiplierSpinBox.value(),
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
             int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
-            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
+            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.taskSettingsFile, self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
         )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)

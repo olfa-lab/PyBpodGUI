@@ -11,6 +11,7 @@ import olfactometry
 from olfactometry.utils import OlfaException
 from time import sleep
 from datetime import datetime
+import random
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
@@ -36,7 +37,7 @@ class ProtocolWorker(QObject):
 
     def __init__(self,
             bpodObject, protocolFileName, olfaConfigFileName, experimentType, camera, shuffleMultiplier, leftSensorPort, leftWaterValvePort, leftWaterValveDuration,
-            rightSensorPort, rightWaterValvePort, rightWaterValveDuration, finalValvePort, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1
+            rightSensorPort, rightWaterValvePort, rightWaterValveDuration, finalValvePort, itiMin, itiMax, noResponseCutoff, autoWaterCutoff,  taskSettingsFile, olfaChecked=True, numTrials=1,
         ):
         super(ProtocolWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
@@ -84,8 +85,10 @@ class ProtocolWorker(QObject):
         self.nOlfas = 0
         self.shuffleVials = []
         self.shuffleFlows = []
+        self.currentStimulusIdx = 0
         self.correctResponsesList = ['left', 'right'] * int(self.nTrials / 2)  # Make a list of all the correct responses to be used for the entire experiment (i.e. for self.nTrials). The experiment will contain 50% left trials and 50% right trials.
         np.random.shuffle(self.correctResponsesList)  # Shuffle the correnct responses and then use self.currentTrialNum as an index to iterate through it. Currently only the identityGenerator function uses the self.correctResponsesList.
+        self.taskSettingsFile = taskSettingsFile
 
     def setLeftSensorPort(self, value):
         self.leftSensorPort = value
@@ -387,7 +390,8 @@ class ProtocolWorker(QObject):
                     self.shuffleVials.append(shuffleVials)
                     self.shuffleFlows.append(shuffleFlows)
                 olfaIndex += 1
-
+            print( self.shuffleVials)
+            print( self.shuffleFlows)
             self.groupDuplicateVials(self.odors, self.concs, self.vials)
 
         elif (self.experimentType == 2):
@@ -434,9 +438,104 @@ class ProtocolWorker(QObject):
                     np.random.shuffle(shuffleVials)  # shuffle in-place
                     self.shuffleVials.append(shuffleVials)
                     self.shuffleFlows.append(shuffleFlows)
-                olfaIndex += 1                
+                olfaIndex += 1
+
+    def readTaskSettingsFile(self):
+        with open(self.taskSettingsFile, 'r') as taskFile:
+            self.taskSettingsDict = json.load(taskFile)
+
+    def createIntensityStimuliDistribution(self):
+        self.readTaskSettingsFile()
+        # This is written by Bea to set specific probabilities for each flow
+        self.all_vial_list = []
+        self.all_flow_list = []
+        #self.stimulusProbDict = dict()
+        #self.stimulusProbDict['5'] = {10:1, 14:1, 72:2, 100:2}
+        #self.stimulusProbDict['6'] = {10:1, 14:1, 72:2, 100:2}
+        self.flow_threshold = 33; 
+        for vial_key in self.taskSettingsDict.keys():
+            for flow_key in self.taskSettingsDict[vial_key].keys():
+                stimprob =  self.taskSettingsDict[vial_key][flow_key]
+                self.all_vial_list.extend([vial_key]*stimprob)
+                self.all_flow_list.extend([int(flow_key)]*stimprob)
+        temp = list(zip( self.all_vial_list, self.all_flow_list))
+        random.shuffle(temp)
+        res1, res2 = zip(*temp)
+        # res1 and res2 come out as tuples, and so must be converted to lists.
+        self.all_vial_list, self.all_flow_list = list(res1), list(res2) 
+        print(self.all_vial_list, self.all_flow_list)
+
+
 
     def intensityGenerator(self):
+        # This one is written by Bea and allows to set specific probabilities for each flo
+        # This structure should work fine since its safe to assume intensity experiments will not use mixtures
+        # so there will be only one olfactometer. But there will be a problem if more than one olfactometer is
+        # used: the correctResponse will be re-determined for each olfactometer because the currentFlow will
+        # not always be the same across the olfactometers. Each olfactometer's list of flowrates will get shuffled
+        # separately, so the self.flowIndex will not always point to the same flowrate. The correctResponse will
+        # be based on the last parameters of the last olfactometer in the loop. Again, if only one olfactometer
+        # exists, there will not be a problem.
+        self.createIntensityStimuliDistribution()
+        ostim = {'olfas': {}}
+        for i in range(self.nOlfas):  # Loop thru each olfa if there is more than one (which will create a mixture)
+            if (self.shuffleMultiplier > 0):
+
+                currentVial= self.all_vial_list[self.currentStimulusIdx]
+                currentFlow = self.all_flow_list[self.currentStimulusIdx]
+                flow_threshold = self.flow_threshold
+                self.currentStimulusIdx+=1
+                if self.currentStimulusIdx > len(self.all_vial_list)-1:
+                    self.currentStimulusIdx = 0
+                # if (self.vialIndex == len(self.shuffleVials[i])):
+                #     np.random.shuffle(self.shuffleVials[i])  # Re-shuffle in-place when the index iterated through the entire list of vials for the olfa with index i.
+                #     self.vialIndex = 0  # Start iteration from the beginning.
+                
+                # currentVial = self.shuffleVials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
+                
+                # if (self.flowIndex >= len(self.shuffleFlows[i][currentVial])):  # self.shuffleFlows is a list of dictionaries and self.shuffleFlows[i][currentVial] returns a list of integer flowrates for the vial identified by the currentVial key of the olfa with index i. I check if greater than or equal to because the lists of flowrates may not all be the same length across vials.
+                #     np.random.shuffle(self.shuffleFlows[i][currentVial])  # Re-shuffle in-place when the index iterated through the entire list of flowrates for the the currentVial of olfa with index i.
+                #     self.flowIndex = 0  # Start iteration from the beginning.
+
+                # currentFlow = self.shuffleFlows[i][currentVial][self.flowIndex]  # This will return an int for a flowrate of the vial with key currentVial of the olfa with index i.
+                # flow_threshold = np.sqrt(min(self.shuffleFlows[i][currentVial]) * max(self.shuffleFlows[i][currentVial]))  # Since the list gets shuffled, I cannot use the first and last index as the min and max because the list is no longer sorted.
+            
+            else:  # Do not shuffle. Just iterate through them in the order given in the olfa config file.
+                if (self.vialIndex == len(self.vials[i])):
+                    self.vialIndex = 0  # Start iteration from the beginning.
+                    self.flowIndex += 1  # Since the lists will not be shuffled (nor extended), only increment the flowIndex when all vials have been iterated through. This way, each flowrate for each vial will be presented.
+                
+                currentVial = self.vials[i][self.vialIndex]  # This will return a string for a vial number of the olfa with index i.
+                
+                if (self.flowIndex >= len(self.flows[i][currentVial])):  # self.flows is a list of dictionaries and self.flows[i][currentVial] returns a list of integer flowrates for the vial identified by the currentVial key of the olfa with index i. I check if greater than or equal to because the lists of flowrates may not all be the same length across vials.
+                    self.flowIndex = 0  # Start iteration from the beginning.
+
+                currentFlow = self.flows[i][currentVial][self.flowIndex]  # This will return an int for a flowrate of the vial with key currentVial of the olfa with index i.
+                flow_threshold = np.sqrt(min(self.flows[i][currentVial]) * max(self.flows[i][currentVial]))  # Not guaranteed that the order is sorted in the olfa config file, so use min and max functions instead of first and last index.
+
+            # If flow is lower than flow_threshold == ~30 , 'left' is correct. Otherwise, 'right' is correct
+            if (currentFlow < flow_threshold):
+                self.correctResponse = 'left'
+            else:
+                self.correctResponse = 'right'       
+
+            ostim['olfas'][f'olfa_{i}'] = {
+                'dilutors': {},
+                'mfc_0_flow': self.mfc_0_capacity,
+                'mfc_1_flow': currentFlow,
+                'odor': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['odor'],
+                'vialconc': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc'],
+                'vialNum': currentVial
+            }
+        self.stimList.clear()
+        self.stimList.append(ostim)
+        self.vialIndex += 1
+        if (self.shuffleMultiplier > 0):
+            self.flowIndex += 1  # Since the lists are shuffled (and may be extended), then increment the flowIndex together with the vialIndex.
+
+
+
+    def intensityGeneratorMohammed(self):
         # This structure should work fine since its safe to assume intensity experiments will not use mixtures
         # so there will be only one olfactometer. But there will be a problem if more than one olfactometer is
         # used: the correctResponse will be re-determined for each olfactometer because the currentFlow will
