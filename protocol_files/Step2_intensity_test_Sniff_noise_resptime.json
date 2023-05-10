@@ -1,0 +1,104 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForSniff"
+            },
+            "outputActions": {
+				"AnalogThreshEnable": "1111",
+                "Olfactometer": "set_stimulus"
+            }
+        },
+		{
+			"stateName": "WaitForSniff",
+            "stateTimer": 2,
+            "stateChangeConditions": {
+                "Flex1Trig1": "PresentOdor",
+				"Tup": "PresentOdor"
+            },
+            "outputActions": {
+                "AnalogThreshEnable": "1111"
+            }
+		},
+        {
+            "stateName": "PresentOdor",
+            "stateTimer": 1,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse",
+                "Port1In": "leftAction",
+                "Port3In": "rightAction"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "Reward",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+				"Valve": [
+                    "rewardValve"
+                ]
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ],
+                "Olfactometer": "set_dummy_vials"
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+				"BNC1" : 1,
+                "Olfactometer": "set_dummy_vials"
+			}
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {}
+        }
+    ]
+}

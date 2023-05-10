@@ -82,6 +82,7 @@ class StreamingWorker(QObject):
         self.events = []
 
         self.event_color_dict = {'WaitForOdor':'gray',
+            'DetectResponse': 'coral',
             'LedOn':'y',
             'CameraOn':'g',
             'CameraOff':'r',
@@ -219,18 +220,23 @@ class StreamingWorker(QObject):
             
             #print( self.events)
             for i, event in enumerate(self.events):
+                try:
+                    event_color = self.event_color_dict[event[0]]
+                except:
+                    event_color = 'k'
+
                 if event[1] < self.tdata[0]:
                     timeslist.append(0)
-                    colorslist.append(self.event_color_dict[event[0]])
+                    colorslist.append(event_color)
                     if i < len(self.events)-1:
                         timeslist.append((self.events[i+1][1]-self.tdata[0]-self.dt)/maxtime)
-                        colorslist.append(self.event_color_dict[event[0]])
+                        colorslist.append(event_color)
                 elif event[1] > self.tdata[0]:
                     timeslist.append((event[1]-self.tdata[0])/maxtime)
                     if i < len(self.events)-1:
                         timeslist.append((self.events[i+1][1]-self.tdata[0]-self.dt)/maxtime)
-                    colorslist.append(self.event_color_dict[event[0]])
-                    colorslist.append(self.event_color_dict[event[0]])
+                    colorslist.append(event_color)
+                    colorslist.append(event_color)
 
             
             cm = pg.ColorMap(timeslist,colorslist)

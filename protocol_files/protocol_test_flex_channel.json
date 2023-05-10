@@ -1,0 +1,47 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForThresh1",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Flex1Trig1": "OpenValve"
+            },
+            "outputActions": {
+                "Flex3AO": 5,
+                "AnalogThreshEnable": "0001"
+            }
+        },
+        {
+            "stateName": "OpenValve",
+            "stateTimer": 1,
+            "stateChangeConditions": {
+                "Tup": "WaitForThresh2"
+            },
+            "outputActions": {
+                "Flex3AO": 5,
+                "Valve": [1]
+            }
+        },
+        {
+            "stateName": "WaitForThresh2",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Flex1Trig2": "OpenValveAgain"
+            },
+            "outputActions": {
+                "Flex3AO": 5
+            }
+        },
+        {
+            "stateName": "OpenValveAgain",
+            "stateTimer": 1,
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {
+                "Flex3AO": 5,
+                "Valve": [1]
+            }
+        }
+    ]
+}

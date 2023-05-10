@@ -1,0 +1,76 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "PresentOdor"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "PresentOdor",
+            "stateTimer": 0.5,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 5,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ]
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+				"BNC1" : 1
+			}
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {}
+        }
+    ]
+}

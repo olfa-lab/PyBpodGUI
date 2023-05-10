@@ -1,0 +1,96 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForSniff"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "WaitForSniff",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "PresentOdor",
+                "Tup": "NoSniff"
+            },
+            "outputActions": {
+                "Serial1": "ADC_start"
+            }
+        },
+        {
+            "stateName": "PresentOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "ADC_stop"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ]
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "NoSniff",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Serial1": "ADC_stop"
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {}
+        }
+    ]
+}

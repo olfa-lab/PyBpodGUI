@@ -1,0 +1,38 @@
+{
+    "states": [
+        {
+            "stateName": "openVial",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "openFinalValve"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus",
+                "Serial1": "ADC_start"
+            }
+        },
+        {
+            "stateName": "openFinalValve",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "ADC_stop"
+            }
+        }
+    ]
+}

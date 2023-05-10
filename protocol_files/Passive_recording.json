@@ -1,0 +1,35 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "PresentOdor"
+            },
+            "outputActions": {
+				"AnalogThreshEnable": "1111",
+                "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "PresentOdor",
+            "stateTimer": 1,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {}
+        }
+    ]
+}

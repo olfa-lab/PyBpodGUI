@@ -756,11 +756,17 @@ class ProtocolWorker(QObject):
             if self.correctResponse == 'left':
                 leftAction = 'Correct'
                 rightAction = 'Wrong'
+                leftActionWait = 'CorrectWait'
+                rightActionWait = 'WrongWait'
+                
                 rewardValve = self.leftWaterValvePort
                 rewardDuration = self.leftWaterDuration
             elif self.correctResponse == 'right':
                 leftAction = 'Wrong'
                 rightAction = 'Correct'
+                leftActionWait = 'WrongWait'
+                rightActionWait = 'CorrectWait'
+                
                 rewardValve = self.rightWaterValvePort
                 rewardDuration = self.rightWaterDuration
             self.sma = StateMachine(self.bpod)
@@ -790,6 +796,11 @@ class ProtocolWorker(QObject):
                         state['stateChangeConditions'][leftInputEvent] = leftAction
                     elif (state['stateChangeConditions'][leftInputEvent] == 'rightAction'):
                         state['stateChangeConditions'][leftInputEvent] = rightAction
+                    elif (state['stateChangeConditions'][leftInputEvent] == 'leftActionWait'):
+                        state['stateChangeConditions'][leftInputEvent] = leftActionWait
+                    elif (state['stateChangeConditions'][leftInputEvent] == 'rightActionWait'):
+                        state['stateChangeConditions'][leftInputEvent] = rightActionWait
+
 
                 rightInputEvent = f'Port{self.rightSensorPort}In'  # For example: 'Port3In'
                 if rightInputEvent in state['stateChangeConditions']:
@@ -797,6 +808,10 @@ class ProtocolWorker(QObject):
                         state['stateChangeConditions'][rightInputEvent] = leftAction
                     elif (state['stateChangeConditions'][rightInputEvent] == 'rightAction'):
                         state['stateChangeConditions'][rightInputEvent] = rightAction
+                    elif (state['stateChangeConditions'][rightInputEvent] == 'leftActionWait'):
+                        state['stateChangeConditions'][rightInputEvent] = leftActionWait
+                    elif (state['stateChangeConditions'][rightInputEvent] == 'rightActionWait'):
+                        state['stateChangeConditions'][rightInputEvent] = rightActionWait
 
                 # Replace output action values with respective variable.
                 if 'Valve' in state['outputActions']:

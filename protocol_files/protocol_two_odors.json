@@ -1,0 +1,135 @@
+{
+    "states": [
+        {
+            "stateName": "WaitForFirstOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForFirstSniff"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "WaitForFirstSniff",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "PresentFirstOdor",
+                "Tup": "NoSniff"
+            },
+            "outputActions": {
+                "Serial1": "ADC_start"
+            }
+        },
+        {
+            "stateName": "PresentFirstOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "FirstDelay"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "FirstDelay",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForSecondOdor"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials"
+            }
+        },
+        {
+            "stateName": "WaitForSecondOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForSecondSniff"
+            },
+            "outputActions": {
+                "Olfactometer": "set_stimulus"
+            }
+        },
+        {
+            "stateName": "WaitForSecondSniff",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "AnalogIn1_1": "PresentSecondOdor",
+                "Tup": "NoSniff"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "PresentSecondOdor",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Tup": "WaitForResponse"
+            },
+            "outputActions": {
+                "Valve": [
+                    "finalValve"
+                ]
+            }
+        },
+        {
+            "stateName": "WaitForResponse",
+            "stateTimer": 3,
+            "stateChangeConditions": {
+                "Port1In": "leftAction",
+                "Port3In": "rightAction",
+                "Tup": "NoResponse"
+            },
+            "outputActions": {
+                "Olfactometer": "set_dummy_vials",
+                "Serial1": "ADC_stop"
+            }
+        },
+        {
+            "stateName": "Correct",
+            "stateTimer": "rewardDuration",
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {
+                "Valve": [
+                    "rewardValve"
+                ]
+            }
+        },
+        {
+            "stateName": "Wrong",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "NoResponse",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "NoSniff",
+            "stateTimer": 0,
+            "stateChangeConditions": {
+                "Tup": "ITI"
+            },
+            "outputActions": {}
+        },
+        {
+            "stateName": "ITI",
+            "stateTimer": "itiDuration",
+            "stateChangeConditions": {
+                "Tup": "exit"
+            },
+            "outputActions": {}
+        }
+    ]
+}
