@@ -2,6 +2,7 @@ __pycache__/
 .vscode/
 .idea/
 results/
+stimuliFiles/
 protocol_files/
 olfactometry_config_files/
 camera_data/

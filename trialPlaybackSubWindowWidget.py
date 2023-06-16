@@ -27,17 +27,22 @@ class trialPlaybackSubWindowWidget(QtWidgets.QWidget):
         videoWidget = QVideoWidget()
         self.mediaPlayer.setVideoOutput(videoWidget)
         self.playLastTrial_Button = QtWidgets.QPushButton(self)
-        self.playLastTrial_Button.setGeometry(QtCore.QRect(90, 180, 75, 23))
+        self.playLastTrial_Button.setGeometry(QtCore.QRect(10, 180, 75, 23))
         self.playLastTrial_Button.setObjectName("playLastTrial_Button")
         self.playLastTrial_Button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPlay))
 
         self.positionSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.positionSlider.setRange(0, 0)
-        self.positionSlider.setGeometry(QtCore.QRect(100, 170, 10, 30))
+        self.positionSlider.setGeometry(QtCore.QRect(10, 170, 10, 30))
+
+        self.trialLabel = QtWidgets.QLabel()
+        self.trialLabel.setGeometry(QtCore.QRect(10, 10, 10, 30))
+        self.trialLabel.setText('Waiting for trial')
 
         # Create layouts to place inside widget
         controlLayout = QtWidgets.QHBoxLayout()
         controlLayout.setContentsMargins(0, 0, 0, 0)
+        controlLayout.addWidget(self.trialLabel)
         controlLayout.addWidget(self.playLastTrial_Button)
         controlLayout.addWidget(self.positionSlider)
 

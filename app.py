@@ -161,7 +161,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotSubWindow.resize(300, 320)
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
 
-
+        
         self.trialPlaybackSubWindow = MyQMdiSubWindow()        
         self.trialPlaybackSubWindow.setObjectName("trialPlaybackSubWindow")
         self.trialPlaybackSubWindow.setWidget(self.trialPlaybackSubWindowWidget)
@@ -214,7 +214,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.applicationModeComboBox.currentIndexChanged.connect(self.switchApplicationMode)
 
-        self.experimentSetupDockWidget.visibilityChanged.connect(lambda x: self.updateViewMenu(self.experimentSetupDockWidget.objectName(), x))
+        # self.experimentSetupDockWidget.visibilityChanged.connect(lambda x: self.updateViewMenu(self.experimentSetupDockWidget.objectName(), x))  # this unchecks the Expreiment Setup window when the whole app is minimized
 
         self.nTrialsSpinBox.valueChanged.connect(self.recordNumTrials)
         self.itiMinSpinBox.valueChanged.connect(self.recordMinITI)
@@ -253,7 +253,9 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def selectCameraDataDestination(self):
-        fname = QFileDialog.getExistingDirectory(self, "Open Folder", "H:\\repos\\PyBpodGUI\\camera_data\\test_bea\\")
+        dlg = QFileDialog()
+        dlg.setDirectory(os.getcwd() + '\\camera_data')
+        fname = dlg.getExistingDirectory(self, "Open Folder")
         self.CameraDataDestinationLineEdit.setText(fname)
 
     def setExperimentType(self):
@@ -529,6 +531,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if self.analogInputModuleCOMPortSpinBox.value() > 0:
                 self.adc = BpodAnalogIn(serial_port=f"COM{self.analogInputModuleCOMPortSpinBox.value()}")
                 self.configureAnalogInputModule()
+                # print('We are actually doing it!')
         except SerialException:
             if self.adc is not None:
                 self.adc.close()
@@ -615,7 +618,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushRightWaterButton.setEnabled(True)
         self.actionConfigureBpodFlexChannels.setEnabled(True)  # re-enable the ability to configure flex channels since an experiment is not running.
         if self.adc is not None:
-            self.actionConfigureAnalogInSettings.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
+            #print('Placeholder')
+            self.analogInputModuleCOMPortSpinBox.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
         self.experimentCompleteDialog()
@@ -1004,6 +1008,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.adc is not None:
             self.startAnalogModule()
         
+        print(self.bpod)
         
         self.runInputEventThread()
         self.runSaveDataThread()
@@ -1011,7 +1016,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.runProtocolThread()
        
         self.runStreamingThread()
-        self.runPlaybackThread()
+        if self.trialPlaybackcheckBox.isChecked():
+            self.runPlaybackThread()
         # Emit signal for experiment start
         self.startExperimentSignal.emit()
 
@@ -1033,7 +1039,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.disconnectDevicesButton.setEnabled(False)  # Do not let user disconnect devices while experiment is running.
         self.actionConfigureBpodFlexChannels.setEnabled(False)  # Prevent user from configuring flex channels while experiment is running.
         if self.adc is not None:
-            self.actionConfigureAnalogInSettings.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
+            self.analogInputModuleCOMPortSpinBox.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
@@ -1089,7 +1095,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def runReadingDataThread(self):
         self.readingDataThread = QThread(parent=self)
-        self.readDataWorker = ReadDataWorker(self.adc, self.bpod)
+        
+        if self.analogInputModuleSettingsDialog is None:  # if it wasnt created yet, then create it but only create it once.
+            self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
+            self.analogInputModuleSettingsDialog.accepted.connect(self.configureAnalogInputModule)
+        settingsDict = self.analogInputModuleSettingsDialog.getSettings()
+        print(f'\nPrinting bpod {self.bpod}\n\n')
+        self.readDataWorker = ReadDataWorker(settingsDict, self.bpod, self.adc)
         self.readDataWorker.moveToThread(self.readingDataThread)
         
         
@@ -1105,7 +1117,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.readingDataThread.started.connect(self.readDataWorker.run)
 
         self.saveDataWorker.analogDataSignalProcessed.connect(lambda x :self.streaming.getData(x))# give analog data to streamer for plotting
-        self.readDataWorker.analogDataSignal.connect(lambda x : self.saveDataWorker.saveAnalogDataFromBpod(x)) # give analog data to SaveDataWorker for saving
+        self.readDataWorker.flexAnalogDataSignal.connect(lambda x : self.saveDataWorker.saveFlexAnalogDataFromBpod(x)) # give analog data to SaveDataWorker for saving
+        self.readDataWorker.analogDataSignal.connect( lambda x : self.saveDataWorker.saveAnalogDataFromModule(x)) # give analog data to SaveDataWorker for saving
+        
         self.stopRunningSignal.connect(lambda: self.readDataWorker.stopRunning()) 
         self.readingDataThread.start()
         logging.info(f"readDataThread running? {self.readingDataThread.isRunning()}")

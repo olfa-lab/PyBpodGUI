@@ -13,11 +13,11 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QPushButton" name="saveOdorTableButton">
+  <widget class="QPushButton" name="saveStimuliListFile">
    <property name="geometry">
     <rect>
-     <x>810</x>
-     <y>720</y>
+     <x>940</x>
+     <y>630</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -45,11 +45,11 @@
     <number>0</number>
    </property>
   </widget>
-  <widget class="QPushButton" name="odorLoadButton">
+  <widget class="QPushButton" name="loadStimuliListFile">
    <property name="geometry">
     <rect>
-     <x>730</x>
-     <y>720</y>
+     <x>860</x>
+     <y>630</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -58,11 +58,11 @@
     <string>Load</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="saveOdorTableAsFileButton">
+  <widget class="QPushButton" name="saveAsStimuliListFile">
    <property name="geometry">
     <rect>
-     <x>890</x>
-     <y>720</y>
+     <x>1020</x>
+     <y>630</y>
      <width>75</width>
      <height>23</height>
     </rect>
@@ -74,8 +74,8 @@
   <widget class="QPushButton" name="generateOdorTableButton">
    <property name="geometry">
     <rect>
-     <x>490</x>
-     <y>650</y>
+     <x>690</x>
+     <y>630</y>
      <width>161</width>
      <height>23</height>
     </rect>
@@ -95,6 +95,45 @@
      <width>421</width>
      <height>501</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="saveStimuliConfigFile">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>630</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="loadStimuliConfigFile">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>630</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="saveAsStimuliConfigFile">
+   <property name="geometry">
+    <rect>
+     <x>580</x>
+     <y>630</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save as...</string>
    </property>
   </widget>
  </widget>

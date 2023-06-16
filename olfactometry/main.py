@@ -73,6 +73,8 @@ class Olfactometers(QtWidgets.QMainWindow):
             success = olfa.set_stimulus(o, open_vials=open_vials)
             successes.append(success)
         if 'dilutors' in list(std.keys()):
+            print(f"Length of dilutor list is {len(std['dilutors'])}")
+            print(f"{std['dilutors']}")
             for i in range(len(std['dilutors'])):
                 
                 dil = self.dilutors[i]

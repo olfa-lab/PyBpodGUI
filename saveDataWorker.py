@@ -52,6 +52,7 @@ Example trial info dictionary created by the bpod.
 
 class SaveDataWorker(QObject):
     analogDataSignal = pyqtSignal(np.ndarray)
+    flexAnalogDataSignal = pyqtSignal(np.ndarray)
     analogDataSignalProcessed = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
@@ -130,7 +131,7 @@ class SaveDataWorker(QObject):
             self.vialsTable.flush()
 
         if self.adc is not None:
-            self.bpod = None  # Avoid using the bpod in case it was also given as a parameter.
+            # self.bpod = None  # Avoid using the bpod in case it was also given as a parameter.
             self.analogSettings = analogInSettings
             self.rangeLimits = {'-10V:10V': [-10.0, 10.0], '-5V:5V': [-5.0, 5.0], '-2.5V:2.5V': [-2.5, 2.5],'0V:10V': [0.0, 10.0]}
             self.maxVoltages = [self.rangeLimits[x][1] for x in self.analogSettings['inputRanges']]  # Make a list of integers for the max voltage of each channel's input range. analogSettings['inputRanges'] returns a list of strings that are used as keys in self.rangeLimits.
@@ -186,7 +187,9 @@ class SaveDataWorker(QObject):
             self.voltsTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum:03d}', description=self.voltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
             self.voltsRow = self.voltsTable.row
 
-        elif self.bpod is not None:
+        if self.bpod is not None:
+            print(f'The bpod is not None at this stage')
+           
             self.channelIndices = self.bpod.hardware.analog_input_channels  # list of channel indices of channels configured for analog input.
             if (self.channelIndices is not None) and (len(self.channelIndices) > 0):
                 # This means it is a list of at least one flex channel number that is configured for analog input.
@@ -199,55 +202,56 @@ class SaveDataWorker(QObject):
                 self.minVoltages = [0] * self.nChannels  # Make a list of integers for the min voltage of each channel's input range.
                 self.samplingPeriod = self.bpod.hardware.analog_input_sampling_interval * 0.0001  # Multiply by the state machines timer period of 100 microseconds.
                 self.bpodTime = 0
-                self.voltsGroup = self.h5file.create_group(where='/', name='voltages', title='Voltages Per Trial')
+                self.flexvoltsGroup = self.h5file.create_group(where='/', name='flexvoltages', title='Voltages Per Trial')
                 
                 # Make the description dict for the setting table.
-                self.voltsSettingsDescDict = {}
+                self.flexvoltsSettingsDescDict = {}
                 pos = 0
-                self.voltsSettingsDescDict['samplingRate'] = tables.UInt16Col(pos=pos)
+                self.flexvoltsSettingsDescDict['samplingRate'] = tables.UInt16Col(pos=pos)
                 pos += 1
-                self.voltsSettingsDescDict['inputRange'] = tables.StringCol(10, pos=pos)
+                self.flexvoltsSettingsDescDict['inputRange'] = tables.StringCol(10, pos=pos)
                 pos += 1
-                self.voltsSettingsDescDict['thresholdVoltage_1'] = tables.Float32Col(pos=pos)
+                self.flexvoltsSettingsDescDict['thresholdVoltage_1'] = tables.Float32Col(pos=pos)
                 pos += 1
-                self.voltsSettingsDescDict['thresholdVoltage_2'] = tables.Float32Col(pos=pos)
+                self.flexvoltsSettingsDescDict['thresholdVoltage_2'] = tables.Float32Col(pos=pos)
                 pos += 1
-                self.voltsSettingsDescDict['thresholdPolarity_1'] = tables.UInt8Col(pos=pos)
+                self.flexvoltsSettingsDescDict['thresholdPolarity_1'] = tables.UInt8Col(pos=pos)
                 pos += 1
-                self.voltsSettingsDescDict['thresholdPolarity_2'] = tables.UInt8Col(pos=pos)
+                self.flexvoltsSettingsDescDict['thresholdPolarity_2'] = tables.UInt8Col(pos=pos)
                 
                 # Make the settings table using the description dict above.
-                self.voltsSettingsTable = self.h5file.create_table(where='/voltages', name='settings', description=self.voltsSettingsDescDict, title='Analog Input Settings')
-                self.voltsSettingsRow = self.voltsSettingsTable.row
+                self.flexvoltsSettingsTable = self.h5file.create_table(where='/flexvoltages', name='settings', description=self.flexvoltsSettingsDescDict, title='Analog Input Settings')
+                self.flexvoltsSettingsRow = self.flexvoltsSettingsTable.row
                 
                 # Write to the settings table.
                 for i in range(self.nChannels):  # Each analog input channel will have a row.
-                    self.voltsSettingsRow['samplingRate'] = 1 / self.samplingPeriod  # sampling rate is global for all channels.
-                    self.voltsSettingsRow['inputRange'] = "0V:5V"  # global for all flex channels.
-                    self.voltsSettingsRow['thresholdVoltage_1'] = (self.thresholds_1[self.channelIndices[i]] / 4095) * self.maxVoltages[i]  # Convert to voltage
-                    self.voltsSettingsRow['thresholdVoltage_2'] = (self.thresholds_2[self.channelIndices[i]] / 4095) * self.minVoltages[i]  # Convert to voltage
-                    self.voltsSettingsRow['thresholdPolarity_1'] = self.polarities_1[self.channelIndices[i]]
-                    self.voltsSettingsRow['thresholdPolarity_2'] = self.polarities_2[self.channelIndices[i]]
-                    self.voltsSettingsRow.append()
-                self.voltsSettingsTable.flush()
+                    self.flexvoltsSettingsRow['samplingRate'] = 1 / self.samplingPeriod  # sampling rate is global for all channels.
+                    self.flexvoltsSettingsRow['inputRange'] = "0V:10V"  # global for all flex channels. # "05:5V"
+                    self.flexvoltsSettingsRow['thresholdVoltage_1'] = (self.thresholds_1[self.channelIndices[i]] / 4095) * self.maxVoltages[i]  # Convert to voltage
+                    self.flexvoltsSettingsRow['thresholdVoltage_2'] = (self.thresholds_2[self.channelIndices[i]] / 4095) * self.minVoltages[i]  # Convert to voltage
+                    self.flexvoltsSettingsRow['thresholdPolarity_1'] = self.polarities_1[self.channelIndices[i]]
+                    self.flexvoltsSettingsRow['thresholdPolarity_2'] = self.polarities_2[self.channelIndices[i]]
+                    self.flexvoltsSettingsRow.append()
+                self.flexvoltsSettingsTable.flush()
 
                 # Make the description dict for the volts table.
-                self.voltsTableDescDict = {}  # Description dictionary for the volts table instead of making a class definition and subclassing tables.IsDescription.
+                self.flexvoltsTableDescDict = {}  # Description dictionary for the volts table instead of making a class definition and subclassing tables.IsDescription.
                 pos = 0
-                self.voltsTableDescDict['trialNum'] = tables.UInt8Col(pos=pos)
+                self.flexvoltsTableDescDict['trialNum'] = tables.UInt8Col(pos=pos)
                 pos += 1
-                self.voltsTableDescDict['bpodTime'] = tables.Float32Col(pos=pos)
+                self.flexvoltsTableDescDict['bpodTime'] = tables.Float32Col(pos=pos)
                 pos += 1
                 for i in range(self.nChannels):
-                    self.voltsTableDescDict[f'voltageCh{self.channelIndices[i]}'] = tables.Float32Col(pos=pos)  # make a column for each channel used.
+                    self.flexvoltsTableDescDict[f'voltageCh{self.channelIndices[i]}'] = tables.Float32Col(pos=pos)  # make a column for each channel used.
                     pos += 1
                 
                 # Make the volts table using the description dict above.
-                self.voltsTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum:03d}', description=self.voltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
-                self.voltsRow = self.voltsTable.row
+                self.flexvoltsTable = self.h5file.create_table(where='/flexvoltages', name=f'trial_{self.trialNum:03d}', description=self.flexvoltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
+                self.flexvoltsRow = self.flexvoltsTable.row
             
             else:
-                self.bpod = None  # Make it None to indicate to other functions below that there is no analog input.
+                print('We used to set bpod to None here')
+                # self.bpod = None  # Make it None to indicate to other functions below that there is no analog input.
 
     def receiveInfoDict(self, infoDict):
         self.newData = True
@@ -305,39 +309,48 @@ class SaveDataWorker(QObject):
         # If its None, that means the first trial's data just came, so make the description dict and then create the trialsTable using that description dict. This only happens once.
         if self.trialsTable is None:
             pos = 0
-            # self.trialsTableDescDict['trialNum'] = tables.UInt16Col(pos=pos)
-            # pos += 1
-            # self.trialsTableDescDict['correctResponse'] = tables.StringCol(8, pos=pos)
-            # pos += 1
+            self.trialsTableDescDict['trialNum'] = tables.UInt16Col(pos=pos)
+            pos += 1
+            self.trialsTableDescDict['correctResponse'] = tables.StringCol(8, pos=pos)
+            pos += 1
             self.trialsTableDescDict['responseResult'] = tables.StringCol(7, pos=pos)
             pos += 1
             # self.trialsTableDescDict['itiDuration'] = tables.UInt8Col(pos=pos)
             # pos += 1
-            # self.trialsTableDescDict['bpodStartTime'] = tables.Float32Col(pos=pos)
-            # pos += 1
+            self.trialsTableDescDict['bpodStartTime'] = tables.Float32Col(pos=pos)
+            pos += 1
             self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
             pos += 1
-            self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos)
+            self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
             pos += 1
+            self.trialsTableDescDict['olfa'] = tables.StringCol(8,pos=pos)# For now I hardcode only one stimulus at a time possble. I fyou wanna use mixtures this must be changed
+            pos += 1
+            self.trialsTableDescDict['vial'] = tables.UInt8Col(pos=pos)
+            pos += 1
+            self.trialsTableDescDict['flow'] = tables.UInt8Col(pos=pos)
+            pos += 1
+
             # self.trialsTableDescDict['totalTrialTime'] = tables.Float32Col(pos=pos)
             # pos += 1
-
             # Loop through the olfactometers used to save each one's parameters for each stimulus in their own column.
             stimIndex = 0
             for stimDict in self.infoDict['stimList']:
-                for olfaName in stimDict['olfas'].keys():
-                    self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_vial'] = tables.UInt8Col(pos=pos)
-                    pos += 1
-                    # self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_name'] = tables.StringCol(32, pos=pos)  # Size of strings added to the column does not need to exactly match the size given during initialization.
-                    # pos += 1
-                    # self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_conc'] = tables.Float32Col(pos=pos)
-                    # pos += 1
-                    self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
-                    pos += 1
-                for dilName in stimDict['dilutors'].keys():
-                    self.trialsTableDescDict[f'odor{stimIndex}_{dilName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
-                    pos += 1
-                    print('How are the dilutorscalled?')
+                # print(stimDict['olfas'])
+                # for olfaName in stimDict['olfas'].keys():
+                #     self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_vial'] = tables.UInt8Col(pos=pos)
+                #     pos += 1
+                #     # self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_name'] = tables.StringCol(32, pos=pos)  # Size of strings added to the column does not need to exactly match the size given during initialization.
+                #     # pos += 1
+                #     # self.tri
+                # alsTableDescDict[f'odor{stimIndex}_{olfaName}_conc'] = tables.Float32Col(pos=pos)
+                #     # pos += 1
+                #     self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
+                #     pos += 1
+                if 'dilutors' in stimDict: # check if Dilutors has dictionary  # changed 5/16/23 JH
+                    if type(stimDict['dilutors']) is dict:
+                        for dilName in stimDict['dilutors'].keys():
+                            self.trialsTableDescDict[f'{dilName}_flow'] = tables.UInt16Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
+                            pos += 1
                 stimIndex += 1
                 
             
@@ -354,29 +367,30 @@ class SaveDataWorker(QObject):
         self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
         self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
         # self.trialRow['totalTrialTime'] = self.trialRow['trialEndTime'] - self.trialRow['trialStartTime']
-        stimIndex = 0
-        for stimDict in self.infoDict['stimList']:  # Loop again to save the data to the columns.
-            for olfaName, olfaValues in stimDict['olfas'].items():
-                self.trialRow[f'odor{stimIndex}_{olfaName}_vial'] = int(olfaValues['vialNum'])
-                # self.trialRow[f'odor{stimIndex}_{olfaName}_name'] = olfaValues['odor']
-                # self.trialRow[f'odor{stimIndex}_{olfaName}_conc'] = olfaValues['vialconc']
-                self.trialRow[f'odor{stimIndex}_{olfaName}_flow'] = olfaValues['mfc_1_flow']
+
+        print(f"Printing stimlist {self.infoDict['stimList']}")
+        stimDict = self.infoDict['stimList'][0]
+        olfaName = stimDict['olfas'].keys()
+        for olfaName in stimDict['olfas'].keys():  # loop through olfas in stim
+            self.trialRow['olfa'] = olfaName
+            self.trialRow['vial'] = int(stimDict['olfas'][olfaName]['vialNum'])
+            self.trialRow['flow'] = stimDict['olfas'][olfaName]['mfc_1_flow']
+
+        if type(stimDict['dilutors']) is dict:  # check if dilutors is dictionary 05/16/23 JH
             for dilName, dilValues in stimDict['dilutors'].items():
-                self.trialRow[f'odor{stimIndex}_{dilName}_flow'] = int(dilValues['vac_flow'])
-            stimIndex += 1
+                self.trialRow[f'{dilName}_flow'] = int(dilValues['vac_flow'])
         
         self.trialRow.append()
         self.trialsTable.flush()
-    
-    def saveAnalogDataFromModule(self):
-        analogData = self.adc.getSampleFromUSB()
 
-        # Uses the computer's clock to make the timestamps for the samples and period in between each sample.
+
+    def saveAnalogDataFromModule(self, analogData):
+         # Uses the computer's clock to make the timestamps for the samples and period in between each sample.
         # currentTimer = time.perf_counter()
         # period = currentTimer - self.previousTimer
         # elapsed = currentTimer - self.t_start
         # self.previousTimer = currentTimer
-
+        # print(analogData)
         if analogData is not None:
             prefix = analogData[0][0]
             syncByte = analogData[0][1]
@@ -388,7 +402,7 @@ class SaveDataWorker(QObject):
                     self.saveVoltages = True  # Start saving to h5 file when syncByte value of 1 is received.
                 elif (syncByte == 2):
                     self.saveVoltages = False  # Stop saving to h5 file when syncByte value of 2 is received.
-
+            self.saveVoltages = True
             # convert decimal bit value to voltage. The length of samples indicates how many channels are streaming to USB.
             for i in range(len(samples)):
                 if (self.minVoltages[i] == 0):  # This is when input voltage range is 0V to 10V.
@@ -418,12 +432,12 @@ class SaveDataWorker(QObject):
             else:
                 # self.voltsTable.flush()  # Write to the file whenever the buffer gets full instead of waiting for the end of trial dict to come from the protocolWorker thread.
                 
-                self.analogDataSignal.emit(self.analogDataBuffer)
+                #self.analogDataSignal.emit(self.analogDataBuffer) # Bea commented in data 26-04-23 for fear that this would couse conflict in the plotting
                 self.counter = 0
                 self.analogDataBuffer[self.counter] = voltages[0]
                 self.counter += 1
     
-    def saveAnalogDataFromBpod(self, analogData):#modified by Bea in introducing ReadDataThread
+    def saveFlexAnalogDataFromBpod(self, analogData):#modified by Bea in introducing ReadDataThread
         #analogData = self.bpod.read_analog_input()
         
         if len(analogData) > 0:
@@ -435,15 +449,15 @@ class SaveDataWorker(QObject):
                 trialNum = analogData[ind]
                 ind += 1
                 if trialNum == self.trialNum:  # Note that self.trialNum starts at 1 and is incremented each time a new info dict is received.
-                    self.voltsRow['trialNum'] = trialNum
-                    self.voltsRow['bpodTime'] = self.bpodTime
+                    self.flexvoltsRow['trialNum'] = trialNum
+                    self.flexvoltsRow['bpodTime'] = self.bpodTime
                     self.bpodTime += self.samplingPeriod
                     for i in range(self.nChannels):
                         samp = (analogData[ind] / 4095) * self.maxVoltages[i]
                         ind += 1
                         voltages[i].append(samp)
-                        self.voltsRow[f'voltageCh{self.channelIndices[i]}'] = voltages[i][-1]  # The most recently appended value is the current ind.
-                    self.voltsRow.append()
+                        self.flexvoltsRow[f'voltageCh{self.channelIndices[i]}'] = voltages[i][-1]  # The most recently appended value is the current ind.
+                    self.flexvoltsRow.append()
                 else:
                     # Skip over this sample. Instead of breaking out of the for loop, run the for loop below to increment ind, just in case analogData
                     # is more than one sample, in which case the next sample could be the correct trialNum.
@@ -452,6 +466,7 @@ class SaveDataWorker(QObject):
 
             self.analogDataSignalProcessed.emit(np.array(voltages[0], dtype='float32'))  # StreamingWorker is currently only capable of plotting one channel.
     
+
     def run(self):
         # self.t_start = time.perf_counter()
         while self.keepRunning:
@@ -459,17 +474,20 @@ class SaveDataWorker(QObject):
                 self.newData = False  # reset
 
                 if not (self.infoDict == {}):
+                    print('If i see this is because I have info ')
                     self.saveTrialData()
                     self.saveEventsTimestamps()
                     self.saveStatesTimestamps()
                     self.trialNum += 1  # increment trial number.
 
-                    if (self.adc is not None) or (self.bpod is not None):
+                    if (self.adc is not None) :
                         # The trial data above comes at the end of a trial, so write the voltages to the disk, and create a new table for the next trial's voltages
                         self.voltsTable.flush()
+                        
                         self.saveVoltages = False  # reset for the next trial.
                         self.bpodTime = 0  # reset timestamps for samples back to zero.
-                        
+                        self.voltsTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum:03d}', description=self.voltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
+                        self.voltsRow = self.voltsTable.row
                         # Re-iterate through the volts table row by row to update the bpodTime so it corresponds to the bpod's trial start time instead of starting it at zero.
                         # self.bpodTime = self.infoDict['Trial start timestamp']
                         # for voltsRow in self.voltsTable.iterrows():
@@ -477,30 +495,45 @@ class SaveDataWorker(QObject):
                         #     self.bpodTime += self.samplingPeriod
                         #     voltsRow.update()
                         # self.voltsTable.flush()
+                       
+                       
+                    if (self.bpod is not None):
+                        self.flexvoltsTable.flush()
+                        self.flexvoltsTable = self.h5file.create_table(where='/flexvoltages', name=f'trial_{self.trialNum:03d}', description=self.flexvoltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
+                        self.flexvoltsRow = self.flexvoltsTable.row
+                        self.saveVoltages = False  # reset for the next trial.
+                        self.bpodTime = 0  # reset timestamps for samples back to zero.
+                        
 
-                        self.voltsTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum:03d}', description=self.voltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
-                        self.voltsRow = self.voltsTable.row
                 else:
                     # Empty dict means to discard the trial and repeat it.
-                    if (self.adc is not None) or (self.bpod is not None):
+                    if (self.adc is not None) :
                         self.saveVoltages = False
                         self.bpodTime = 0
                         self.voltsTable.remove()  # Delete the current table and create and new empty below.
                         self.voltsTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum:03d}', description=self.voltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
                         self.voltsRow = self.voltsTable.row
 
+                    if (self.bpod is not None):
+                        self.saveVoltages = False
+                        self.bpodTime = 0
+                        self.flexvoltsTable.remove()  # Delete the current table and create and new empty below.
+                        self.flexvoltsTable = self.h5file.create_table(where='/flexvoltages', name=f'trial_{self.trialNum:03d}', description=self.flexvoltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
+                        self.flexvoltsRow = self.flexvoltsTable.row
             
             #elif self.adc is not None:
             #    self.saveAnalogDataFromModule()
             #
             #elif self.bpod is not None:
-            #    self.saveAnalogDataFromBpod()
+            #    self.saveFlexAnalogDataFromBpod()
 
             else:
                 QThread.sleep(1)  # Need this or else entire application will become severely unresponsive.
 
-        if (self.adc is not None) or (self.bpod is not None):
+        if (self.adc is not None) :
             self.voltsTable.flush()
+        if (self.bpod is not None):
+            self.flexvoltsTable.flush()
 
         self.h5file.close()
         logging.info("h5 file closed")

@@ -27,6 +27,7 @@ class PlaybackWorker(QObject):
         self.positionSlider = trialPlaybackSubWindowWidget.positionSlider
         self.mediaPlayer = trialPlaybackSubWindowWidget.mediaPlayer
         self.playLastTrial_Button = trialPlaybackSubWindowWidget.playLastTrial_Button
+        self.trialLabel = trialPlaybackSubWindowWidget.trialLabel
         self.camera = camera
         self.lastTrialVideo = None
     
@@ -63,7 +64,7 @@ class PlaybackWorker(QObject):
     def findLastTrialVideo(self):
         #folder = 'H:\\repos\\PyBpodGUI\\camera_data\\' # need to change to camera.camera_data_dir
         folder = self.camera.camera_data_dir # need to change to camera.camera_data_dir
-        print(f'Saving imagine in folder {self.camera.camera_data_dir}')
+        print(f'Saving images in folder {self.camera.camera_data_dir}')
         list_of_tifs = []
         while not bool(list_of_tifs):
             list_of_tifs = glob.glob(folder +'\\*\\*.tif')
@@ -79,7 +80,7 @@ class PlaybackWorker(QObject):
             print('Using {0} as most recent tif.'.format(self.lastTrialVideo))
 
             imstack1 = skio.imread(self.lastTrialVideo)
-            meanframe = np.mean(imstack1[:100,:,:], axis = 0)
+            meanframe = np.mean(imstack1[:50,:,:], axis = 0)
             normstack = imstack1 - meanframe
 
             video_name = 'temp.avi' # 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
@@ -102,6 +103,12 @@ class PlaybackWorker(QObject):
             
             writer.release()
 
+            trialNumStart = self.lastTrialVideo.find('Trial_') + 6
+            trialNumEnd = trialNumStart + 3
+            trialNumString = self.lastTrialVideo[trialNumStart:trialNumEnd]
+
+            self.trialLabel.setText(trialNumString)
+            print(f'Trial num is {trialNumString}')
             self.mediaPlayer.setMedia(
                         QMediaContent(QUrl.fromLocalFile(video_name)))
             self.playLastTrial_Button.setEnabled(True)

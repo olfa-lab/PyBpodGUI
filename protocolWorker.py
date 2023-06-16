@@ -60,7 +60,7 @@ class ProtocolWorker(QObject):
         self.currentITI = None
         self.itiMin = itiMin
         self.itiMax = itiMax
-        self.nTrials = numTrials
+        self.nTrials = min(numTrials,len(allTrialsDict))
         self.leftSensorPort = leftSensorPort
         self.leftWaterValvePort = leftWaterValvePort
         self.leftWaterDuration = leftWaterValveDuration / 1000  # convert to seconds
@@ -139,6 +139,7 @@ class ProtocolWorker(QObject):
         return trialDict
 
     def getEndOfTrialInfoDict(self):
+        print('\n\ninside getEndOfTrialInfoDict\n')
         if (self.currentStateName == 'exit'):
             dict1 = self.getCurrentTrialInfoDict()
             dict2 = self.bpod.session.current_trial.export()
@@ -444,7 +445,9 @@ class ProtocolWorker(QObject):
     def imagingGenerator(self):
         print('Running the imagingGenerator!')
         # Simply get the list of dictionaries from odorEditorDialog, to get the current trial vial/vialname/vialconc/dilutor_flow/mfc_flow
-        current_trial = self.allTrialsDict[self.currentTrialNum-1]
+        current_trial = self.allTrialsDict[self.currentTrialNum-1].copy()
+        print(f'Current trial is {current_trial}')
+        print(f'Current trial num {self.currentTrialNum}')
         ostim = {'olfas': {}}
         if current_trial['olfa_num'] is not list:
             current_trial['olfa_num'] = [current_trial['olfa_num']]
@@ -457,7 +460,14 @@ class ProtocolWorker(QObject):
                     'vialconc': self.olfaConfigDict['Olfactometers'][i]['Vials'][currentVial]['conc'],  # useful when same odor in two vials at different
                     'vialNum': str(int(current_trial['vial_num']))  # vial 1 is actually read to be vial 5 (4=dummy)
                 }
-        ostim['dilutors'] ={'dilutor_0':{'vac_flow':current_trial['dilutor_flow'],'air_flow':current_trial['dilutor_flow']}}
+            
+        if 'Dilutors' in self.olfaConfigDict:  # modified for case when dilutor field is empty 05/16/23 JH
+            if len(self.olfaConfigDict['Dilutors']) > 0:
+                ostim['dilutors'] ={'dilutor_0':{'vac_flow':current_trial['dilutor_flow'],'air_flow':current_trial['dilutor_flow']}}
+            else:
+                ostim['dilutors'] = []
+        else:
+            ostim['dilutors'] = []
 
         self.stimList.clear()
         self.stimList.append(ostim)
@@ -867,6 +877,7 @@ class ProtocolWorker(QObject):
             self.camera.stop_acquisition()
         if self.olfas:
             self.olfas.set_dummy_vials()  # Close vials in case experiment stopped while olfactometer was on.
+
 
     def discardCurrentTrial(self):
         self.saveTrial = False

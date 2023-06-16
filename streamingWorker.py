@@ -27,6 +27,9 @@ class StreamingWorker(QObject):
         #self.ax = self.dynamic_canvas.figure.subplots()
         self.dynamic_canvas = pg.PlotWidget()  
         self.dynamic_canvas.setBackground('w')
+        self.dynamic_canvas.enableAutoRange(axis='y', enable=False)
+        self.dynamic_canvas.enableAutoRange(axis='x', enable=True)
+        self.dynamic_canvas.setYRange(0,5)
         self.ax = self.dynamic_canvas.getPlotItem()
         self.buffersize = 50
 
@@ -80,29 +83,27 @@ class StreamingWorker(QObject):
 
         self.events = []
 
-        self.event_color_dict = {'WaitForOdor':'k',
-            'LedOn':'y',
-            'CameraOn':'g',
-            'CameraOff':'r',
-            'WaitForCamera': 'm',
-            'WaitForSniff':'y',
-            'PresentOdor': 'g',
-            'WaitForResponse':'b',
-            'NoResponse':'c',
-            'Correct':'g',
-            'Wrong':'r',
-            'ITI':'m'}
+        self.event_color_dict = {'WaitForOdor':'gray',
+            'LedOn':'lightseagreen',
+            'CameraOn':'navy',
+            'CameraOff':'navy',
+            'WaitForCamera': 'lightsteelblue',
+            'WaitForSniff':'peachpuff',
+            'PresentOdor': 'sandybrown',
+            'WaitForResponse':'steelblue',
+            'NoResponse':'gray',
+            'Correct':'yellowgreen',
+            'Wrong':'darkred',
+            'ITI':'darkseagreen'}
 
     def setYaxis(self, ymin, ymax):
         self.ymax = ymax
         self.ymin = ymin
-        self.dynamic_canvas.setYRange(self.ymin, self.ymax )
         self.triggeredValues = [self.ymax, (self.ymax - ((self.ymax - self.ymin) / 3)), (((self.ymax - self.ymin) / 3) + self.ymin), self.ymin]
         #self.ax.figure.canvas.draw()
     
     def setXaxis(self, maxt):
         self.maxt = maxt
-        self.dynamic_canvas.setXRange(self.tdata[0], self.tdata[0] + self.maxt)
         #self.ax.figure.canvas.draw()
 
     def set_dt(self, dt):
@@ -134,17 +135,13 @@ class StreamingWorker(QObject):
                    
                     self.port_1_Data.append(self.inputPorts[0]) 
                     self.port_1_Time.append(self.inputPortsTime[0])
-                    self.dynamic_canvas.disableAutoRange()
                     self.port_1_Line.setData(self.port_1_Time, self.port_1_Data)
-                    self.dynamic_canvas.autoRange()
                 elif i == 1:
                     pass
                 elif i ==2:
                     self.port_3_Data.append(self.inputPorts[2])
                     self.port_3_Time.append(self.inputPortsTime[2])
-                    self.dynamic_canvas.disableAutoRange()
                     self.port_3_Line.setData(self.port_3_Time, self.port_3_Data)
-                    self.dynamic_canvas.autoRange()
                     
                 elif i ==3:
                     pass
@@ -187,12 +184,10 @@ class StreamingWorker(QObject):
                 self.tdata.extend(t)
                 self.ydata.extend(self.analogData)
                 
-                #self.dynamic_canvas.setXRange(int(self.tdata[0]), int(self.tdata[0] + self.maxt))
             else:
                 
                 self.tdata.extend(t)
                 self.ydata.extend(self.analogData)
-                #self.dynamic_canvas.setXRange(self.tdata[0], self.tdata[0] + self.maxt)
             
             nSamples = len(self.tdata)
             timeslist = []
@@ -238,12 +233,10 @@ class StreamingWorker(QObject):
             cm = pg.ColorMap(timeslist,colorslist)
 
             pen = cm.getPen( span=(self.tdata[0], self.tdata[-1]), width=5 ,orientation='horizontal')
-            self.dynamic_canvas.disableAutoRange()
             self.line.setData(self.tdata, self.ydata )
             self.line.setPen(pen)
             self.tsniff = [self.tdata[0], self.tdata[-1]]
             self.sniffthline.setData(self.tsniff, self.sniffthdata)
-            self.dynamic_canvas.autoRange()
         else:
             self.finished.emit()
         self.update_calls_count +=1
@@ -251,6 +244,8 @@ class StreamingWorker(QObject):
         return self.line #self.port_1_Line, self.port_2_Line, self.port_3_Line, self.port_4_Line, self.span,
 
     def getData(self, data):
+        if np.shape(data)[0] > 1:  # incase we have multiple flex channels eg PID
+            data = [data[0]]
         self.analogData.extend(data)
         self.analogFlag = 1
         if len(self.analogData)>self.buffersize:

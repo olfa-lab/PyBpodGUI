@@ -10,8 +10,8 @@
         "nTrials": 300,
         "noResponseCutoff": 0,
         "autoWaterCutoff": 0,
-        "maxITI": 30,
-        "minITI": 30,
+        "maxITI": 5,
+        "minITI": 5,
         "mouseNum": 1234,
         "rig": "e"
     },

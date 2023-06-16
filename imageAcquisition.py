@@ -32,6 +32,7 @@ class MicroManagerPrime95B:  # here we define the 'camera' object used in app.py
         #self.studio = self.bridge.get_studio()
         self.studio = Studio()
         self.acquisitions = self.studio.acquisitions()
+        dir(self.acquisitions)
         self.camera_name = self.core.get_camera_device()
         
         # Set camera properties for 80Hz imaging
@@ -103,13 +104,16 @@ class MicroManagerPrime95B:  # here we define the 'camera' object used in app.py
     def start_acquisition(self):
         self.update_settings()
         
+        print('\n\nStarting camera acquisition\n\n')
+
+
         check_settings = self.acquisitions.get_acquisition_settings()
 
         self.current_acquisition = self.acquisitions.run_acquisition_nonblocking() # has to be started for every trial, _nonblocking?
         self.acquisitions.get_acquisition_settings()
 
-    def stop_acquisition(self): # need to write this
-        self.acquisitions.run_acquisition_nonblocking() # has to be started for every trial, _nonblocking?
+    def stop_acquisition(self):
+        self.acquisitions.halt_acquisition()  # guessing here
 
     def is_acquisition_running(self):
         return self.acquisitions.is_acquisition_running()
