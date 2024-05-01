@@ -82,19 +82,32 @@ class StreamingWorker(QObject):
         self.keepRunning = True
 
         self.events = []
-
         self.event_color_dict = {'WaitForOdor':'gray',
-            'LedOn':'lightseagreen',
-            'CameraOn':'navy',
-            'CameraOff':'navy',
-            'WaitForCamera': 'lightsteelblue',
-            'WaitForSniff':'peachpuff',
+            'LedOn':'gray',
+            'CameraOn':'gray',
+            'CameraOff':'gray',
+            'WaitForCamera': 'gray',
+            'WaitInhalationStart': 'steelblue',
+            'WaitExhalation': 'navy',
+            'WaitForSniff':'gray',
             'PresentOdor': 'sandybrown',
-            'WaitForResponse':'steelblue',
+            'WaitForResponse':'gray',
             'NoResponse':'gray',
             'Correct':'yellowgreen',
             'Wrong':'darkred',
-            'ITI':'darkseagreen'}
+            'ITI':'gray'}
+        # self.event_color_dict = {'WaitForOdor':'gray',
+        #     'LedOn':'lightseagreen',
+        #     'CameraOn':'navy',
+        #     'CameraOff':'navy',
+        #     'WaitForCamera': 'lightsteelblue',
+        #     'WaitForSniff':'peachpuff',
+        #     'PresentOdor': 'sandybrown',
+        #     'WaitForResponse':'steelblue',
+        #     'NoResponse':'gray',
+        #     'Correct':'yellowgreen',
+        #     'Wrong':'darkred',
+        #     'ITI':'darkseagreen'}
 
     def setYaxis(self, ymin, ymax):
         self.ymax = ymax
@@ -177,8 +190,8 @@ class StreamingWorker(QObject):
             t = np.linspace(self.previousTimer, currentTimer, n_new_datapoints)
             
             if lastt >= self.tdata[0] + self.maxt:
-                self.tdata = self.tdata[n_new_datapoints-1:]
-                self.ydata = self.ydata[n_new_datapoints-1:]
+                self.tdata = self.tdata[n_new_datapoints:]
+                self.ydata = self.ydata[n_new_datapoints:]
                 #self.dataColor =  self.dataColor[n_new_datapoints-1:]
                 
                 self.tdata.extend(t)

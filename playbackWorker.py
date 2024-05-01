@@ -83,7 +83,12 @@ class PlaybackWorker(QObject):
             meanframe = np.mean(imstack1[:50,:,:], axis = 0)
             normstack = imstack1 - meanframe
 
-            video_name = 'temp.avi' # 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
+            video_name = 'temp.avi'.format(self.lastTrialVideo)
+
+            if os.path.exists(video_name):
+                print('Wiping {0}'.format(video_name))
+                os.remove(video_name)
+
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             fps = 30
             vidshape = np.shape(normstack)
@@ -112,11 +117,6 @@ class PlaybackWorker(QObject):
             self.mediaPlayer.setMedia(
                         QMediaContent(QUrl.fromLocalFile(video_name)))
             self.playLastTrial_Button.setEnabled(True)
-        
 
-        # self.videoLabel.setMedia(
-        #             QMediaContent(QUrl.fromLocalFile(fname[0])))
-        # self.playLastTrial_Button.setEnabled(True)
-  
+            sleep(1)
             self.play()
-        

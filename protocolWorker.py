@@ -38,7 +38,7 @@ class ProtocolWorker(QObject):
             bpodObject, protocolFileName, olfaConfigFileName, experimentType, camera, shuffleMultiplier, allTrialsDict, leftSensorPort, leftWaterValvePort, leftWaterValveDuration,
             rightSensorPort, rightWaterValvePort, rightWaterValveDuration, finalValvePort, itiMin, itiMax, noResponseCutoff, autoWaterCutoff, olfaChecked=True, numTrials=1
         ):
-        super(ProtocolWorker, self).__init__()
+        super(ProtocolWorker, self).__init__() # equivalent to QObject.__init__(self), super() refers to parent class
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
         self.bpod = bpodObject
         self.olfaChecked = olfaChecked

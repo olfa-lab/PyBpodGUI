@@ -177,6 +177,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.playLastTrial_Button = self.trialPlaybackSubWindowWidget.playLastTrial_Button #widget before
 
     def connectSignalsSlots(self):
+        """
+        read about signals here: https://www.riverbankcomputing.com/static/Docs/PyQt5/signals_slots.html
+        signals here are in the common meaning, not mathematical
+        << A signal is emitted when something of potential interest happens. A slot is a Python callable. 
+        If a signal is connected to a slot then the slot is called when the signal is emitted. If a signal isn’t connected then nothing happens. 
+        The code (or component) that emits the signal does not know or care if the signal is being used. >>
+        """
         self.startButton.clicked.connect(self.runTask)
         self.stopButton.clicked.connect(self.endTask)
         self.pauseButton.clicked.connect(self.pauseExperiment)
@@ -251,9 +258,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.selectCameraDataDestinationPushButton.clicked.connect(self.selectCameraDataDestination)
 
 
-
     def selectCameraDataDestination(self):
         dlg = QFileDialog()
+        """
+        QFileDialog documentation does not exist as of 11.01.2023 - RR
+        https://www.riverbankcomputing.com/static/Docs/PyQt5/api/qtwidgets/qfiledialog.html#qfiledialog
+        """
         dlg.setDirectory(os.getcwd() + '\\camera_data')
         fname = dlg.getExistingDirectory(self, "Open Folder")
         self.CameraDataDestinationLineEdit.setText(fname)
@@ -1155,10 +1165,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
     
         self.protocolWorker = ProtocolWorker(
-            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, self.shuffleMultiplierSpinBox.value(), self.odorEditor.all_trials_dict,
+            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, 
+            self.shuffleMultiplierSpinBox.value(), self.odorEditor.all_trials_dict,
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
             int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
-            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
+            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), 
+            self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
         )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)

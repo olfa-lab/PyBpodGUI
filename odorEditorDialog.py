@@ -155,7 +155,13 @@ class OdorEditorDialog(QDialog, Ui_Dialog):
                 dilutor_dil = self.tableWidget.item(irow,self.stimuli_config_columns['Dilutor_flow']).text()[1:-1].split(',')
                 nRep = int(self.tableWidget.item(irow,self.stimuli_config_columns['Reps']).text())
                 for istim, mfc in enumerate(mfc_dil):
-                    mfc_flow = (float(mfc)/100)*olfa_mfc_capacity
+                    print('Printing inside odorEditorDialog l158')
+                    print(istim, mfc)
+                    try:
+                        mfc_flow = (float(mfc)/100)*olfa_mfc_capacity
+                    except:  # JH 12/21/23
+                        mfc_flow = (float(mfc)/100)*1000
+                        print('Assuming mfc capacity of 1000')
                     dil_flow = (float(dilutor_dil[istim])/100)*dil_mfc_capacity
                     for irep in range(0, nRep):
                         all_trials.append([olfa_number, vial_number, vial_name, mfc_flow, dil_flow])

@@ -136,14 +136,14 @@ class SaveDataWorker(QObject):
             self.rangeLimits = {'-10V:10V': [-10.0, 10.0], '-5V:5V': [-5.0, 5.0], '-2.5V:2.5V': [-2.5, 2.5],'0V:10V': [0.0, 10.0]}
             self.maxVoltages = [self.rangeLimits[x][1] for x in self.analogSettings['inputRanges']]  # Make a list of integers for the max voltage of each channel's input range. analogSettings['inputRanges'] returns a list of strings that are used as keys in self.rangeLimits.
             self.minVoltages = [self.rangeLimits[x][0] for x in self.analogSettings['inputRanges']]  # Make a list of integers for the min voltage of each channel's input range.
-            self.samplingPeriod = 1 / (self.analogSettings['samplingRate'])
+            self.analogSamplingPeriod = 1 / (self.analogSettings['samplingRate'])
             self.analogDataBufferSize = 5  # Size of buffer to send to the streamingWorker for plotting the analog data. Larger the buffer, the thicker the line gets and steps become more visible as buffers get sent before the previous buffer is completely plotted.
             self.analogDataBuffer = np.zeros(shape=self.analogDataBufferSize, dtype='float32')
             self.saveVoltages = False
             self.counter = 0
             self.previousTimer = 0
             self.t_start = 0
-            self.bpodTime = 0
+            self.analogbpodTime = 0
             self.voltsGroup = self.h5file.create_group(where='/', name='voltages', title='Voltages Per Trial')
             
             # Make the description dict for the setting table.
@@ -200,8 +200,8 @@ class SaveDataWorker(QObject):
                 self.polarities_2 = self.bpod.hardware.analog_input_threshold_polarity_2
                 self.maxVoltages = [5] * self.nChannels  # Make a list of integers for the max voltage of each channel's input range.
                 self.minVoltages = [0] * self.nChannels  # Make a list of integers for the min voltage of each channel's input range.
-                self.samplingPeriod = self.bpod.hardware.analog_input_sampling_interval * 0.0001  # Multiply by the state machines timer period of 100 microseconds.
-                self.bpodTime = 0
+                self.flexSamplingPeriod = self.bpod.hardware.analog_input_sampling_interval * 0.0001  # Multiply by the state machines timer period of 100 microseconds.
+                self.flexbpodTime = 0
                 self.flexvoltsGroup = self.h5file.create_group(where='/', name='flexvoltages', title='Voltages Per Trial')
                 
                 # Make the description dict for the setting table.
@@ -225,7 +225,7 @@ class SaveDataWorker(QObject):
                 
                 # Write to the settings table.
                 for i in range(self.nChannels):  # Each analog input channel will have a row.
-                    self.flexvoltsSettingsRow['samplingRate'] = 1 / self.samplingPeriod  # sampling rate is global for all channels.
+                    self.flexvoltsSettingsRow['samplingRate'] = 1 / self.flexSamplingPeriod  # sampling rate is global for all channels.
                     self.flexvoltsSettingsRow['inputRange'] = "0V:10V"  # global for all flex channels. # "05:5V"
                     self.flexvoltsSettingsRow['thresholdVoltage_1'] = (self.thresholds_1[self.channelIndices[i]] / 4095) * self.maxVoltages[i]  # Convert to voltage
                     self.flexvoltsSettingsRow['thresholdVoltage_2'] = (self.thresholds_2[self.channelIndices[i]] / 4095) * self.minVoltages[i]  # Convert to voltage
@@ -419,8 +419,8 @@ class SaveDataWorker(QObject):
                 # self.voltsRow['computerPeriod'] = period
                 # self.voltsRow['prefix'] = prefix
                 # self.voltsRow['syncByte'] = syncByte
-                self.voltsRow['bpodTime'] = self.bpodTime
-                self.bpodTime += self.samplingPeriod
+                self.voltsRow['bpodTime'] = self.analogbpodTime
+                self.analogbpodTime += self.analogSamplingPeriod
                 for i in range(len(voltages)):
                     self.voltsRow[f'voltageCh{i}'] = voltages[i]
                 self.voltsRow.append()
@@ -450,8 +450,8 @@ class SaveDataWorker(QObject):
                 ind += 1
                 if trialNum == self.trialNum:  # Note that self.trialNum starts at 1 and is incremented each time a new info dict is received.
                     self.flexvoltsRow['trialNum'] = trialNum
-                    self.flexvoltsRow['bpodTime'] = self.bpodTime
-                    self.bpodTime += self.samplingPeriod
+                    self.flexvoltsRow['bpodTime'] = self.flexbpodTime
+                    self.flexbpodTime += self.flexSamplingPeriod
                     for i in range(self.nChannels):
                         samp = (analogData[ind] / 4095) * self.maxVoltages[i]
                         ind += 1
@@ -485,7 +485,7 @@ class SaveDataWorker(QObject):
                         self.voltsTable.flush()
                         
                         self.saveVoltages = False  # reset for the next trial.
-                        self.bpodTime = 0  # reset timestamps for samples back to zero.
+                        self.analogbpodTime = 0  # reset timestamps for samples back to zero.
                         self.voltsTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum:03d}', description=self.voltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
                         self.voltsRow = self.voltsTable.row
                         # Re-iterate through the volts table row by row to update the bpodTime so it corresponds to the bpod's trial start time instead of starting it at zero.
@@ -502,21 +502,21 @@ class SaveDataWorker(QObject):
                         self.flexvoltsTable = self.h5file.create_table(where='/flexvoltages', name=f'trial_{self.trialNum:03d}', description=self.flexvoltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
                         self.flexvoltsRow = self.flexvoltsTable.row
                         self.saveVoltages = False  # reset for the next trial.
-                        self.bpodTime = 0  # reset timestamps for samples back to zero.
+                        self.flexbpodTime = 0  # reset timestamps for samples back to zero.
                         
 
                 else:
                     # Empty dict means to discard the trial and repeat it.
                     if (self.adc is not None) :
                         self.saveVoltages = False
-                        self.bpodTime = 0
+                        self.analogbpodTime = 0
                         self.voltsTable.remove()  # Delete the current table and create and new empty below.
                         self.voltsTable = self.h5file.create_table(where='/voltages', name=f'trial_{self.trialNum:03d}', description=self.voltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
                         self.voltsRow = self.voltsTable.row
 
                     if (self.bpod is not None):
                         self.saveVoltages = False
-                        self.bpodTime = 0
+                        self.flexbpodTime = 0
                         self.flexvoltsTable.remove()  # Delete the current table and create and new empty below.
                         self.flexvoltsTable = self.h5file.create_table(where='/flexvoltages', name=f'trial_{self.trialNum:03d}', description=self.flexvoltsTableDescDict, title=f'Trial {self.trialNum} Voltage Data')
                         self.flexvoltsRow = self.flexvoltsTable.row
