@@ -256,7 +256,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.experimentTypeComboBox.currentTextChanged.connect(self.setExperimentType)
 
         self.selectCameraDataDestinationPushButton.clicked.connect(self.selectCameraDataDestination)
-        self.taskSettingspushButton.clicked.connect(self.selectTaskSettings)
+        #self.taskSettingspushButton.clicked.connect(self.selectTaskSettings)
 
 
     def selectCameraDataDestination(self):
