@@ -100,6 +100,7 @@ class TeensyOlfa(Olfactometer):
 
         # CONFIGURE DEVICES
         self.dilutors = self._config_dilutors(config_dict.get('Dilutors', {}))
+        
         self.mfcs = self._config_mfcs(config_dict['MFCs'])
         self.vials = VialGroup(self, config_dict['Vials'])
         self._poll_mfcs()
@@ -125,14 +126,19 @@ class TeensyOlfa(Olfactometer):
         :return: True if stimulus set successfully.
         :rtype: bool
         """
+       
         successes = []
-        dilspecs = stimulus_dict['dilutors']
+        dilspecs = stimulus_dict.get('dilutors',{})
         odor = stimulus_dict['odor']
+
+        # {'dilutors': {}, 'mfc_0_flow': 1000, 'mfc_1_flow': 400, 'odor': '94(4) D23', 'vialconc': 1.0, 'vialNum': '5'};
         try:
             vialconc = stimulus_dict['vialconc']
         except KeyError:
             vialconc = None
+
         for i in range(len(dilspecs)):
+            
             dilutor = self.dilutors[i]
             k = 'dilutor_{0}'.format(i)
             success = dilutor.set_stimulus(dilspecs[k])
@@ -455,7 +461,6 @@ class TeensyOlfa(Olfactometer):
         else:
             command = "valve {0} {1} off".format(self.slaveindex, valvenum)
         logging.debug(command)
-        print(command)
         line = self.parent_device.send_command(command)
         logging.debug(line)
         return

@@ -12,10 +12,11 @@ from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
 
 class ReadDataWorker(QObject):
     analogDataSignal = pyqtSignal(list)
+    flexAnalogDataSignal = pyqtSignal(list)
     analogDataSignalProcessed = pyqtSignal(np.ndarray)
     finished = pyqtSignal()
 
-    def __init__(self, analogInModule=None, bpod=None):
+    def __init__(self, analogInSettings,  bpod, analogInModule=None):
         super(ReadDataWorker, self).__init__()
         # properties
         self.adc = analogInModule
@@ -26,42 +27,51 @@ class ReadDataWorker(QObject):
         
         # init depending on reading of analog through analog module or Bpod (analog module won't be tested since I don't use it)
         if self.adc is not None:
-            self.bpod = None  # Avoid using the bpod in case it was also given as a parameter.
+            # self.bpod = None  # Avoid using the bpod in case it was also given as a parameter.
             self.analogSettings = analogInSettings
-        elif self.bpod is not None:
+            # print(self.analogSettings)
+
+        if self.bpod is not None:
             self.samplingPeriod = self.bpod.hardware.analog_input_sampling_interval * 0.0001  # Multiply by the state machines timer period of 100 microseconds.
             self.channelIndices = self.bpod.hardware.analog_input_channels  # list of channel indices of channels configured for analog input.
             if (self.channelIndices is not None) and (len(self.channelIndices) > 0):
                 # This means it is a list of at least one flex channel number that is configured for analog input.
                 self.nChannels = len(self.channelIndices)
-        self.maxVoltages = [5] * self.nChannels  # Make a list of integers for the max voltage of each channel's input range.
-        self.minVoltages = [0] * self.nChannels  # Make a list of integers for the min voltage of each channel's input range.
+            self.maxVoltages = [5] * self.nChannels  # Make a list of integers for the max voltage of each channel's input range.
+            self.minVoltages = [0] * self.nChannels  # Make a list of integers for the min voltage of each channel's input range.
 
     def receiveInfoDict(self, infoDict):
         self.newData = True
         self.infoDict = infoDict
 
     def run(self):
-        
+        # print(f'We are run-ning')
         while self.keepRunning:
             if self.newData:
+                # print(f'We are setting newData to False')
                 self.newData = False # reset
-            elif self.adc is not None:
-                self.saveAnalogDataFromModule()
-            elif self.bpod is not None:
-                self.readAnalogDataFromBpod()
+            else:
+                if self.adc is not None:
+                    # print(f'We are readAnalogDataFromModule-ing')
+                    self.readAnalogDataFromModule()
+                if self.bpod is not None:
+                    # print(f'We are readFlexAnalogDataFromBpod-ing')
+                    self.readFlexAnalogDataFromBpod()
         # When it finishes
         logging.info("ReadDataWorker Finished")
         self.finished.emit()
     
-    def saveAnalogDataFromModule(self):# this is placeholder to avoid errors but function is all to be changes accordingly
-        analogData = self.bpod.read_analog_input()
-        analogDataSignal.emit(analogData)
-
-    def readAnalogDataFromBpod(self):
-        analogData = self.bpod.read_analog_input()
-        #print("before emitting analogDataSignal")
+    def readAnalogDataFromModule(self):# this is placeholder to avoid errors but function is all to be changes accordingly
+        analogData = self.adc.getSampleFromUSB()
+        # print(f' analog data from module {analogData}')
         self.analogDataSignal.emit(analogData)
+
+    def readFlexAnalogDataFromBpod(self):
+        flexAnalogData = self.bpod.read_analog_input()
+        #print("before emitting analogDataSignal")
+        # print(f' analog data from flex {flexAnalogData}')
+
+        self.flexAnalogDataSignal.emit(flexAnalogData)
         # #print("after emitting analogDataSignal")
         # if len(analogData) > 0:
         #     # convert decimal bit value to voltage. The length of samples indicates how many channels are streaming to USB.

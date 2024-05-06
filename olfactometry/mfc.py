@@ -22,7 +22,7 @@ class MFC(QtWidgets.QGroupBox):
         :return:
         """
         super(MFC, self).__init__()
-
+        
         self.parent_device = parent_device
         self.mfc_type = mfc_config['MFC_type']
         self.capacity = int(mfc_config['capacity'])

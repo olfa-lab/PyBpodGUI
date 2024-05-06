@@ -28,6 +28,7 @@ from flowUsagePlotWorker import FlowUsagePlotWorker
 from resultsPlotWorker import ResultsPlotWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
+from odorEditorDialog import OdorEditorDialog
 from analogInputModuleSettingsDialog import AnalogInputModuleSettingsDialog
 from bpodFlexChannelSettingsDialog import BpodFlexChannelSettingsDialog
 from PyQt5.QtGui import QPixmap
@@ -160,10 +161,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotSubWindow.resize(300, 320)
         self.mdiArea.addSubWindow(self.flowUsagePlotSubWindow)
 
-
-       
-
-
+        
         self.trialPlaybackSubWindow = MyQMdiSubWindow()        
         self.trialPlaybackSubWindow.setObjectName("trialPlaybackSubWindow")
         self.trialPlaybackSubWindow.setWidget(self.trialPlaybackSubWindowWidget)
@@ -179,6 +177,13 @@ class Window(QMainWindow, Ui_MainWindow):
         self.playLastTrial_Button = self.trialPlaybackSubWindowWidget.playLastTrial_Button #widget before
 
     def connectSignalsSlots(self):
+        """
+        read about signals here: https://www.riverbankcomputing.com/static/Docs/PyQt5/signals_slots.html
+        signals here are in the common meaning, not mathematical
+        << A signal is emitted when something of potential interest happens. A slot is a Python callable. 
+        If a signal is connected to a slot then the slot is called when the signal is emitted. If a signal isn’t connected then nothing happens. 
+        The code (or component) that emits the signal does not know or care if the signal is being used. >>
+        """
         self.startButton.clicked.connect(self.runTask)
         self.stopButton.clicked.connect(self.endTask)
         self.pauseButton.clicked.connect(self.pauseExperiment)
@@ -204,6 +209,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionSelectOlfaConfigFile.triggered.connect(self.openOlfaConfigFileNameDialog)
         self.actionConfigureOlfaSettings.triggered.connect(self.launchOlfaEditor)
         self.actionLaunchOlfaGUI.triggered.connect(self.launchOlfaGUI)
+        self.actionOdors.triggered.connect(self.setOdorStimuli)
         self.actionConfigureBpodFlexChannels.triggered.connect(self.launchBpodFlexChannelSettingsDialog)
         self.actionConfigureAnalogInputModuleSettings.triggered.connect(self.launchAnalogInputModuleSettingsDialog)
         self.actionViewStreaming.toggled.connect(self.viewStreamingSubWindow)
@@ -215,7 +221,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
         self.applicationModeComboBox.currentIndexChanged.connect(self.switchApplicationMode)
 
-        self.experimentSetupDockWidget.visibilityChanged.connect(lambda x: self.updateViewMenu(self.experimentSetupDockWidget.objectName(), x))
+        # self.experimentSetupDockWidget.visibilityChanged.connect(lambda x: self.updateViewMenu(self.experimentSetupDockWidget.objectName(), x))  # this unchecks the Expreiment Setup window when the whole app is minimized
 
         self.nTrialsSpinBox.valueChanged.connect(self.recordNumTrials)
         self.itiMinSpinBox.valueChanged.connect(self.recordMinITI)
@@ -253,9 +259,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.taskSettingspushButton.clicked.connect(self.selectTaskSettings)
 
 
-
     def selectCameraDataDestination(self):
-        fname = QFileDialog.getExistingDirectory(self, "Open Folder", "H:\\repos\\PyBpodGUI\\camera_data\\test_bea\\")
+        dlg = QFileDialog()
+        """
+        QFileDialog documentation does not exist as of 11.01.2023 - RR
+        https://www.riverbankcomputing.com/static/Docs/PyQt5/api/qtwidgets/qfiledialog.html#qfiledialog
+        """
+        dlg.setDirectory(os.getcwd() + '\\camera_data')
+        fname = dlg.getExistingDirectory(self, "Open Folder")
         self.CameraDataDestinationLineEdit.setText(fname)
     
     
@@ -436,9 +447,18 @@ class Window(QMainWindow, Ui_MainWindow):
         else:
             QMessageBox.warning(self, "Warning", "Please select an olfa config file first! Go to 'Olfactometer' menu > 'Select config file'")
 
+    def setOdorStimuli(self):
+        self.odorEditor = OdorEditorDialog(self.olfaConfigFileName)
+        self.odorEditor.show()
+
     def launchOlfaEditor(self):
-        self.olfaEditor = OlfaEditorDialog(self.olfaConfigFileName)
-        self.olfaEditor.show()
+        # Loop through olfaConfigFileName, find number of olfas
+        with open(self.olfaConfigFileName, 'r') as olfa_config:
+            self.olfaConfigDict = json.load(olfa_config)
+        self.olfaEditor = []
+        for olfa_idx in range(0, len(self.olfaConfigDict['Olfactometers'])):
+            self.olfaEditor.append(OlfaEditorDialog(self.olfaConfigFileName, olfa_idx))
+            self.olfaEditor[olfa_idx].show()
 
     def launchProtocolEditor(self):
         if self.bpod is not None:
@@ -532,6 +552,7 @@ class Window(QMainWindow, Ui_MainWindow):
             if self.analogInputModuleCOMPortSpinBox.value() > 0:
                 self.adc = BpodAnalogIn(serial_port=f"COM{self.analogInputModuleCOMPortSpinBox.value()}")
                 self.configureAnalogInputModule()
+                # print('We are actually doing it!')
         except SerialException:
             if self.adc is not None:
                 self.adc.close()
@@ -618,7 +639,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flushRightWaterButton.setEnabled(True)
         self.actionConfigureBpodFlexChannels.setEnabled(True)  # re-enable the ability to configure flex channels since an experiment is not running.
         if self.adc is not None:
-            self.actionConfigureAnalogInSettings.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
+            #print('Placeholder')
+            self.analogInputModuleCOMPortSpinBox.setEnabled(True)  # re-enable the ability to configure analog input settings since an experiment is not running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(True)  # re-enable the olfa GUI button after the experiment completes.
         self.experimentCompleteDialog()
@@ -877,6 +899,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def updateCurrentTrialInfo(self, trialInfoDict):
         # Check if not empty.
+        
         if trialInfoDict:
             self.trialNumLineEdit.setText(str(trialInfoDict['currentTrialNum']))
             self.correctResponseLineEdit.setText(trialInfoDict['correctResponse'])
@@ -884,6 +907,9 @@ class Window(QMainWindow, Ui_MainWindow):
             self.currentTrialProgressBar.setRange(0, trialInfoDict['nStates'])
 
             if ('stimList' in trialInfoDict) and (len(trialInfoDict['stimList']) > 0):
+                # Show olfa name
+                olfa_names =  list(trialInfoDict['stimList'][0]['olfas'].keys()  )
+                self.olfaNamesLineEdit.setText(olfa_names[0])
                 odorA_vialString = ''
                 odorA_nameString = ''
                 odorA_concString = ''
@@ -1003,6 +1029,7 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.adc is not None:
             self.startAnalogModule()
         
+        print(self.bpod)
         
         self.runInputEventThread()
         self.runSaveDataThread()
@@ -1010,7 +1037,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.runProtocolThread()
        
         self.runStreamingThread()
-        self.runPlaybackThread()
+        if self.trialPlaybackcheckBox.isChecked():
+            self.runPlaybackThread()
         # Emit signal for experiment start
         self.startExperimentSignal.emit()
 
@@ -1032,7 +1060,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.disconnectDevicesButton.setEnabled(False)  # Do not let user disconnect devices while experiment is running.
         self.actionConfigureBpodFlexChannels.setEnabled(False)  # Prevent user from configuring flex channels while experiment is running.
         if self.adc is not None:
-            self.actionConfigureAnalogInSettings.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
+            self.analogInputModuleCOMPortSpinBox.setEnabled(False)  # Prevent user from configuring analog input settings while experiment is running.
         if self.olfaCheckBox.isChecked():
             self.actionLaunchOlfaGUI.setEnabled(False)  # Disable the olfa GUI button if the olfactometer will be used for the experiment by the protocolWorker's thread.
             # The user can still use the olfactometer GUI during an experiment (i.e. for manual control) but must uncheck the olfa check box to let
@@ -1088,7 +1116,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def runReadingDataThread(self):
         self.readingDataThread = QThread(parent=self)
-        self.readDataWorker = ReadDataWorker(self.adc, self.bpod)
+        
+        if self.analogInputModuleSettingsDialog is None:  # if it wasnt created yet, then create it but only create it once.
+            self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
+            self.analogInputModuleSettingsDialog.accepted.connect(self.configureAnalogInputModule)
+        settingsDict = self.analogInputModuleSettingsDialog.getSettings()
+        print(f'\nPrinting bpod {self.bpod}\n\n')
+        self.readDataWorker = ReadDataWorker(settingsDict, self.bpod, self.adc)
         self.readDataWorker.moveToThread(self.readingDataThread)
         
         
@@ -1104,7 +1138,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.readingDataThread.started.connect(self.readDataWorker.run)
 
         self.saveDataWorker.analogDataSignalProcessed.connect(lambda x :self.streaming.getData(x))# give analog data to streamer for plotting
-        self.readDataWorker.analogDataSignal.connect(lambda x : self.saveDataWorker.saveAnalogDataFromBpod(x)) # give analog data to SaveDataWorker for saving
+        self.readDataWorker.flexAnalogDataSignal.connect(lambda x : self.saveDataWorker.saveFlexAnalogDataFromBpod(x)) # give analog data to SaveDataWorker for saving
+        self.readDataWorker.analogDataSignal.connect( lambda x : self.saveDataWorker.saveAnalogDataFromModule(x)) # give analog data to SaveDataWorker for saving
+        
         self.stopRunningSignal.connect(lambda: self.readDataWorker.stopRunning()) 
         self.readingDataThread.start()
         logging.info(f"readDataThread running? {self.readingDataThread.isRunning()}")
@@ -1140,10 +1176,12 @@ class Window(QMainWindow, Ui_MainWindow):
 
     
         self.protocolWorker = ProtocolWorker(
-            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentIndex(), self.camera, self.shuffleMultiplierSpinBox.value(),
+            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, 
+            self.shuffleMultiplierSpinBox.value(), self.odorEditor.all_trials_dict,
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
             int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
-            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.taskSettingsFile, self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
+            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), 
+            self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
         )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)

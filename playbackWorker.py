@@ -27,6 +27,7 @@ class PlaybackWorker(QObject):
         self.positionSlider = trialPlaybackSubWindowWidget.positionSlider
         self.mediaPlayer = trialPlaybackSubWindowWidget.mediaPlayer
         self.playLastTrial_Button = trialPlaybackSubWindowWidget.playLastTrial_Button
+        self.trialLabel = trialPlaybackSubWindowWidget.trialLabel
         self.camera = camera
         self.lastTrialVideo = None
     
@@ -63,29 +64,31 @@ class PlaybackWorker(QObject):
     def findLastTrialVideo(self):
         #folder = 'H:\\repos\\PyBpodGUI\\camera_data\\' # need to change to camera.camera_data_dir
         folder = self.camera.camera_data_dir # need to change to camera.camera_data_dir
-        print(self.camera.camera_data_dir)
+        print(f'Saving images in folder {self.camera.camera_data_dir}')
         list_of_tifs = []
         while not bool(list_of_tifs):
             list_of_tifs = glob.glob(folder +'\\*\\*.tif')
-            #print(list_of_tifs)
         latest_tif = max(list_of_tifs, key=os.path.getctime)
         self.lastTrialVideo = latest_tif
-        #print('Found {0} as most recent tif.'.format(latest_tif))
 
     def playLastTrial(self):
         if self.camera is not None: 
             #fname = QFileDialog.getOpenFileName(self, "Open File", "R:\\Rinberglab\\rinberglabspace\\Users\\Bea\\testimages", "All Files(*);; PNG Files (*.png)")
-            print('Finding last trial video')
             self.findLastTrialVideo()
             sleep(1)
             # self.lastTrialVideo = 'H:\\repos\\PyBpodGUI\\camera_data\\test.tif'
             print('Using {0} as most recent tif.'.format(self.lastTrialVideo))
 
             imstack1 = skio.imread(self.lastTrialVideo)
-            meanframe = np.mean(imstack1[:100,:,:], axis = 0)
+            meanframe = np.mean(imstack1[:50,:,:], axis = 0)
             normstack = imstack1 - meanframe
 
-            video_name = 'temp.avi' # 'C:\\Users\\barrab01\\Documents\\tiffvideo4.avi'
+            video_name = 'temp.avi'.format(self.lastTrialVideo)
+
+            if os.path.exists(video_name):
+                print('Wiping {0}'.format(video_name))
+                os.remove(video_name)
+
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
             fps = 30
             vidshape = np.shape(normstack)
@@ -95,7 +98,6 @@ class PlaybackWorker(QObject):
             normstack[normstack > perc95] = perc95
             normstackn = normstack - np.amin(normstack)
             normstackn = normstackn / np.amax(normstackn)
-            print(type(normstackn), normstackn.shape)
             vidin = 255 * normstackn
             vidint = vidin.astype('uint8')
 
@@ -105,16 +107,16 @@ class PlaybackWorker(QObject):
                 writer.write(x)
             
             writer.release()
-            print('done')
 
+            trialNumStart = self.lastTrialVideo.find('Trial_') + 6
+            trialNumEnd = trialNumStart + 3
+            trialNumString = self.lastTrialVideo[trialNumStart:trialNumEnd]
+
+            self.trialLabel.setText(trialNumString)
+            print(f'Trial num is {trialNumString}')
             self.mediaPlayer.setMedia(
                         QMediaContent(QUrl.fromLocalFile(video_name)))
             self.playLastTrial_Button.setEnabled(True)
-        
 
-        # self.videoLabel.setMedia(
-        #             QMediaContent(QUrl.fromLocalFile(fname[0])))
-        # self.playLastTrial_Button.setEnabled(True)
-  
+            sleep(1)
             self.play()
-        

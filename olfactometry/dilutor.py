@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtWidgets
 from serial import SerialException
-from .mfc import MFCclasses, MFC
+from olfactometry.mfc import MFCclasses, MFC
 import logging
-from .utils import OlfaException, connect_serial
+from olfactometry.utils import OlfaException, connect_serial
 
 
 class Dilutor(QtWidgets.QGroupBox):
@@ -13,25 +13,26 @@ class Dilutor(QtWidgets.QGroupBox):
     # TODO: implement json? dillution factor calibration system
     def __init__(self, parent, config, polling_interval=1.1):
         super(Dilutor, self).__init__()
-
         baudrate = 115200
         com_port = config['com_port']
         self.serial = connect_serial(com_port, baudrate=baudrate, timeout=1, writeTimeout=1)
         self._eol = '\r'
 
+        
+        
         self.slaveindex = 1
 
         for i, mfc in enumerate(config['MFCs']):
             # mfc['arduino_port'] = i + 1
             mfc['arduino_port_num'] = i + 1
-
-        print(config['MFCs'])
+        
+        
 
         layout = QtWidgets.QHBoxLayout()
         self.mfcs = self._config_mfcs(config['MFCs'])
         self.polling_interval = polling_interval
         self.mfc_timer = self.start_mfc_polling()
-
+       
         # GUI:
         for mfc in self.mfcs:
             layout.addWidget(mfc)
@@ -47,6 +48,7 @@ class Dilutor(QtWidgets.QGroupBox):
         for mfc_spec in mfc_config:
             mfc_type = mfc_spec['MFC_type']
             gas = mfc_spec['gas']
+            
             mfc = MFCclasses[mfc_type](self, mfc_spec)
             mfcs[gas_positions[gas.lower()]] = mfc
             
@@ -80,8 +82,7 @@ class Dilutor(QtWidgets.QGroupBox):
 
     def send_command(self, command, tries=1):
         # must send with '\r' end of line
-        print(command)
-        raise TypeError("Only integers are allowed")
+        #raise TypeError("Only integers are allowed")
         self.serial.flushInput()
         for i in range(tries):
             self.serial.write(bytes(command, 'utf-8'))

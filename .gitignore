@@ -2,6 +2,11 @@ __pycache__/
 .vscode/
 .idea/
 results/
+<<<<<<< HEAD
+=======
+stimuliFiles/
+protocol_files/
+>>>>>>> dilutor_dev
 olfactometry_config_files/
 camera_data/
 *.log
