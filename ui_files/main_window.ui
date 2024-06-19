@@ -873,6 +873,8 @@
      <string>Experiment</string>
     </property>
     <addaction name="actionOdors"/>
+    <addaction name="actionOptical"/>
+    <addaction name="actionSound"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOlfactometer"/>
@@ -1240,12 +1242,22 @@
        </item>
        <item>
         <property name="text">
-         <string>Identity</string>
+         <string>Auditory</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Optostim</string>
         </property>
        </item>
        <item>
         <property name="text">
          <string>1PImaging</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Identity</string>
         </property>
        </item>
       </widget>
@@ -1379,6 +1391,16 @@
   <action name="actionOdors">
    <property name="text">
     <string>Odors</string>
+   </property>
+  </action>
+  <action name="actionOptical">
+   <property name="text">
+    <string>Optical</string>
+   </property>
+  </action>
+  <action name="actionSound">
+   <property name="text">
+    <string>Auditory</string>
    </property>
   </action>
  </widget>

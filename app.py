@@ -29,6 +29,7 @@ from resultsPlotWorker import ResultsPlotWorker
 from protocolEditorDialog import ProtocolEditorDialog
 from olfaEditorDialog import OlfaEditorDialog
 from odorEditorDialog import OdorEditorDialog
+from soundEditorDialog import SoundEditorDialog
 from analogInputModuleSettingsDialog import AnalogInputModuleSettingsDialog
 from bpodFlexChannelSettingsDialog import BpodFlexChannelSettingsDialog
 from PyQt5.QtGui import QPixmap
@@ -88,10 +89,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.finalValve = int(self.finalValvePortNumComboBox.currentText())
         self.rightWaterValve = int(self.rightWaterValvePortNumComboBox.currentText())
         self.protocolFileName = ''
-        self.olfaConfigFileName = ''
+        self.olfaConfigFileName =''
+        self.stimuliFilesDirectory = os.getcwd() + '\\soundstimuliFiles\\'
+        self.soundConfigFileName ='\\defaultSoundConfig.xlsx' 
         self.analogInputModuleSettingsDialog = None
         self.bpodFlexChannelSettingsDialog = None
         self.isPaused = False
+        self.imaging = 0
+        self.odorEditor = []# Initialize to get away with giving it as input no matter what (made it not indispensable in the protocolWorker)
         self.loadDefaults()
 
         
@@ -210,6 +215,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionConfigureOlfaSettings.triggered.connect(self.launchOlfaEditor)
         self.actionLaunchOlfaGUI.triggered.connect(self.launchOlfaGUI)
         self.actionOdors.triggered.connect(self.setOdorStimuli)
+        self.actionSound.triggered.connect(self.setSoundStimuli)
         self.actionConfigureBpodFlexChannels.triggered.connect(self.launchBpodFlexChannelSettingsDialog)
         self.actionConfigureAnalogInputModuleSettings.triggered.connect(self.launchAnalogInputModuleSettingsDialog)
         self.actionViewStreaming.toggled.connect(self.viewStreamingSubWindow)
@@ -278,12 +284,13 @@ class Window(QMainWindow, Ui_MainWindow):
 
 
     def setExperimentType(self):
-        if self.experimentTypeComboBox.currentIndex() == 3:
-            self.experimentType = 'Imaging'
+        
+        self.experimentType = self.experimentTypeComboBox.currentText() 
+        if self.experimentType == 'Imaging':
             self.imaging = 1
-        else:
-            #self.experimentType = 'Behavior'
-            self.imaging = 0
+            
+
+            
         
 
     def loadDefaults(self):
@@ -298,6 +305,7 @@ class Window(QMainWindow, Ui_MainWindow):
             self.analogInputModuleCOMPortSpinBox.setValue(self.defaultSettings['experimentSetup']['analogInputModuleCOMPort'])
             self.olfaCheckBox.setChecked(self.defaultSettings['experimentSetup']['enableOlfactometer'])
             self.olfaConfigFileName = self.defaultSettings['experimentSetup']['olfaConfigFile']
+            
             self.olfaConfigFileLineEdit.setText(self.defaultSettings['experimentSetup']['olfaConfigFile'])
             self.protocolFileName = self.defaultSettings['experimentSetup']['protocolFile']
             self.protocolFileLineEdit.setText(self.defaultSettings['experimentSetup']['protocolFile'])
@@ -450,7 +458,11 @@ class Window(QMainWindow, Ui_MainWindow):
     def setOdorStimuli(self):
         self.odorEditor = OdorEditorDialog(self.olfaConfigFileName)
         self.odorEditor.show()
+    def setSoundStimuli(self):
+        self.soundEditor = SoundEditorDialog(self.soundConfigFileName)
+        self.soundEditor.show()
 
+    
     def launchOlfaEditor(self):
         # Loop through olfaConfigFileName, find number of olfas
         with open(self.olfaConfigFileName, 'r') as olfa_config:
@@ -897,77 +909,101 @@ class Window(QMainWindow, Ui_MainWindow):
         self.totalNoResponsesLineEdit.setText(str(totalsDict['totalNoResponses']))
         self.totalPercentCorrectLineEdit.setText(str(totalsDict['totalPercentCorrect']))
 
+    def updatecurrentOdorTrial(self, trialInfoDict):
+        if ('stimList' in trialInfoDict) and (len(trialInfoDict['stimList']) > 0):
+            # Show olfa name
+            olfa_names =  list(trialInfoDict['stimList'][0]['olfas'].keys()  )
+            self.olfaNamesLineEdit.setText(olfa_names[0])
+            odorA_vialString = ''
+            odorA_nameString = ''
+            odorA_concString = ''
+            odorA_flowString = ''
+            # In case there are multiple olfactometers used (for creating mixtures), create a string for the parameters of each olfa and separates them by a comma. This is just for viewing purposes on the screen. Each olfa will have its own column in the h5 file.
+            for olfaValues in trialInfoDict['stimList'][0]['olfas'].values():
+                if odorA_vialString:  # If string is not empty, that means the first item was concantenated to it already, so put a comma before concatenating the next item. No need to check every string because they all get items concatenated every loop.
+                    odorA_vialString += ', '  + olfaValues['vialNum']
+                    odorA_nameString += ', '  + olfaValues['odor']
+                    odorA_concString += ', '  + str(olfaValues['vialconc'])
+                    odorA_flowString += ', '  + str(olfaValues['mfc_1_flow'])
+
+                else:  # Concatenate without a comma because this will be the first concatenation. And this will avoid putting a comma when only one odor is used.
+                    odorA_vialString += olfaValues['vialNum']
+                    odorA_nameString += olfaValues['odor']
+                    odorA_concString += str(olfaValues['vialconc'])
+                    odorA_flowString += str(olfaValues['mfc_1_flow'])
+
+            self.odorA_vialLineEdit.setText(odorA_vialString)
+            self.odorA_nameLineEdit.setText(odorA_nameString)
+            self.odorA_concLineEdit.setText(odorA_concString)
+            self.odorA_flowLineEdit.setText(odorA_flowString)
+
+            try:
+                odorB_vialString = ''
+                odorB_nameString = ''
+                odorB_concString = ''
+                odorB_flowString = ''
+                # In case there are multiple olfactometers used (for creating mixtures), create a string for the parameters of each olfa and separates them by a comma. This is just for viewing purposes on the screen. Each olfa will have its own column in the h5 file.
+                for olfaValues in trialInfoDict['stimList'][1]['olfas'].values():
+                    if odorB_vialString:  # If string is not empty, that means the first item was concantenated to it already, so put a comma before concatenating the next item. No need to check every string because they all get items concatenated every loop.
+                        odorB_vialString += ', '  + olfaValues['vialNum']
+                        odorB_nameString += ', '  + olfaValues['odor']
+                        odorB_concString += ', '  + str(olfaValues['vialconc'])
+                        odorB_flowString += ', '  + str(olfaValues['mfc_1_flow'])
+
+                    else:  # Concatenate without a comma because this will be the first concatenation. And this will avoid putting a comma when only one odor is used.
+                        odorB_vialString += olfaValues['vialNum']
+                        odorB_nameString += olfaValues['odor']
+                        odorB_concString += str(olfaValues['vialconc'])
+                        odorB_flowString += str(olfaValues['mfc_1_flow'])
+
+                self.odorB_vialLineEdit.setText(odorB_vialString)
+                self.odorB_nameLineEdit.setText(odorB_nameString)
+                self.odorB_concLineEdit.setText(odorB_concString)
+                self.odorB_flowLineEdit.setText(odorB_flowString)
+
+            except IndexError:  # That means only one odor presentation is being used for the experiment.
+                self.odorB_vialLineEdit.setText('N/A')
+                self.odorB_nameLineEdit.setText('N/A')
+                self.odorB_concLineEdit.setText('N/A')
+                self.odorB_flowLineEdit.setText('N/A')
+
+        else:  # This means olfactometer was not used for the experiment.
+            self.odorA_vialLineEdit.setText('N/A')
+            self.odorA_nameLineEdit.setText('N/A')
+            self.odorA_concLineEdit.setText('N/A')
+            self.odorA_flowLineEdit.setText('N/A')
+
+
+    def updatecurrentSoundTrial(self, trialInfoDict):
+        if ('stimList' in trialInfoDict) and (len(trialInfoDict['stimList']) > 0):
+            # Show olfa name
+            self.olfaNamesLineEdit.setText('None')
+            odorA_vialString = ''
+            odorA_nameString = ''
+            odorA_concString = ''
+            odorA_flowString = ''
+
+            self.odorA_vialLineEdit.setText(str(trialInfoDict['stimList'][0]['soundfreq']))
+            self.odorA_nameLineEdit.setText(str(trialInfoDict['stimList'][0]['soundfreq']))
+            self.odorA_concLineEdit.setText(str(trialInfoDict['stimList'][0]['soundtime']))
+            self.odorA_flowLineEdit.setText(str(trialInfoDict['stimList'][0]['soundamp']))
+
+
+
     def updateCurrentTrialInfo(self, trialInfoDict):
         # Check if not empty.
-        
+        print(trialInfoDict)
         if trialInfoDict:
             self.trialNumLineEdit.setText(str(trialInfoDict['currentTrialNum']))
             self.correctResponseLineEdit.setText(trialInfoDict['correctResponse'])
             self.itiLineEdit.setText(str(trialInfoDict['currentITI']))
             self.currentTrialProgressBar.setRange(0, trialInfoDict['nStates'])
+            
+            if self.experimentType == 'Intensity' or self.experimentType == '1PImaging': 
+                self.updatecurrentOdorTrial(trialInfoDict)
+            elif self.experimentType == 'Auditory' :
+                self.updatecurrentSoundTrial(trialInfoDict)
 
-            if ('stimList' in trialInfoDict) and (len(trialInfoDict['stimList']) > 0):
-                # Show olfa name
-                olfa_names =  list(trialInfoDict['stimList'][0]['olfas'].keys()  )
-                self.olfaNamesLineEdit.setText(olfa_names[0])
-                odorA_vialString = ''
-                odorA_nameString = ''
-                odorA_concString = ''
-                odorA_flowString = ''
-                # In case there are multiple olfactometers used (for creating mixtures), create a string for the parameters of each olfa and separates them by a comma. This is just for viewing purposes on the screen. Each olfa will have its own column in the h5 file.
-                for olfaValues in trialInfoDict['stimList'][0]['olfas'].values():
-                    if odorA_vialString:  # If string is not empty, that means the first item was concantenated to it already, so put a comma before concatenating the next item. No need to check every string because they all get items concatenated every loop.
-                        odorA_vialString += ', '  + olfaValues['vialNum']
-                        odorA_nameString += ', '  + olfaValues['odor']
-                        odorA_concString += ', '  + str(olfaValues['vialconc'])
-                        odorA_flowString += ', '  + str(olfaValues['mfc_1_flow'])
-
-                    else:  # Concatenate without a comma because this will be the first concatenation. And this will avoid putting a comma when only one odor is used.
-                        odorA_vialString += olfaValues['vialNum']
-                        odorA_nameString += olfaValues['odor']
-                        odorA_concString += str(olfaValues['vialconc'])
-                        odorA_flowString += str(olfaValues['mfc_1_flow'])
-
-                self.odorA_vialLineEdit.setText(odorA_vialString)
-                self.odorA_nameLineEdit.setText(odorA_nameString)
-                self.odorA_concLineEdit.setText(odorA_concString)
-                self.odorA_flowLineEdit.setText(odorA_flowString)
-
-                try:
-                    odorB_vialString = ''
-                    odorB_nameString = ''
-                    odorB_concString = ''
-                    odorB_flowString = ''
-                    # In case there are multiple olfactometers used (for creating mixtures), create a string for the parameters of each olfa and separates them by a comma. This is just for viewing purposes on the screen. Each olfa will have its own column in the h5 file.
-                    for olfaValues in trialInfoDict['stimList'][1]['olfas'].values():
-                        if odorB_vialString:  # If string is not empty, that means the first item was concantenated to it already, so put a comma before concatenating the next item. No need to check every string because they all get items concatenated every loop.
-                            odorB_vialString += ', '  + olfaValues['vialNum']
-                            odorB_nameString += ', '  + olfaValues['odor']
-                            odorB_concString += ', '  + str(olfaValues['vialconc'])
-                            odorB_flowString += ', '  + str(olfaValues['mfc_1_flow'])
-
-                        else:  # Concatenate without a comma because this will be the first concatenation. And this will avoid putting a comma when only one odor is used.
-                            odorB_vialString += olfaValues['vialNum']
-                            odorB_nameString += olfaValues['odor']
-                            odorB_concString += str(olfaValues['vialconc'])
-                            odorB_flowString += str(olfaValues['mfc_1_flow'])
-
-                    self.odorB_vialLineEdit.setText(odorB_vialString)
-                    self.odorB_nameLineEdit.setText(odorB_nameString)
-                    self.odorB_concLineEdit.setText(odorB_concString)
-                    self.odorB_flowLineEdit.setText(odorB_flowString)
-
-                except IndexError:  # That means only one odor presentation is being used for the experiment.
-                    self.odorB_vialLineEdit.setText('N/A')
-                    self.odorB_nameLineEdit.setText('N/A')
-                    self.odorB_concLineEdit.setText('N/A')
-                    self.odorB_flowLineEdit.setText('N/A')
-
-            else:  # This means olfactometer was not used for the experiment.
-                self.odorA_vialLineEdit.setText('N/A')
-                self.odorA_nameLineEdit.setText('N/A')
-                self.odorA_concLineEdit.setText('N/A')
-                self.odorA_flowLineEdit.setText('N/A')
 
     def noResponseAbortDialog(self):
         QMessageBox.information(self, "Notice", "Session aborted due to too many consecutive no responses.")
@@ -995,7 +1031,8 @@ class Window(QMainWindow, Ui_MainWindow):
         QMessageBox.warning(self, "Warning", f"Experiment aborted because the bpod raised the following exception:\n{error}")
 
     def runTask(self):
-
+        
+        # Controls
         if (self.mouseNumberLineEdit.text() == ''):
             QMessageBox.warning(self, "Warning", "Please enter mouse number!")
             return
@@ -1029,7 +1066,6 @@ class Window(QMainWindow, Ui_MainWindow):
         if self.adc is not None:
             self.startAnalogModule()
         
-        print(self.bpod)
         
         self.runInputEventThread()
         self.runSaveDataThread()
@@ -1046,9 +1082,9 @@ class Window(QMainWindow, Ui_MainWindow):
         #    self.streaming.resetPlot()
         #    self.streaming.resumeAnimation()
 
-        self.resultsPlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
-        self.flowUsagePlot.setExperimentType(self.experimentTypeComboBox.currentIndex())
-        if (self.experimentTypeComboBox.currentIndex() == 2):
+        self.resultsPlot.setExperimentType(self.experimentTypeComboBox.currentText())
+        self.flowUsagePlot.setExperimentType(self.experimentTypeComboBox.currentText())
+        if (self.experimentTypeComboBox.currentText() == '1PImaging'):
             self.flowUsagePlotSubWindow.showShaded()
 
         
@@ -1100,8 +1136,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.oldSaveDataThreads.append(self.saveDataThread)
 
         self.saveDataWorker = SaveDataWorker(
-            self.mouseNumberLineEdit.text(), self.rigLetterLineEdit.text(), self.protocolFileName, self.olfaConfigFileName, self.shuffleMultiplierSpinBox.value(), self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(),
-            self.leftWaterValveDurationSpinBox.value(), self.rightWaterValveDurationSpinBox.value(), settingsDict, self.adc, self.bpod
+            self.mouseNumberLineEdit.text(), self.rigLetterLineEdit.text(), self.protocolFileName, self.shuffleMultiplierSpinBox.value(), self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(),
+            self.leftWaterValveDurationSpinBox.value(), self.rightWaterValveDurationSpinBox.value(), settingsDict, self.experimentType, self.adc, self.bpod, self.olfaConfigFileName, self.soundConfigFileName,
         )
         self.saveDataWorker.moveToThread(self.saveDataThread)
         self.saveDataThread.started.connect(self.saveDataWorker.run)
@@ -1173,15 +1209,14 @@ class Window(QMainWindow, Ui_MainWindow):
         ## hack fix for Qthread deleted error, more info in __init__
         self.oldProtocolThreads.append(self.protocolThread)
         #self.oldProtocolWorkers.append(self.protocolWorker)
-
-    
+        
+        
         self.protocolWorker = ProtocolWorker(
-            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, 
-            self.shuffleMultiplierSpinBox.value(), self.odorEditor.all_trials_dict,
+            self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, self.shuffleMultiplierSpinBox.value(), 
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
             int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
             self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), 
-            self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value()
+            self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value(), self.odorEditor, self.soundEditor,
         )
         self.protocolWorker.moveToThread(self.protocolThread)
         self.protocolThread.started.connect(self.protocolWorker.run)

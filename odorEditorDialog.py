@@ -25,7 +25,7 @@ class OdorEditorDialog(QDialog, Ui_Dialog):
         self.setupUi(self)
         self.setWindowTitle("Odor Configuration Editor")
         self.olfaConfigFile = olfaConfigFileName
-        self.currentStimuliConfigFileName = 'H:\\repos\\pybpod-3.9\\PyBpodGUI\\currentStimuliConfig.h5'
+        self.currentStimuliConfigFileName = 'H:\\repos\\pybpod-3.9\\PyBpodGUI\\defaultOdorConfig.h5'
         #self.currentStimuliListFileName = 'H:\\repos\\pybpod-3.9\\PyBpodGUI\\currentStimuliList.h5'
         #try:
             #self.loadStimuliTable()

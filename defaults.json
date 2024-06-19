@@ -1,11 +1,11 @@
 {
     "experimentSetup": {
         "bpodCOMPort": 0,
-        "analogInputModuleCOMPort": 17,
-        "enableOlfactometer": true,
+        "analogInputModuleCOMPort": 0,
+        "enableOlfactometer": false,
         "olfaConfigFile": "olfactometry_config_files/single_olfa0_file.json",
-        "protocolFile": "protocol_files/protocolWithSniff_imaging.json",
-        "experimentType": 3,
+        "protocolFile": "protocol_files/auditorystim.json",
+        "experimentType": 2,
         "shuffleMultiplier": 0,
         "nTrials": 300,
         "noResponseCutoff": 0,

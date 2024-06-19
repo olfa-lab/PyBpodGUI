@@ -95,7 +95,10 @@ class StreamingWorker(QObject):
             'NoResponse':'gray',
             'Correct':'yellowgreen',
             'Wrong':'darkred',
-            'ITI':'gray'}
+            'ITI':'gray', 
+            'Wait2sec': 'gray',
+            'PresentSound': 'gray'
+            }
         # self.event_color_dict = {'WaitForOdor':'gray',
         #     'LedOn':'lightseagreen',
         #     'CameraOn':'navy',
@@ -182,7 +185,7 @@ class StreamingWorker(QObject):
         if self.keepRunning:
             lastt = self.tdata[-1]
             n_new_datapoints= len(self.analogData)
-            
+            #print('in update :', n_new_datapoints, len(self.tdata))
             if self.update_calls_count == 0:
                 self.tdata = [currentTimer-n_new_datapoints*self.dt]
                 
@@ -246,10 +249,14 @@ class StreamingWorker(QObject):
             cm = pg.ColorMap(timeslist,colorslist)
 
             pen = cm.getPen( span=(self.tdata[0], self.tdata[-1]), width=5 ,orientation='horizontal')
+            #print('in update post:', len(self.tdata), len(self.ydata))
             self.line.setData(self.tdata, self.ydata )
             self.line.setPen(pen)
-            self.tsniff = [self.tdata[0], self.tdata[-1]]
-            self.sniffthline.setData(self.tsniff, self.sniffthdata)
+            #self.tsniff = [self.tdata[0], self.tdata[-1]]
+            #self.sniffthline.setData(self.tsniff, self.sniffthdata)
+
+
+
         else:
             self.finished.emit()
         self.update_calls_count +=1
@@ -302,14 +309,6 @@ class StreamingWorker(QObject):
 
     def getFigure(self):
         return self.dynamic_canvas
-
-
-    def checkOdorPresentation(self, stateName): 
-        if stateName == 'PresentOdor':
-            self.presentOdor = True
-            self.spanStart = self.tdata[-1]
-            self.span.set_color('y')
-            self.spanColor = 'y'
 
 
     def getStateNameTime(self, stateName):

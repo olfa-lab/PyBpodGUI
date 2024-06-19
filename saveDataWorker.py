@@ -8,7 +8,7 @@ from unicodedata import name
 from shutil import copy2  # preserve metadata
 import glob
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
-
+import pandas as pd
 
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
@@ -57,7 +57,8 @@ class SaveDataWorker(QObject):
     finished = pyqtSignal()
 
     def __init__(self,
-            mouseNum, rigLetter, protocolFile, olfaConfigFile, shuffleMultiplier, itiMin, itiMax, leftWaterValveDuration, rightWaterValveDuration, analogInSettings, analogInModule=None, bpod=None
+            mouseNum, rigLetter, protocolFile, shuffleMultiplier, itiMin, itiMax, leftWaterValveDuration, rightWaterValveDuration, analogInSettings, experimentType, 
+            analogInModule=None, bpod=None, olfaConfigFile = None, soundConfigFile =None,
         ):
         super(SaveDataWorker, self).__init__()
         # QObject.__init__(self)  # super(...).__init() does this for you in the line above.
@@ -69,6 +70,7 @@ class SaveDataWorker(QObject):
         
         self.h5file = tables.open_file(filename=fileName, mode='w', title=f"Mouse {mouseNum} Experiment Data")
         
+        self.soundstimuliFilesDirectory = os.getcwd() + '\\soundstimuliFiles\\'
         # File attributes for future reference.
         self.h5file.root._v_attrs.mouseNum = mouseNum
         self.h5file.root._v_attrs.rig = rigLetter
@@ -81,6 +83,7 @@ class SaveDataWorker(QObject):
         self.h5file.root._v_attrs.leftWaterValveDuration = leftWaterValveDuration
         self.h5file.root._v_attrs.rightWaterValveDuration = rightWaterValveDuration
         
+        # this is common to all experiments
         self.eventsGroup = self.h5file.create_group(where='/', name='event_times', title='Event Timestamps Per Trial')
         self.trialsTable = None  # Make it None for now because have to wait for completion of first trial to get the infoDict with data on the trial. Once that comes, make a description dictionary using the infoDict and then use that description dict to create the trialsTable.
         self.trialsTableDescDict = {}  # Description for the trialsTable (using this instead of making a class definition and subclassing tables.IsDescription).
@@ -96,12 +99,13 @@ class SaveDataWorker(QObject):
         self.infoDict = {}        
         self.adc = analogInModule
         self.bpod = bpod
+        self.experimentType = experimentType
 
-        if olfaConfigFile:
+        if self.experimentType == 'Imaging' or self.experimentType == 'Intensity':
             with open(olfaConfigFile, 'r') as configFile:
                 self.olfaConfigDict = json.load(configFile)
                 self.nOlfas = len(self.olfaConfigDict['Olfactometers'])
-            
+            # Organize the file with vials ONLY if it is an olfactory task
             # Make the description dict for the vials table.
             self.vialsTableDescDict = {}
             pos = 0
@@ -130,7 +134,45 @@ class SaveDataWorker(QObject):
                 olfaIndex += 1
             self.vialsTable.flush()
 
-        if self.adc is not None:
+        elif self.experimentType == 'Auditory':
+            if soundConfigFile:
+                print(self.soundstimuliFilesDirectory+soundConfigFile)
+                self.soundConfigDict = pd.read_excel(self.soundstimuliFilesDirectory+soundConfigFile)
+                #Column names are  'Freq':0, 'Amp':1, 'Duration':2, 'Prob':3
+            # Organize the file with sound frequencies ONLY if it is an olfactory task
+            # Make the description dict for the vials table.
+
+            self.stimuliTableDescDict = {}
+            pos = 0
+            self.stimuliTableDescDict["freq"] = tables.UInt8Col(pos=pos)
+            pos += 1
+            self.stimuliTableDescDict["amp"] = tables.StringCol(32, pos=pos)
+            pos += 1
+            self.stimuliTableDescDict["duration"] = tables.StringCol(32, pos=pos) #tables.UInt8Col(pos=pos)
+            pos += 1
+            self.stimuliTableDescDict["prob"] = tables.StringCol(32, pos=pos)
+
+            # Make the vials table using the description dict above.
+            self.soundsTable = self.h5file.create_table(where=self.h5file.root, name='sounds', description=self.stimuliTableDescDict, title='Sound Details')
+            self.soundsRow = self.soundsTable.row
+
+            # Write to the vials table.
+            
+            for isound, soundFreq in enumerate(self.soundConfigDict.Freq):
+               
+                self.soundsRow['freq'] = int(soundFreq)
+                self.soundsRow['amp'] = str(self.soundConfigDict.Amp[isound])
+                self.soundsRow['duration'] = str(self.soundConfigDict.Duration[isound])
+                self.soundsRow['prob'] = str(self.soundConfigDict.Prob[isound])
+                self.soundsRow.append()
+            
+            self.soundsTable.flush()
+        else:
+            print('Experiment Type not found')
+
+
+
+        if self.adc is not None: # this part if common to all stimuli for now 
             # self.bpod = None  # Avoid using the bpod in case it was also given as a parameter.
             self.analogSettings = analogInSettings
             self.rangeLimits = {'-10V:10V': [-10.0, 10.0], '-5V:5V': [-5.0, 5.0], '-2.5V:2.5V': [-2.5, 2.5],'0V:10V': [0.0, 10.0]}
@@ -305,6 +347,9 @@ class SaveDataWorker(QObject):
             self.eventsRow.append()
         self.eventsTable.flush()
     
+    # Here below you also have to generalize for auditory stimuli
+    
+    ### THISI IS TO ADAPT TO DIFFERENT STIMULI
     def saveTrialData(self):
         # If its None, that means the first trial's data just came, so make the description dict and then create the trialsTable using that description dict. This only happens once.
         if self.trialsTable is None:
@@ -323,12 +368,20 @@ class SaveDataWorker(QObject):
             pos += 1
             self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
             pos += 1
-            self.trialsTableDescDict['olfa'] = tables.StringCol(8,pos=pos)# For now I hardcode only one stimulus at a time possble. I fyou wanna use mixtures this must be changed
-            pos += 1
-            self.trialsTableDescDict['vial'] = tables.UInt8Col(pos=pos)
-            pos += 1
-            self.trialsTableDescDict['flow'] = tables.UInt8Col(pos=pos)
-            pos += 1
+            if self.experimentType == 'Intensity' or  self.experimentType == '1PImaging' :
+                self.trialsTableDescDict['olfa'] = tables.StringCol(8,pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
+                pos += 1
+                self.trialsTableDescDict['vial'] = tables.UInt8Col(pos=pos)
+                pos += 1
+                self.trialsTableDescDict['flow'] = tables.UInt8Col(pos=pos)
+                pos += 1
+            elif  self.experimentType == 'Auditory':
+                self.trialsTableDescDict['freq'] = tables.UInt8Col(pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
+                pos += 1
+                self.trialsTableDescDict['amp'] =  tables.Float32Col(pos=pos)
+                pos += 1
+                self.trialsTableDescDict['duration'] = tables.Float32Col(pos=pos)
+                pos += 1
 
             # self.trialsTableDescDict['totalTrialTime'] = tables.Float32Col(pos=pos)
             # pos += 1
@@ -370,16 +423,26 @@ class SaveDataWorker(QObject):
 
         print(f"Printing stimlist {self.infoDict['stimList']}")
         stimDict = self.infoDict['stimList'][0]
-        olfaName = stimDict['olfas'].keys()
-        for olfaName in stimDict['olfas'].keys():  # loop through olfas in stim
-            self.trialRow['olfa'] = olfaName
-            self.trialRow['vial'] = int(stimDict['olfas'][olfaName]['vialNum'])
-            self.trialRow['flow'] = stimDict['olfas'][olfaName]['mfc_1_flow']
+        if self.experimentType == 'Intensity' or  self.experimentType == '1PImaging' :
+            olfaName = stimDict['olfas'].keys()
+            for olfaName in stimDict['olfas'].keys():  # loop through olfas in stim
+                self.trialRow['olfa'] = olfaName
+                self.trialRow['vial'] = int(stimDict['olfas'][olfaName]['vialNum'])
+                self.trialRow['flow'] = stimDict['olfas'][olfaName]['mfc_1_flow']
 
-        if type(stimDict['dilutors']) is dict:  # check if dilutors is dictionary 05/16/23 JH
-            for dilName, dilValues in stimDict['dilutors'].items():
-                self.trialRow[f'{dilName}_flow'] = int(dilValues['vac_flow'])
-        
+            if type(stimDict['dilutors']) is dict:  # check if dilutors is dictionary 05/16/23 JH
+                for dilName, dilValues in stimDict['dilutors'].items():
+                    self.trialRow[f'{dilName}_flow'] = int(dilValues['vac_flow'])
+        elif  self.experimentType == 'Auditory':
+            print('This is infoDict in saveData Worker')
+            print(stimDict)
+            print('-------------------------------------')
+            print(int(stimDict['soundfreq']), float(stimDict['soundamp']), float(stimDict['soundtime']))
+            self.trialRow['freq'] = int(stimDict['soundfreq'])
+            self.trialRow['amp'] =float(stimDict['soundamp'])
+            self.trialRow['duration'] =float(stimDict['soundtime'])
+            
+
         self.trialRow.append()
         self.trialsTable.flush()
 
