@@ -97,6 +97,8 @@ class Window(QMainWindow, Ui_MainWindow):
         self.isPaused = False
         self.imaging = 0
         self.odorEditor = []# Initialize to get away with giving it as input no matter what (made it not indispensable in the protocolWorker)
+        self.soundEditor = []
+        self.taskSettingsFile = ''
         self.loadDefaults()
 
         
@@ -262,7 +264,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.experimentTypeComboBox.currentTextChanged.connect(self.setExperimentType)
 
         self.selectCameraDataDestinationPushButton.clicked.connect(self.selectCameraDataDestination)
-        #self.taskSettingspushButton.clicked.connect(self.selectTaskSettings)
+        self.taskSettingspushButton.clicked.connect(self.selectTaskSettings)
 
 
     def selectCameraDataDestination(self):
@@ -281,6 +283,7 @@ class Window(QMainWindow, Ui_MainWindow):
         #fname = QFileDialog.getExistingDirectory(self, "Open Folder", "C:\\Users\\olfa-lab\\pybpod\\PyBpodGUI\\taskSettings\\")
         self.taskSettingsLineEdit.setText(fname)
         self.taskSettingsFile = fname
+        print( self.taskSettingsFile)
 
 
     def setExperimentType(self):
@@ -1209,13 +1212,14 @@ class Window(QMainWindow, Ui_MainWindow):
         ## hack fix for Qthread deleted error, more info in __init__
         self.oldProtocolThreads.append(self.protocolThread)
         #self.oldProtocolWorkers.append(self.protocolWorker)
-        
+        print('Task settings file fed to protocolWorker')
+        print(self.taskSettingsFile)
         
         self.protocolWorker = ProtocolWorker(
             self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, self.shuffleMultiplierSpinBox.value(), 
             int(self.leftSensorPortNumComboBox.currentText()), self.leftWaterValve, self.leftWaterValveDurationSpinBox.value(),
             int(self.rightSensorPortNumComboBox.currentText()), self.rightWaterValve, self.rightWaterValveDurationSpinBox.value(),
-            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), 
+            self.finalValve, self.itiMinSpinBox.value(), self.itiMaxSpinBox.value(), self.noResponseCutoffSpinBox.value(), self.autoWaterCutoffSpinBox.value(), self.taskSettingsFile,
             self.olfaCheckBox.isChecked(), self.nTrialsSpinBox.value(), self.odorEditor, self.soundEditor,
         )
         self.protocolWorker.moveToThread(self.protocolThread)

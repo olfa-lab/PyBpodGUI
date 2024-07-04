@@ -350,101 +350,147 @@ class SaveDataWorker(QObject):
     # Here below you also have to generalize for auditory stimuli
     
     ### THISI IS TO ADAPT TO DIFFERENT STIMULI
-    def saveTrialData(self):
-        # If its None, that means the first trial's data just came, so make the description dict and then create the trialsTable using that description dict. This only happens once.
-        if self.trialsTable is None:
-            pos = 0
-            self.trialsTableDescDict['trialNum'] = tables.UInt16Col(pos=pos)
-            pos += 1
-            self.trialsTableDescDict['correctResponse'] = tables.StringCol(8, pos=pos)
-            pos += 1
-            self.trialsTableDescDict['responseResult'] = tables.StringCol(7, pos=pos)
-            pos += 1
-            # self.trialsTableDescDict['itiDuration'] = tables.UInt8Col(pos=pos)
-            # pos += 1
-            self.trialsTableDescDict['bpodStartTime'] = tables.Float32Col(pos=pos)
-            pos += 1
-            self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
-            pos += 1
-            self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
-            pos += 1
-            if self.experimentType == 'Intensity' or  self.experimentType == '1PImaging' :
-                self.trialsTableDescDict['olfa'] = tables.StringCol(8,pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
+    def buildIntensityBehaviorTable(self):
+        
+        pos = 0
+        self.trialsTableDescDict['responseResult'] = tables.StringCol(7, pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
+        pos += 1
+        # Loop through the olfactometers used to save each one's parameters for each stimulus in their own column.
+        stimIndex = 0
+        for stimDict in self.infoDict['stimList']:
+            for olfaName in stimDict['olfas'].keys():
+                self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_vial'] = tables.UInt8Col(pos=pos)
                 pos += 1
-                self.trialsTableDescDict['vial'] = tables.UInt8Col(pos=pos)
+                self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
                 pos += 1
-                self.trialsTableDescDict['flow'] = tables.UInt8Col(pos=pos)
-                pos += 1
-            elif  self.experimentType == 'Auditory':
-                self.trialsTableDescDict['freq'] = tables.UInt8Col(pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
-                pos += 1
-                self.trialsTableDescDict['amp'] =  tables.Float32Col(pos=pos)
-                pos += 1
-                self.trialsTableDescDict['duration'] = tables.Float32Col(pos=pos)
-                pos += 1
+            stimIndex += 1
+        self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
+        self.trialRow = self.trialsTable.row
+        self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
 
-            # self.trialsTableDescDict['totalTrialTime'] = tables.Float32Col(pos=pos)
-            # pos += 1
-            # Loop through the olfactometers used to save each one's parameters for each stimulus in their own column.
-            stimIndex = 0
-            for stimDict in self.infoDict['stimList']:
-                # print(stimDict['olfas'])
-                # for olfaName in stimDict['olfas'].keys():
-                #     self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_vial'] = tables.UInt8Col(pos=pos)
-                #     pos += 1
-                #     # self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_name'] = tables.StringCol(32, pos=pos)  # Size of strings added to the column does not need to exactly match the size given during initialization.
-                #     # pos += 1
-                #     # self.tri
-                # alsTableDescDict[f'odor{stimIndex}_{olfaName}_conc'] = tables.Float32Col(pos=pos)
-                #     # pos += 1
-                #     self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
-                #     pos += 1
-                if 'dilutors' in stimDict: # check if Dilutors has dictionary  # changed 5/16/23 JH
-                    if type(stimDict['dilutors']) is dict:
-                        for dilName in stimDict['dilutors'].keys():
-                            self.trialsTableDescDict[f'{dilName}_flow'] = tables.UInt16Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
-                            pos += 1
-                stimIndex += 1
-                
-            
-            self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
-            self.trialRow = self.trialsTable.row
-            self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
-
-        # Fill in the column values for the row now that the trialsTable has been created.
-        # self.trialRow['trialNum'] = self.infoDict['currentTrialNum']
-        # self.trialRow['correctResponse'] = self.infoDict['correctResponse']
+        
+    def fillIntensityBehaviorTable(self):
         self.trialRow['responseResult'] = self.infoDict['responseResult']
-        # self.trialRow['itiDuration'] = self.infoDict['currentITI']
-        # self.trialRow['bpodStartTime'] = self.infoDict['Bpod start timestamp']
         self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
         self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
-        # self.trialRow['totalTrialTime'] = self.trialRow['trialEndTime'] - self.trialRow['trialStartTime']
+        stimIndex = 0
+        for stimDict in self.infoDict['stimList']:  # Loop again to save the data to the columns.
+            for olfaName, olfaValues in stimDict['olfas'].items():
+                self.trialRow[f'odor{stimIndex}_{olfaName}_vial'] = int(olfaValues['vialNum'])
+                self.trialRow[f'odor{stimIndex}_{olfaName}_flow'] = olfaValues['mfc_1_flow']
+            stimIndex += 1
+        
+        self.trialRow.append()
+        self.trialsTable.flush()
 
-        print(f"Printing stimlist {self.infoDict['stimList']}")
+    def build1PImagingTable(self):
+        pos = 0
+        self.trialsTableDescDict['trialNum'] = tables.UInt16Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['correctResponse'] = tables.StringCol(8, pos=pos)
+        pos += 1
+        self.trialsTableDescDict['responseResult'] = tables.StringCol(7, pos=pos)
+        pos += 1
+        self.trialsTableDescDict['bpodStartTime'] = tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
+        pos += 1
+        self.trialsTableDescDict['olfa'] = tables.StringCol(8,pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
+        pos += 1
+        self.trialsTableDescDict['vial'] = tables.UInt8Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['flow'] = tables.UInt8Col(pos=pos)
+        pos += 1
+        stimIndex = 0
+        for stimDict in self.infoDict['stimList']:
+            if 'dilutors' in stimDict: # check if Dilutors has dictionary  # changed 5/16/23 JH
+                if type(stimDict['dilutors']) is dict:
+                    for dilName in stimDict['dilutors'].keys():
+                        self.trialsTableDescDict[f'{dilName}_flow'] = tables.UInt16Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
+                        pos += 1
+            stimIndex += 1
+        self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
+        self.trialRow = self.trialsTable.row
+        self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
+
+
+    def fill1PImagingTable(self):
+        self.trialRow['trialNum'] = self.infoDict['currentTrialNum']
+        self.trialRow['correctResponse'] = self.infoDict['correctResponse']
+        self.trialRow['responseResult'] = self.infoDict['responseResult']
+        self.trialRow['bpodStartTime'] = self.infoDict['Bpod start timestamp']
+        self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
+        self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
         stimDict = self.infoDict['stimList'][0]
-        if self.experimentType == 'Intensity' or  self.experimentType == '1PImaging' :
-            olfaName = stimDict['olfas'].keys()
-            for olfaName in stimDict['olfas'].keys():  # loop through olfas in stim
-                self.trialRow['olfa'] = olfaName
-                self.trialRow['vial'] = int(stimDict['olfas'][olfaName]['vialNum'])
-                self.trialRow['flow'] = stimDict['olfas'][olfaName]['mfc_1_flow']
-
+        olfaName = stimDict['olfas'].keys()
+        for olfaName in stimDict['olfas'].keys():  # loop through olfas in stim
+            self.trialRow['olfa'] = olfaName
+            self.trialRow['vial'] = int(stimDict['olfas'][olfaName]['vialNum'])
+            self.trialRow['flow'] = stimDict['olfas'][olfaName]['mfc_1_flow']
+        if 'dilutors' in stimDict:# Bea, generalizing for intensity ecperiment
             if type(stimDict['dilutors']) is dict:  # check if dilutors is dictionary 05/16/23 JH
                 for dilName, dilValues in stimDict['dilutors'].items():
                     self.trialRow[f'{dilName}_flow'] = int(dilValues['vac_flow'])
-        elif  self.experimentType == 'Auditory':
-            print('This is infoDict in saveData Worker')
-            print(stimDict)
-            print('-------------------------------------')
-            print(int(stimDict['soundfreq']), float(stimDict['soundamp']), float(stimDict['soundtime']))
-            self.trialRow['freq'] = int(stimDict['soundfreq'])
-            self.trialRow['amp'] =float(stimDict['soundamp'])
-            self.trialRow['duration'] =float(stimDict['soundtime'])
-            
 
         self.trialRow.append()
         self.trialsTable.flush()
+
+    def buildAuditoryBehaviorTable(self):
+        pos = 0
+        self.trialsTableDescDict['responseResult'] = tables.StringCol(7, pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
+        pos += 1
+        self.trialsTableDescDict['freq'] = tables.UInt8Col(pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
+        pos += 1
+        self.trialsTableDescDict['amp'] =  tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['duration'] = tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
+        self.trialRow = self.trialsTable.row
+        self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
+
+
+    def fillAuditoryBehaviorTable(self):
+        stimDict = self.infoDict['stimList'][0]
+        self.trialRow['responseResult'] = self.infoDict['responseResult']
+        self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
+        self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
+        self.trialRow['freq'] = int(stimDict['soundfreq'])
+        self.trialRow['amp'] =float(stimDict['soundamp'])
+        self.trialRow['duration'] =float(stimDict['soundtime'])
+            
+        self.trialRow.append()
+        self.trialsTable.flush()
+
+    def saveTrialData(self):
+        # If its None, that means the first trial's data just came, so make the description dict and then create the trialsTable using that description dict. This only happens once.
+        
+        if self.experimentType == 'Intensity': 
+            if self.trialsTable is None: # If it is the first trial nd the table is not built yet
+                self.buildIntensityBehaviorTable()
+            else:
+                self.fillIntensityBehaviorTable()
+        elif self.experimentType == '1PImaging': 
+            if self.trialsTable is None: # If it is the first trial nd the table is not built yet
+                self.build1PImagingTable()
+            else:
+                self.fill1PImagingTable()
+        elif self.experimentType == 'Auditory': 
+            if self.trialsTable is None: # If it is the first trial nd the table is not built yet
+                self.buildAuditoryBehaviorTable()
+            else:
+                self.fillAuditoryBehaviorTable()
+
 
 
     def saveAnalogDataFromModule(self, analogData):

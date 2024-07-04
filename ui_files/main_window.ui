@@ -1269,6 +1269,16 @@
        </property>
       </widget>
      </item>
+     <item row="7" column="0">
+      <widget class="QPushButton" name="taskSettingspushButton">
+       <property name="text">
+        <string>Select Task Settings</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="taskSettingsLineEdit"/>
+     </item>
     </layout>
    </widget>
   </widget>
