@@ -39,9 +39,6 @@ class ResultsPlotWorker(QObject):
             self.updatePlot(self.resultsList)
 
     def updatePlot(self, resultsList):
-        #print("experiment type is :", self.experimentType)
-        print("In updatePlot looking at what's happened")
-        print(self.experimentType, resultsList)
         if ( self.experimentType== 'Intensity'):
             self.intensityPlot(resultsList)
         elif self.experimentType == 'Auditory':
@@ -62,7 +59,6 @@ class ResultsPlotWorker(QObject):
             dict_1 = dict(enumerate(AmpsInt))  # This dict will have integer indices for keys and string flowrates for values, but might have multiple keys holding the same flowrate values...
             dict_2 = dict((str(amp), index) for index, amp in dict_1.items())  # This dict will swap the keys and values of dict_1, thus removing any duplicate flowrates because every key must be unique. But it might also remove the indices linked to those duplicates...
             dict_3 = dict(enumerate(dict_2.keys()))  # Finally, this dict will contain integer indices for keys and string flowrates for values, such that there will not be any duplicate flowrates or missing indices.
-            print(dict_3)
             self.xAxis.setTicks([dict_3.items()])
             self.graphWidget.setXRange(-1, len(dict_3)+1, padding=0)
             self.xAxisDict = dict_3
@@ -94,7 +90,6 @@ class ResultsPlotWorker(QObject):
                     percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
                 xValues.append(index)  # self.xAxisDict has string flowrates for keys and integer values for the index of the flowrate on the x axis.
                 yValues.append(percent)
-            print(xValues, yValues)
             self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
             self.graphWidget.plot(xValues, yValues, name='All Sounds', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
             colorIndex += 1

@@ -238,7 +238,6 @@ class SoundEditorDialog(QDialog, Ui_Dialog):
     #     self.saveStimuliListTable(fileName)
 
     def connectSignalsSlots(self):
-        print('Connecting signals')
         # Connect widgets to function of this class
         self.saveSoundConfigFile.clicked
         self.saveSoundConfigFile.clicked.connect(self.saveStimuliConfigTable)

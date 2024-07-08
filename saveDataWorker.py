@@ -136,7 +136,6 @@ class SaveDataWorker(QObject):
 
         elif self.experimentType == 'Auditory':
             if soundConfigFile:
-                print(self.soundstimuliFilesDirectory+soundConfigFile)
                 self.soundConfigDict = pd.read_excel(self.soundstimuliFilesDirectory+soundConfigFile)
                 #Column names are  'Freq':0, 'Amp':1, 'Duration':2, 'Prob':3
             # Organize the file with sound frequencies ONLY if it is an olfactory task
@@ -230,7 +229,6 @@ class SaveDataWorker(QObject):
             self.voltsRow = self.voltsTable.row
 
         if self.bpod is not None:
-            print(f'The bpod is not None at this stage')
            
             self.channelIndices = self.bpod.hardware.analog_input_channels  # list of channel indices of channels configured for analog input.
             if (self.channelIndices is not None) and (len(self.channelIndices) > 0):
@@ -449,7 +447,7 @@ class SaveDataWorker(QObject):
         pos += 1
         self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
         pos += 1
-        self.trialsTableDescDict['freq'] = tables.UInt8Col(pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
+        self.trialsTableDescDict['freq'] = tables.UInt16Col(pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
         pos += 1
         self.trialsTableDescDict['amp'] =  tables.Float32Col(pos=pos)
         pos += 1
@@ -468,7 +466,9 @@ class SaveDataWorker(QObject):
         self.trialRow['freq'] = int(stimDict['soundfreq'])
         self.trialRow['amp'] =float(stimDict['soundamp'])
         self.trialRow['duration'] =float(stimDict['soundtime'])
-            
+        print('Here are the values I am saving in my file')
+        print( int(stimDict['soundfreq']), stimDict['soundfreq'])
+
         self.trialRow.append()
         self.trialsTable.flush()
 
@@ -478,16 +478,19 @@ class SaveDataWorker(QObject):
         if self.experimentType == 'Intensity': 
             if self.trialsTable is None: # If it is the first trial nd the table is not built yet
                 self.buildIntensityBehaviorTable()
+                self.fillIntensityBehaviorTable()
             else:
                 self.fillIntensityBehaviorTable()
         elif self.experimentType == '1PImaging': 
             if self.trialsTable is None: # If it is the first trial nd the table is not built yet
                 self.build1PImagingTable()
+                self.fill1PImagingTable()
             else:
                 self.fill1PImagingTable()
         elif self.experimentType == 'Auditory': 
             if self.trialsTable is None: # If it is the first trial nd the table is not built yet
                 self.buildAuditoryBehaviorTable()
+                self.fillAuditoryBehaviorTable()
             else:
                 self.fillAuditoryBehaviorTable()
 
@@ -583,7 +586,6 @@ class SaveDataWorker(QObject):
                 self.newData = False  # reset
 
                 if not (self.infoDict == {}):
-                    print('If i see this is because I have info ')
                     self.saveTrialData()
                     self.saveEventsTimestamps()
                     self.saveStatesTimestamps()

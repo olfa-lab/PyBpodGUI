@@ -156,7 +156,6 @@ class ProtocolWorker(QObject):
         return trialDict
 
     def getEndOfTrialInfoDict(self):
-        print('\n\ninside getEndOfTrialInfoDict\n')
         if (self.currentStateName == 'exit'):
             dict1 = self.getCurrentTrialInfoDict()
             dict2 = self.bpod.session.current_trial.export()
@@ -228,7 +227,6 @@ class ProtocolWorker(QObject):
             freq = self.stimList[0]['soundfreq']
             amp = self.stimList[0]['soundamp']
             duration = self.stimList[0]['soundtime']
-            #print(freq, amp, duration)
             self.wg.disable_output_channel(self.wg_stim_channel)
             self.wg.set_waveform_freq(self.wg_stim_channel, freq)
             self.wg.set_waveform_amp(self.wg_stim_channel, amp)
@@ -505,7 +503,6 @@ class ProtocolWorker(QObject):
             self.stimulusFunction = self.imagingGenerator
 
     def imagingGenerator(self):
-        print('Running the imagingGenerator!')
         # Simply get the list of dictionaries from odorEditorDialog, to get the current trial vial/vialname/vialconc/dilutor_flow/mfc_flow
         current_trial = self.allTrialsDict[self.currentTrialNum-1].copy()
         print(f'Current trial is {current_trial}')
@@ -544,9 +541,7 @@ class ProtocolWorker(QObject):
         # be based on the last parameters of the last olfactometer in the loop. Again, if only one olfactometer
         # exists, there will not be a problem.
 
-        print('Intensity Generator gets called')
         self.createIntensityStimuliDistribution()
-        print('post createIntensityStimuliDistribution')
         ostim = {'olfas': {}}
         for i in range(self.nOlfas):  # Loop thru each olfa if there is more than one (which will create a mixture)
             if (self.shuffleMultiplier > 0):
@@ -600,19 +595,15 @@ class ProtocolWorker(QObject):
         self.stimList.clear()
         self.stimList.append(ostim)
         self.vialIndex += 1
-        print(self.stimList)
         if (self.shuffleMultiplier > 0):
             self.flowIndex += 1  # Since the lists are shuffled (and may be extended), then increment the flowIndex together with the vialIndex.
 
     def readTaskSettingsFile(self):
-        print('this is my settings file')
-        print(self.taskSettingsFile)
         with open(self.taskSettingsFile, 'r') as taskFile:
             self.taskSettingsDict = json.load(taskFile)
 
     def createIntensityStimuliDistribution(self):
         self.readTaskSettingsFile()
-        print('did I read the file??')
         # This is written by Bea to set specific probabilities for each flow
         self.all_vial_list = []
         self.all_flow_list = []
@@ -873,7 +864,6 @@ class ProtocolWorker(QObject):
 
     def parseExperimentType(self):
         # Parse the experimentType
-        print(self.olfaChecked)
         match self.experimentType:
            
             case 'Intensity':
@@ -883,7 +873,6 @@ class ProtocolWorker(QObject):
                         self.olfas = olfactometry.Olfactometers(config_obj=self.stimConfigFileName)
                         #self.dilutors = olfactometry.Dilutor(config=self.olfaConfigFileName)
                     self.bpod.softcode_handler_function = self.my_softcode_handler    
-                    print('has this worked??')
 
                 # Note that these except clauses can only trigger from the first trial.
                 except SerialException:
@@ -903,8 +892,7 @@ class ProtocolWorker(QObject):
                     # self.finished.emit()
                 # Setting stimulus function to Intensity Generatior
                 self.stimulusFunction = self.intensityGenerator
-                print('The stimulus function is ' )
-                print(self.stimulusFunction)
+      
 
             case '1PImaging':
                 try:
@@ -938,14 +926,11 @@ class ProtocolWorker(QObject):
                 self.initializeSoundResponseDict()
                 self.stimulusFunction = self.auditoryGenerator
                 self.bpod.softcode_handler_function = self.my_softcode_handler  
-                #print('here auditory specific stuff')
 
 
     def run(self):
         # Parsing experiment Type
-        print(' Parsing experiment Type')
         self.parseExperimentType()
-        print(' startingTrials')
         self.startTrial()
         """ try:
             if self.olfaChecked:
@@ -979,7 +964,6 @@ class ProtocolWorker(QObject):
         if self.keepRunning and (self.currentTrialNum <= self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
             #print('running trials')
             sleep(1)
-            print('Am i in the if ')
             # load protocol from json file. I do this every trial because I need to reset some values back to their original as read
             # from the file, so instead of looping through the self.stateMachine dictionary a second time just to reset the values
             # after parsing it and adding the state to the state machine, I'll just re-read the file and all value will go back to
@@ -992,7 +976,6 @@ class ProtocolWorker(QObject):
             
             # Call the generator to create a new trial
             self.stimulusFunction()
-            print('passed the stimulus function ')
             if (self.itiMin == self.itiMax):  # If they are equal, then self.currentITI will be the same every trial.
                 self.currentITI = self.itiMin
             else:
@@ -1022,9 +1005,7 @@ class ProtocolWorker(QObject):
                 rewardDuration = self.rightWaterDuration
             self.sma = StateMachine(self.bpod)
             listOfTuples = []
-            print(self.stateMachine)
             for state in self.stateMachine['states']:
-                print(state)
                 if 'Olfactometer' in state['outputActions']:
                     # Replace 'Olfactometer': 'set_stimulus' with SoftCode 2.
                     if (state['outputActions']['Olfactometer'] == 'set_stimulus'):
@@ -1124,7 +1105,6 @@ class ProtocolWorker(QObject):
 
                 listOfTuples = []  # reset to empty list.
             
-            print(self.sma)
             # Add timers if they exist
             if 'timers' in self.stateMachine.keys():
                 for timer in self.stateMachine['timers']:
@@ -1160,7 +1140,6 @@ class ProtocolWorker(QObject):
             try:
                 self.bpod.send_state_machine(self.sma)  # Send state machine description to Bpod device
                 self.bpod.run_state_machine(self.sma)  # Run state machine
-                print('run the state machine')
                
             except (BpodErrorException, TypeError) as err:
                 print('error in running the state machine')
@@ -1193,7 +1172,6 @@ class ProtocolWorker(QObject):
             QTimer.singleShot(1000, self.startTrial)
 
         else:
-            #print('do I enter here?')
             if (self.consecutiveNoResponses >= self.noResponseCutOff):
                 self.noResponseAbortSignal.emit()
 

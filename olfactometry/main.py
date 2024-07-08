@@ -73,8 +73,6 @@ class Olfactometers(QtWidgets.QMainWindow):
             success = olfa.set_stimulus(o, open_vials=open_vials)
             successes.append(success)
         if 'dilutors' in list(std.keys()):
-            print(f"Length of dilutor list is {len(std['dilutors'])}")
-            print(f"{std['dilutors']}")
             for i in range(len(std['dilutors'])):
                 
                 dil = self.dilutors[i]
@@ -312,7 +310,6 @@ class Olfactometers(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def _stim_template_display(self):
         template_string = self.generate_stimulus_template()
-        print(template_string)
         d = QtWidgets.QWidget()
         d.setWindowTitle('Stimulus template')
         l = QtWidgets.QVBoxLayout(d)
