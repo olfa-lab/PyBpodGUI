@@ -69,6 +69,7 @@ class MyQMdiSubWindow(QMdiSubWindow):
 class Window(QMainWindow, Ui_MainWindow):
     stopRunningSignal = pyqtSignal()
     startExperimentSignal = pyqtSignal()
+    pavlovFlagSignal = pyqtSignal(int)  
     # launchOlfaGUISignal = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -209,7 +210,6 @@ class Window(QMainWindow, Ui_MainWindow):
         self.flowUsagePlotSeparateVialsButton.clicked.connect(lambda: self.flowUsagePlot.setPlottingMode(2))
         
 
-
         self.actionNewProtocol.triggered.connect(self.launchProtocolEditor)
         self.actionOpenProtocol.triggered.connect(self.openProtocolFileNameDialog)
         self.actionLoadDefaults.triggered.connect(self.loadDefaults)
@@ -234,6 +234,9 @@ class Window(QMainWindow, Ui_MainWindow):
         self.nTrialsSpinBox.valueChanged.connect(self.recordNumTrials)
         self.itiMinSpinBox.valueChanged.connect(self.recordMinITI)
         self.itiMaxSpinBox.valueChanged.connect(self.recordMaxITI)
+        
+        self.pavlovCheckBox.stateChanged.connect(self.recordPavlovFlag) ## PAVLOV
+        
         self.noResponseCutoffSpinBox.valueChanged.connect(self.recordNoResponseCutoff)
         self.autoWaterCutoffSpinBox.valueChanged.connect(self.recordAutoWaterCutoff)
         self.yMaxDoubleSpinBox.valueChanged.connect(lambda ymax: self.streaming.setYaxis(self.yMinDoubleSpinBox.value(), ymax))
@@ -843,6 +846,14 @@ class Window(QMainWindow, Ui_MainWindow):
         self.itiMinSpinBox.setMaximum(value)  # Do not allow itiMinSpinBox to hold a value greater than itiMaxSpinBox's current value.
         if self.protocolWorker is not None:
             self.protocolWorker.setMaxITI(value)
+
+    def recordPavlovFlag(self):
+        if self.protocolWorker is not None:
+            if self.pavlovCheckBox.isChecked():
+                self.protocolWorker.setPavlovFlag(1)
+            else:
+                self.protocolWorker.setPavlovFlag(0)
+
 
     def recordLeftSensorPort(self, text):
         if self.protocolWorker is not None:

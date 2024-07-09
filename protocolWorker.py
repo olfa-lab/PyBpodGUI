@@ -35,6 +35,9 @@ class ProtocolWorker(QObject):
     invalidFileSignal = pyqtSignal(str)  # sends the key string that caused the KeyError with it to the main thread to notify the user.
     bpodExceptionSignal = pyqtSignal(str)  # sends the bpod exception error string with it to the main thread to notify the user.
     duplicateVialsSignal = pyqtSignal(dict)  # sends a dict that groups duplicate vials to the resultsPLotWorker.
+    pavlovFlagSignal = pyqtSignal(int)  
+
+
     # startSDCardLoggingSignal = pyqtSignal()
     # stopSDCardLoggingSignal = pyqtSignal()
     finished = pyqtSignal()
@@ -96,6 +99,7 @@ class ProtocolWorker(QObject):
         self.wg_stim_channel = 1 # hardcoded 
         self.wg_stim_mode = 'TRIG'
         self.wg_trig_source = 'EXT'
+        self.pavlovFlag = 0
 
         # Conditional actions
         if self.experimentType == '1PImaging': # We use this list only for imaging
@@ -131,6 +135,10 @@ class ProtocolWorker(QObject):
 
     def setMaxITI(self, value):
         self.itiMax = value
+    
+    def setPavlovFlag(self, value):
+        self.pavlovFlag = value
+        print('Pavlog flag is = to ', self.pavlovFlag)
 
     def setNoResponseCutoff(self, value):
         self.noResponseCutOff = value if (value > 0) else (self.nTrials + 1)  # Zero means to never abort, so set it equal to 1 more than the number of trials to guarantee that it will never abort automatically.
@@ -151,7 +159,8 @@ class ProtocolWorker(QObject):
             'correctResponse': self.correctResponse,
             'currentITI': self.currentITI,
             'stimList': self.stimList,
-            'nStates': self.sma.total_states_added
+            'nStates': self.sma.total_states_added,
+            'pavlovFlag': self.pavlovFlag
         }
         return trialDict
 
@@ -648,7 +657,7 @@ class ProtocolWorker(QObject):
             idx_thisfreq = [i  for i,x in enumerate(self.all_freq_list) if x ==freq_key]
             amp_this_freq = [self.all_amp_list[i] for i in idx_thisfreq]
             all_amps = np.unique(amp_this_freq)
-            self.amp_TH[freq_key] = np.min(all_amps) + 0.33*(np.max(all_amps)-np.min(all_amps))
+            self.amp_TH[freq_key] = 0.5*(all_amps[3] + all_amps[4])
         temp = list(zip( self.all_freq_list, self.all_amp_list, self.all_dur_list))
         random.shuffle(temp)
         res1, res2, res3 = zip(*temp)
@@ -958,7 +967,24 @@ class ProtocolWorker(QObject):
             self.olfaExceptionSignal.emit(str(olf))
             self.stopRunning()  # This would also stop the bpod trial just in case the olfa raised the exception when the state machine is running.
             # self.finished.emit() """
-        
+    
+    def prepend_pavlovian(self, filepath):
+        path_items = filepath.split('/')
+        filename = path_items[-1]
+        if filename[:4] == 'Pav_':
+            return filepath
+        filename = 'Pav_'+ filename
+        path_items[-1] = filename
+        return '/'.join(path_items)
+    
+    def remove_pavlovian(self, filepath):
+        path_items = filepath.split('/')
+        filename = path_items[-1]
+        if filename[:4] == 'Pav_':
+            filename = filename[4:]
+        path_items[-1] = filename
+        return '/'.join(path_items)
+    
     def startTrial(self):
         print(self.keepRunning,self.currentTrialNum,  self.nTrials , self.consecutiveNoResponses, self.noResponseCutOff)
         if self.keepRunning and (self.currentTrialNum <= self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
@@ -971,6 +997,13 @@ class ProtocolWorker(QObject):
             # "rightAction" results in them only being modified the first trial. These variables change every trial according to 
             # self.correctResponse, so I need to update what gets added to the state machine every trial. Otherwise, the state change
             # condition for 'Port1In' will always stay the same instead of changing depending on self.correctResponse.
+            if self.pavlovFlag ==1: 
+                self.protocolFileName = self.prepend_pavlovian(self.protocolFileName)
+            elif self.pavlovFlag ==0 : 
+                self.protocolFileName = self.remove_pavlovian(self.protocolFileName)
+            
+            print(self.protocolFileName, self.pavlovFlag)
+
             with open(self.protocolFileName, 'r') as protocolFile:
                 self.stateMachine = json.load(protocolFile)
             

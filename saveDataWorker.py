@@ -366,6 +366,9 @@ class SaveDataWorker(QObject):
                 self.trialsTableDescDict[f'odor{stimIndex}_{olfaName}_flow'] = tables.UInt8Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
                 pos += 1
             stimIndex += 1
+        # Added for pavlovian addition
+        self.trialsTableDescDict['pavlovian'] = tables.UInt8Col(pos=pos)
+
         self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
         self.trialRow = self.trialsTable.row
         self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
@@ -375,6 +378,7 @@ class SaveDataWorker(QObject):
         self.trialRow['responseResult'] = self.infoDict['responseResult']
         self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
         self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
+        self.trialRow['pavlovian'] = self.infoDict['pavlovFlag']
         stimIndex = 0
         for stimDict in self.infoDict['stimList']:  # Loop again to save the data to the columns.
             for olfaName, olfaValues in stimDict['olfas'].items():
@@ -413,6 +417,9 @@ class SaveDataWorker(QObject):
                         self.trialsTableDescDict[f'{dilName}_flow'] = tables.UInt16Col(pos=pos)  # This is assuming that only flowrates between 1 to 100 will be used.
                         pos += 1
             stimIndex += 1
+        
+        
+
         self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
         self.trialRow = self.trialsTable.row
         self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
@@ -453,6 +460,9 @@ class SaveDataWorker(QObject):
         pos += 1
         self.trialsTableDescDict['duration'] = tables.Float32Col(pos=pos)
         pos += 1
+        self.trialsTableDescDict['pavlovian'] = tables.UInt8Col(pos=pos)
+
+        
         self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
         self.trialRow = self.trialsTable.row
         self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
@@ -466,6 +476,7 @@ class SaveDataWorker(QObject):
         self.trialRow['freq'] = int(stimDict['soundfreq'])
         self.trialRow['amp'] =float(stimDict['soundamp'])
         self.trialRow['duration'] =float(stimDict['soundtime'])
+        self.trialRow['pavlovian'] = self.infoDict['pavlovFlag']
         print('Here are the values I am saving in my file')
         print( int(stimDict['soundfreq']), stimDict['soundfreq'])
 
