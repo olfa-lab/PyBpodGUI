@@ -657,7 +657,8 @@ class ProtocolWorker(QObject):
             idx_thisfreq = [i  for i,x in enumerate(self.all_freq_list) if x ==freq_key]
             amp_this_freq = [self.all_amp_list[i] for i in idx_thisfreq]
             all_amps = np.unique(amp_this_freq)
-            self.amp_TH[freq_key] = 0.5*(all_amps[3] + all_amps[4])
+            Nstimuli = len(all_amps)
+            self.amp_TH[freq_key] = 0.5*(all_amps[int(Nstimuli/2 -1)] + all_amps[int(Nstimuli/2)])
         temp = list(zip( self.all_freq_list, self.all_amp_list, self.all_dur_list))
         random.shuffle(temp)
         res1, res2, res3 = zip(*temp)
