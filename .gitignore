@@ -8,6 +8,9 @@ stimuliFiles/
 protocol_files/
 >>>>>>> dilutor_dev
 olfactometry_config_files/
+taskSettings/
+soundstimuliFiles/
 camera_data/
+images/
 *.log
 *.avi

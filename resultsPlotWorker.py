@@ -125,6 +125,32 @@ class ResultsPlotWorker(QObject):
             #         colorIndex += 1
         
         elif (self.plottingMode == 2):
+
+             # This combines all vials into one line.
+
+            allFlowsCounterDict = {}  # use this dict to count numLeft and numResponses for each flowrate.
+            for freq in resultsList[0].keys():
+                for realAmp, totalsDict  in resultsList[0][freq].items():
+                    if realAmp not in allFlowsCounterDict:
+                        allFlowsCounterDict[realAmp] = {'numLeft': 0, 'numResponses': 0}
+                    allFlowsCounterDict[realAmp]['numLeft'] += totalsDict['left']
+                    allFlowsCounterDict[realAmp]['numResponses'] += totalsDict['Correct'] + totalsDict['Wrong']  # I only want the denominator to be the total number of actual responses, not including the NoResponses.
+
+                xValues = []
+                yValues = []
+                allamps = [float(x) for x in allFlowsCounterDict.keys()]
+                allamps_sorted = np.sort(allamps)
+                for index, amp in enumerate(allamps_sorted):
+                    amp_key = "{:.2f}".format(amp)
+                    if not (allFlowsCounterDict[amp_key]['numResponses'] == 0):
+                        percent = round((float(allFlowsCounterDict[amp_key]['numLeft']) / float(allFlowsCounterDict[amp_key]['numResponses']) * 100), 2)
+                    else:
+                        percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
+                    xValues.append(index)  # self.xAxisDict has string flowrates for keys and integer values for the index of the flowrate on the x axis.
+                    yValues.append(percent)
+                self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+                self.graphWidget.plot(xValues, yValues, name='All Sounds', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+                colorIndex += 1
             # # This plots a line for each vial's results.
             print('This plots a line for each vials results.')
             # for vialNum, flowrateDict in resultsList[0].items():

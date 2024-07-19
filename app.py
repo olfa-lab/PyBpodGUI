@@ -100,6 +100,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.odorEditor = []# Initialize to get away with giving it as input no matter what (made it not indispensable in the protocolWorker)
         self.soundEditor = []
         self.taskSettingsFile = ''
+        self.currentStimulusType = 'O' # 'O'= odors, 'S' = sound, 'L' = light
         self.loadDefaults()
 
         
@@ -218,6 +219,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.actionLaunchOlfaGUI.triggered.connect(self.launchOlfaGUI)
         self.actionOdors.triggered.connect(self.setOdorStimuli)
         self.actionSound.triggered.connect(self.setSoundStimuli)
+        self.actionAuditory_Odors.triggered.connect(self.setSoundAndOdorStimuli)
         self.actionConfigureBpodFlexChannels.triggered.connect(self.launchBpodFlexChannelSettingsDialog)
         self.actionConfigureAnalogInputModuleSettings.triggered.connect(self.launchAnalogInputModuleSettingsDialog)
         self.actionViewStreaming.toggled.connect(self.viewStreamingSubWindow)
@@ -467,6 +469,16 @@ class Window(QMainWindow, Ui_MainWindow):
     def setSoundStimuli(self):
         self.soundEditor = SoundEditorDialog(self.soundConfigFileName)
         self.soundEditor.show()
+    def setSoundAndOdorStimuli(self):
+        print('need to set up ')
+        # SET UP DIALOG THAT GIVES CHOICE OF ADIO AND ODOR STIM 
+        # - ODOR:read from olfa file
+        # - SOUND - SAME TABLE AS SOUND
+        # SET UP DIALOG THAT MAKES YOU CONFIRM ODOR STIMULI AND MOVE FORWARD WITH SOUNDS
+        #  
+        #self.soundEditor = SoundEditorDialog(self.soundConfigFileName)
+        #self.soundEditor.show()
+
 
     
     def launchOlfaEditor(self):
@@ -1017,6 +1029,12 @@ class Window(QMainWindow, Ui_MainWindow):
                 self.updatecurrentOdorTrial(trialInfoDict)
             elif self.experimentType == 'Auditory' :
                 self.updatecurrentSoundTrial(trialInfoDict)
+            elif self.experimentType == 'Mixed':
+                if self.currentStimulusType == 'O':
+                    self.updatecurrentOdorTrial(trialInfoDict)
+                elif self.currentStimulusType == 'S':
+                    self.updatecurrentSoundTrial(trialInfoDict)
+
 
 
     def noResponseAbortDialog(self):
@@ -1097,7 +1115,7 @@ class Window(QMainWindow, Ui_MainWindow):
         #    self.streaming.resumeAnimation()
 
         self.resultsPlot.setExperimentType(self.experimentTypeComboBox.currentText())
-        self.flowUsagePlot.setExperimentType(self.experimentTypeComboBox.currentText())
+        self.flowUsagePlot.setExperimentType(self.experimentTypeComboBox.currentText()) ## BEA ADDRESS
         if (self.experimentTypeComboBox.currentText() == '1PImaging'):
             self.flowUsagePlotSubWindow.showShaded()
 

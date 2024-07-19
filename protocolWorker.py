@@ -100,6 +100,9 @@ class ProtocolWorker(QObject):
         self.wg_stim_mode = 'TRIG'
         self.wg_trig_source = 'EXT'
         self.pavlovFlag = 0
+        self.currentstimulusType = 'O'
+        self.mixedStimulusTypes = ['O', 'S'] # You will have to change this when you expand for opto, so that you get it from app.py
+        self.originalProtocolFilename = protocolFileName
 
         # Conditional actions
         if self.experimentType == '1PImaging': # We use this list only for imaging
@@ -261,7 +264,7 @@ class ProtocolWorker(QObject):
             self.previousResponseResult = self.currentResponseResult
             self.consecutiveNoResponses = 0  # Reset counter to 0 because there was a response.
 
-            if (self.experimentType == 'Intensity' or self.experimentType == '1PImaging'):
+            if (self.experimentType == 'Intensity' or self.experimentType == '1PImaging' or( self.experimentType == 'Mixed' and self.currentstimulusType == 'O')):
                 for i in range(self.nOlfas):
                     vialNum = self.stimList[0]['olfas'][f'olfa_{i}']['vialNum']
                     flow = self.stimList[0]['olfas'][f'olfa_{i}']['mfc_1_flow']
@@ -270,7 +273,7 @@ class ProtocolWorker(QObject):
                     self.resultsCounterList[i][vialNum][str(flow)]['Total'] += 1
                     self.resultsCounterListSignal.emit(self.resultsCounterList)
             
-            elif self.experimentType == 'Auditory':
+            elif self.experimentType == 'Auditory'  or ( self.experimentType == 'Mixed' and self.currentstimulusType == 'S'):
                 freq = self.stimList[0]['soundfreq']
                 amp = "{:.2f}".format(self.stimList[0]['soundamp'])
                 self.resultsCounterList[0][freq][amp][self.correctResponse] += 1
@@ -873,6 +876,8 @@ class ProtocolWorker(QObject):
         self.resultsCounterList.append(resultsCounterDict)
 
     def parseExperimentType(self):
+        print('Experiment type is : ')
+        print(self.experimentType, )
         # Parse the experimentType
         match self.experimentType:
            
@@ -936,9 +941,54 @@ class ProtocolWorker(QObject):
                 self.initializeSoundResponseDict()
                 self.stimulusFunction = self.auditoryGenerator
                 self.bpod.softcode_handler_function = self.my_softcode_handler  
+            case 'Mixed':
+                # Those are actions that you have to do once at the beginning og the session
+                self.wg = grab_generator()
+                self.bpod.softcode_handler_function = self.my_softcode_handler  
+
+
+    def defineStimType(self):
+        
+        idx_stim_type = random.randint(0, 1)     
+        self.currentstimulusType = self.mixedStimulusTypes[idx_stim_type]
+        print(self.currentstimulusType)
+        if self.currentstimulusType == 'O':
+            try:
+                if self.olfaChecked:
+                    self.getOdorsFromConfigFile()
+                    self.olfas = olfactometry.Olfactometers(config_obj=self.stimConfigFileName)
+                    #self.dilutors = olfactometry.Dilutor(config=self.olfaConfigFileName)
+                self.bpod.softcode_handler_function = self.my_softcode_handler    
+
+            # Note that these except clauses can only trigger from the first trial.
+            except SerialException:
+                if self.olfas:
+                    self.olfas.close_serials()  # close serial ports and let the user try again.
+                    del self.olfas
+                    self.olfas = None  # Create the empty variable after deleting to avoid AttributeError.
+                self.olfaNotConnectedSignal.emit()
+                self.finished.emit()  
+            except KeyError as err:  # error reading from json file.
+                self.invalidFileSignal.emit(str(err))
+                self.finished.emit() 
+            except OlfaException:
+                olf = 'olfa exception'
+                self.olfaExceptionSignal.emit(str(olf))
+                self.stopRunning()  # This would also stop the bpod trial just in case the olfa raised the exception when the state machine is running.
+                # self.finished.emit()
+            # Setting stimulus function to Intensity Generatior
+            self.stimulusFunction = self.intensityGenerator
+        
+        
+        elif self.currentstimulusType == 'S':
+            
+            self.initializeSoundResponseDict()
+            self.stimulusFunction = self.auditoryGenerator
+            self.bpod.softcode_handler_function = self.my_softcode_handler 
 
 
     def run(self):
+        print('\n\n\n\n')
         # Parsing experiment Type
         self.parseExperimentType()
         self.startTrial()
@@ -986,6 +1036,24 @@ class ProtocolWorker(QObject):
         path_items[-1] = filename
         return '/'.join(path_items)
     
+    def prepend_S(self, filepath):
+        path_items = filepath.split('/')
+        filename = path_items[-1]
+        if filename[:4] == 'S_':
+            return filepath
+        filename = 'S_'+ filename
+        path_items[-1] = filename
+        return '/'.join(path_items)
+    
+    def prepend_O(self, filepath):
+        path_items = filepath.split('/')
+        filename = path_items[-1]
+        if filename[:4] == 'O_':
+            return filepath
+        filename = 'O_'+ filename
+        path_items[-1] = filename
+        return '/'.join(path_items)
+    
     def startTrial(self):
         print(self.keepRunning,self.currentTrialNum,  self.nTrials , self.consecutiveNoResponses, self.noResponseCutOff)
         if self.keepRunning and (self.currentTrialNum <= self.nTrials) and (self.consecutiveNoResponses < self.noResponseCutOff):
@@ -998,13 +1066,25 @@ class ProtocolWorker(QObject):
             # "rightAction" results in them only being modified the first trial. These variables change every trial according to 
             # self.correctResponse, so I need to update what gets added to the state machine every trial. Otherwise, the state change
             # condition for 'Port1In' will always stay the same instead of changing depending on self.correctResponse.
+
+            self.protocolFileName = self.originalProtocolFilename # Whatever the modifications to the file name done in the previous trial, restore it here
             if self.pavlovFlag ==1: 
                 self.protocolFileName = self.prepend_pavlovian(self.protocolFileName)
             elif self.pavlovFlag ==0 : 
                 self.protocolFileName = self.remove_pavlovian(self.protocolFileName)
             
-            print(self.protocolFileName, self.pavlovFlag)
+            if self.experimentType== 'Mixed':
+                self.defineStimType(self)
+                
+            if self.currentstimulusType == 'S':
+                self.prepend_S(self.protocolFileName)
+            elif  self.currentstimulusType == 'O':
+                self.prepend_O(self.protocolFileName)
+            
+            print(self.protocolFileName, self.originalProtocolFilename)
 
+
+            # Open the protocol file 
             with open(self.protocolFileName, 'r') as protocolFile:
                 self.stateMachine = json.load(protocolFile)
             

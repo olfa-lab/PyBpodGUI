@@ -875,6 +875,7 @@
     <addaction name="actionOdors"/>
     <addaction name="actionOptical"/>
     <addaction name="actionSound"/>
+    <addaction name="actionAuditory_Odors"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuOlfactometer"/>
@@ -1260,6 +1261,11 @@
          <string>Identity</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Mixed</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item row="10" column="1">
@@ -1418,6 +1424,11 @@
   <action name="actionSound">
    <property name="text">
     <string>Auditory</string>
+   </property>
+  </action>
+  <action name="actionAuditory_Odors">
+   <property name="text">
+    <string>Auditory+Odors</string>
    </property>
   </action>
  </widget>
