@@ -100,7 +100,7 @@ class Window(QMainWindow, Ui_MainWindow):
         self.odorEditor = []# Initialize to get away with giving it as input no matter what (made it not indispensable in the protocolWorker)
         self.soundEditor = []
         self.taskSettingsFile = ''
-        self.currentStimulusType = 'O' # 'O'= odors, 'S' = sound, 'L' = light
+        self.currentStimulusType = '' # 'O'= odors, 'S' = sound, 'L' = light
         self.loadDefaults()
 
         
@@ -288,7 +288,6 @@ class Window(QMainWindow, Ui_MainWindow):
         #fname = QFileDialog.getExistingDirectory(self, "Open Folder", "C:\\Users\\olfa-lab\\pybpod\\PyBpodGUI\\taskSettings\\")
         self.taskSettingsLineEdit.setText(fname)
         self.taskSettingsFile = fname
-        print( self.taskSettingsFile)
 
 
     def setExperimentType(self):
@@ -1018,7 +1017,7 @@ class Window(QMainWindow, Ui_MainWindow):
 
     def updateCurrentTrialInfo(self, trialInfoDict):
         # Check if not empty.
-        print(trialInfoDict)
+        
         if trialInfoDict:
             self.trialNumLineEdit.setText(str(trialInfoDict['currentTrialNum']))
             self.correctResponseLineEdit.setText(trialInfoDict['correctResponse'])
@@ -1030,10 +1029,11 @@ class Window(QMainWindow, Ui_MainWindow):
             elif self.experimentType == 'Auditory' :
                 self.updatecurrentSoundTrial(trialInfoDict)
             elif self.experimentType == 'Mixed':
-                if self.currentStimulusType == 'O':
-                    self.updatecurrentOdorTrial(trialInfoDict)
-                elif self.currentStimulusType == 'S':
+                if 'soundfreq' in trialInfoDict['stimList'][0].keys():
                     self.updatecurrentSoundTrial(trialInfoDict)
+                else :
+                    self.updatecurrentOdorTrial(trialInfoDict)
+                    
 
 
 
@@ -1189,7 +1189,6 @@ class Window(QMainWindow, Ui_MainWindow):
             self.analogInputModuleSettingsDialog = AnalogInputModuleSettingsDialog(parent=self)
             self.analogInputModuleSettingsDialog.accepted.connect(self.configureAnalogInputModule)
         settingsDict = self.analogInputModuleSettingsDialog.getSettings()
-        print(f'\nPrinting bpod {self.bpod}\n\n')
         self.readDataWorker = ReadDataWorker(settingsDict, self.bpod, self.adc)
         self.readDataWorker.moveToThread(self.readingDataThread)
         
@@ -1241,8 +1240,7 @@ class Window(QMainWindow, Ui_MainWindow):
         ## hack fix for Qthread deleted error, more info in __init__
         self.oldProtocolThreads.append(self.protocolThread)
         #self.oldProtocolWorkers.append(self.protocolWorker)
-        print('Task settings file fed to protocolWorker')
-        print(self.taskSettingsFile)
+
         
         self.protocolWorker = ProtocolWorker(
             self.bpod, self.protocolFileName, self.olfaConfigFileName, self.experimentTypeComboBox.currentText(), self.camera, self.shuffleMultiplierSpinBox.value(), 

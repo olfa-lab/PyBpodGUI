@@ -39,17 +39,114 @@ class ResultsPlotWorker(QObject):
             self.updatePlot(self.resultsList)
 
     def updatePlot(self, resultsList):
+        #print('AM I TRYING TO UPDATE THIS PLOT??')
         if ( self.experimentType== 'Intensity'):
             self.intensityPlot(resultsList)
         elif self.experimentType == 'Auditory':
             self.auditoryPlot(resultsList)
         elif (self.experimentType == '1PImaging'):
             self.identityPlot(resultsList)
+        elif (self.experimentType == 'Mixed'):
+            self.SoundOdorPlot(resultsList)
     
+    def SoundOdorPlot(self, resultsList):
+        print('\n\n')
+        print('in SoundOdorPlot')
+        print(resultsList[0])
+        print('\n\n')
+
+        print(resultsList[1])
+
+        max_V = 1
+        min_V = 0
+        self.resultsList = resultsList
+        # Compute maximum number of stimuli across all stimuli type
+        currentmax = 1
+        for i in range(len(resultsList)):
+            for key in self.resultsList[i].keys():
+                currentmax = np.max([len(self.resultsList[i][key].keys()), currentmax]) 
+            AmpsInt = np.linspace(1, currentmax, currentmax)
+            
+        if not self.xAxisReady: 
+            dict_1 = dict(enumerate(AmpsInt))  # This dict will have integer indices for keys and string flowrates for values, but might have multiple keys holding the same flowrate values...
+            dict_2 = dict((str(amp), index) for index, amp in dict_1.items())  # This dict will swap the keys and values of dict_1, thus removing any duplicate flowrates because every key must be unique. But it might also remove the indices linked to those duplicates...
+            dict_3 = dict(enumerate(dict_2.keys()))  # Finally, this dict will contain integer indices for keys and string flowrates for values, such that there will not be any duplicate flowrates or missing indices.
+            self.xAxis.setTicks([dict_3.items()])
+            self.graphWidget.setXRange(-1, len(dict_3)+1, padding=0)
+            self.xAxisDict = dict_3
+            self.xAxisReady = True
+        colorIndex = 0
+        self.graphWidget.clear()
+        # Plotting Olfactory curve
+        allFlowsCounterDict = {}  # use this dict to count numLeft and numResponses for each flowrate.
+        for vial, flowrateDict in resultsList[0].items():
+            for flow, totalsDict in flowrateDict.items():
+                if flow not in allFlowsCounterDict:
+                    allFlowsCounterDict[flow] = {'numLeft': 0, 'numResponses': 0}
+                allFlowsCounterDict[flow]['numLeft'] += totalsDict['left']
+                allFlowsCounterDict[flow]['numResponses'] += totalsDict['Correct'] + totalsDict['Wrong']  # I only want the denominator to be the total number of actual responses, not including the NoResponses.
+
+        xValues = []
+        yValues = []
+        xvaluestemp = []
+        for index, flow in enumerate(allFlowsCounterDict.keys()):
+            if not (allFlowsCounterDict[flow]['numResponses'] == 0):
+                percent = round((float(allFlowsCounterDict[flow]['numLeft']) / float(allFlowsCounterDict[flow]['numResponses']) * 100), 2)
+            else:
+                percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
+            #xValues.append(index)  # self.xAxisDict has string flowrates for keys and integer values for the index of the flowrate on the x axis.
+            yValues.append(percent)
+            xvaluestemp.append(flow)
+
+        print('\n\nIn result Plot Worker\n\n')
+        print(xvaluestemp)
+        right_idx = np.argsort([float(x) for x in xvaluestemp])
+        print(right_idx)
+        yValues = [yValues[i] for i in right_idx]
+        xValues = np.linspace(1, currentmax, len(allFlowsCounterDict.keys()))
+        self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+        self.graphWidget.plot(xValues, yValues, name='All vials', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+
+        colorIndex += 1
+       
+        # Plotting auditory curve
+        allFlowsCounterDict = {} 
+        xvaluestemp = []
+        for freq in resultsList[1].keys():
+            print(freq)
+            for realAmp, totalsDict  in resultsList[1][freq].items():
+                    if realAmp not in allFlowsCounterDict:
+                        allFlowsCounterDict[realAmp] = {'numLeft': 0, 'numResponses': 0}
+                    allFlowsCounterDict[realAmp]['numLeft'] += totalsDict['left']
+                    allFlowsCounterDict[realAmp]['numResponses'] += totalsDict['Correct'] + totalsDict['Wrong']  # I only want the denominator to be the total number of actual responses, not including the NoResponses.
+
+            xValues = []
+            yValues = []
+            allamps = [float(x) for x in allFlowsCounterDict.keys()]
+            allamps_sorted = np.sort(allamps)
+            for index, amp in enumerate(allamps_sorted):
+                amp_key = "{:.2f}".format(amp)
+                if not (allFlowsCounterDict[amp_key]['numResponses'] == 0):
+                    percent = round((float(allFlowsCounterDict[amp_key]['numLeft']) / float(allFlowsCounterDict[amp_key]['numResponses']) * 100), 2)
+                else:
+                    percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
+                #xValues.append(index)  # self.xAxisDict has string flowrates for keys and integer values for the index of the flowrate on the x axis.
+                yValues.append(percent)
+                xvaluestemp.append(amp)
+            print(xvaluestemp)
+            right_idx = np.argsort([float(x) for x in xvaluestemp])
+            print(right_idx)
+            yValues = [yValues[i] for i in right_idx]
+            xValues = np.linspace(1, currentmax, len(allFlowsCounterDict.keys()))
+            self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+            self.graphWidget.plot(xValues, yValues, name='All Sounds', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+            
+
 
     def auditoryPlot(self, resultsList):
         # This function currently only plots vials of the first olfactometer (regardless of the plottingMode).
         self.resultsList = resultsList
+        print(resultsList)
         # Find common xaxis
         Amps = np.linspace(0.1,10,8)
         AmpsInt= [float(x) for x in Amps]
@@ -70,29 +167,30 @@ class ResultsPlotWorker(QObject):
         if (self.plottingMode == 0):
             # This combines all vials into one line.
 
-            allFlowsCounterDict = {}  # use this dict to count numLeft and numResponses for each flowrate.
+            # use this dict to count numLeft and numResponses for each flowrate.
             for freq in resultsList[0].keys():
+                allFlowsCounterDict = {}  
                 for realAmp, totalsDict  in resultsList[0][freq].items():
                     if realAmp not in allFlowsCounterDict:
                         allFlowsCounterDict[realAmp] = {'numLeft': 0, 'numResponses': 0}
                     allFlowsCounterDict[realAmp]['numLeft'] += totalsDict['left']
                     allFlowsCounterDict[realAmp]['numResponses'] += totalsDict['Correct'] + totalsDict['Wrong']  # I only want the denominator to be the total number of actual responses, not including the NoResponses.
 
-            xValues = []
-            yValues = []
-            allamps = [float(x) for x in allFlowsCounterDict.keys()]
-            allamps_sorted = np.sort(allamps)
-            for index, amp in enumerate(allamps_sorted):
-                amp_key = "{:.2f}".format(amp)
-                if not (allFlowsCounterDict[amp_key]['numResponses'] == 0):
-                    percent = round((float(allFlowsCounterDict[amp_key]['numLeft']) / float(allFlowsCounterDict[amp_key]['numResponses']) * 100), 2)
-                else:
-                    percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
-                xValues.append(index)  # self.xAxisDict has string flowrates for keys and integer values for the index of the flowrate on the x axis.
-                yValues.append(percent)
-            self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
-            self.graphWidget.plot(xValues, yValues, name='All Sounds', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
-            colorIndex += 1
+                xValues = []
+                yValues = []
+                allamps = [float(x) for x in allFlowsCounterDict.keys()]
+                allamps_sorted = np.sort(allamps)
+                for index, amp in enumerate(allamps_sorted):
+                    amp_key = "{:.2f}".format(amp)
+                    if not (allFlowsCounterDict[amp_key]['numResponses'] == 0):
+                        percent = round((float(allFlowsCounterDict[amp_key]['numLeft']) / float(allFlowsCounterDict[amp_key]['numResponses']) * 100), 2)
+                    else:
+                        percent = 0.0  # To handle divide-by-zero-error that occurs when the flow has not yet been used.
+                    xValues.append(index)  # self.xAxisDict has string flowrates for keys and integer values for the index of the flowrate on the x axis.
+                    yValues.append(percent)
+                self.pen = pg.mkPen(color=self.colors[colorIndex], width=2)
+                self.graphWidget.plot(xValues, yValues, name='All Sounds', pen=self.pen, symbol='s', symbolSize=10, symbolBrush=self.colors[colorIndex])
+                colorIndex += 1
         
         elif (self.plottingMode == 1):
             print('This combines vials with duplicate odor/conc and plots a line for each distinct odor/conc.')
@@ -306,7 +404,7 @@ class ResultsPlotWorker(QObject):
         self.experimentType = experimentType
         self.graphWidget.clear()
 
-        if (self.experimentType == 'Intensity' or self.experimentType == 'Auditory'):
+        if (self.experimentType == 'Intensity' or self.experimentType == 'Auditory' or  self.experimentType == 'Mixed'):
             styles = {'color':'blue', 'font-size': '10pt'}
             self.graphWidget.setBackground('w')
             self.graphWidget.setTitle('Percent Left Licks For Each Flow Rate', color='b', size='10pt')

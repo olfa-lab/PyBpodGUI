@@ -9,7 +9,7 @@ from shutil import copy2  # preserve metadata
 import glob
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
 import pandas as pd
-
+import random
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 
 
@@ -482,6 +482,48 @@ class SaveDataWorker(QObject):
 
         self.trialRow.append()
         self.trialsTable.flush()
+    
+
+
+    def buildOdorSoundBehaviorTable(self):
+        pos = 0
+        self.trialsTableDescDict['responseResult'] = tables.StringCol(7, pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialStartTime'] = tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['trialEndTime'] = tables.Float32Col(pos=pos) 
+        pos += 1
+        self.trialsTableDescDict['stimType'] = tables.UInt16Col(pos=pos)# For now I hardcode only one stimulus at a time possible. I fyou wanna use mixtures this must be changed
+        pos += 1
+        self.trialsTableDescDict['stimAmp'] =  tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['duration'] = tables.Float32Col(pos=pos)
+        pos += 1
+        self.trialsTableDescDict['pavlovian'] = tables.UInt8Col(pos=pos)
+
+        
+        self.trialsTable = self.h5file.create_table(where='/', name='trial_data', description=self.trialsTableDescDict, title='Trial Data')
+        self.trialRow = self.trialsTable.row
+        self.h5file.root._v_attrs.bpodStartTime = self.infoDict['Bpod start timestamp']  # Save the bpod start time as an attribute instead of in the table because it remains the same for every trial. So save it when the first trial's data comes.
+
+    def fillOdorSoundBehaviorTable(self):
+        stimDict = self.infoDict['stimList'][0]
+        self.trialRow['responseResult'] = self.infoDict['responseResult']
+        self.trialRow['trialStartTime'] = self.infoDict['Trial start timestamp']
+        self.trialRow['trialEndTime'] = self.infoDict['Trial end timestamp']
+        if 'soundfreq' in stimDict.keys():
+            self.trialRow['stimType'] = int(stimDict['soundfreq'])
+            self.trialRow['stimAmp'] =float(stimDict['soundamp'])
+            self.trialRow['duration'] =float(stimDict['soundtime'])
+        elif 'olfas' in stimDict.keys():
+            self.trialRow['stimType'] = int(stimDict['olfas']['olfa_0']['vialNum'])
+            self.trialRow['stimAmp'] = int(stimDict['olfas']['olfa_0']['mfc_1_flow'])
+            self.trialRow['duration'] =0.8
+                    
+        self.trialRow['pavlovian'] = self.infoDict['pavlovFlag']
+        self.trialRow.append()
+        self.trialsTable.flush()
+    
 
     def saveTrialData(self):
         # If its None, that means the first trial's data just came, so make the description dict and then create the trialsTable using that description dict. This only happens once.
@@ -504,6 +546,13 @@ class SaveDataWorker(QObject):
                 self.fillAuditoryBehaviorTable()
             else:
                 self.fillAuditoryBehaviorTable()
+        elif self.experimentType == 'Mixed': 
+            if self.trialsTable is None: # If it is the first trial nd the table is not built yet
+                self.buildOdorSoundBehaviorTable()
+                self.fillOdorSoundBehaviorTable()
+            else:
+                self.fillOdorSoundBehaviorTable()
+
 
 
 
@@ -562,7 +611,6 @@ class SaveDataWorker(QObject):
     
     def saveFlexAnalogDataFromBpod(self, analogData):#modified by Bea in introducing ReadDataThread
         #analogData = self.bpod.read_analog_input()
-        
         if len(analogData) > 0:
             # convert decimal bit value to voltage. The length of samples indicates how many channels are streaming to USB.
             nSamples = int(len(analogData) / (self.nChannels + 1))  # Add one to account for the trial number that is included with every sample.
@@ -586,8 +634,9 @@ class SaveDataWorker(QObject):
                     # is more than one sample, in which case the next sample could be the correct trialNum.
                     for i in range(self.nChannels):
                         ind += 1
-
-            self.analogDataSignalProcessed.emit(np.array(voltages[0], dtype='float32'))  # StreamingWorker is currently only capable of plotting one channel.
+            
+                self.analogDataSignalProcessed.emit(np.array(voltages[0], dtype='float32'))
+        # StreamingWorker is currently only capable of plotting one channel.
     
 
     def run(self):

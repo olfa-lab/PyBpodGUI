@@ -91,15 +91,15 @@ class StreamingWorker(QObject):
             'WaitExhalation': 'navy',
             'WaitForSniff':'gray',
             'PresentOdor': 'sandybrown',
+            'PresentStim':'sandybrown',
             'SetSound': 'steelblue',
-            'PresentSound': 'sandybrown',
+            'PresentSound':'sandybrown',
             'WaitForResponse':'navy',
             'NoResponse':'gray',
             'Correct':'yellowgreen',
             'Wrong':'darkred',
             'ITI':'gray', 
             'Wait2sec': 'gray',
-            'PresentSound': 'gray'
             }
         # self.event_color_dict = {'WaitForOdor':'gray',
         #     'LedOn':'lightseagreen',
@@ -164,7 +164,7 @@ class StreamingWorker(QObject):
                 elif i ==3:
                     pass
 
-                if len(self.port_1_Data)+len(self.port_3_Data)>10:
+                if len(self.port_1_Data)+len(self.port_3_Data)>50:
                     self.port_1_Data = []
                     self.port_1_Time = []
                     self.port_3_Data = []
